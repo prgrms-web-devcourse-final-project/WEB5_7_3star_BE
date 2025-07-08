@@ -31,12 +31,13 @@ public enum ErrorCode {
 	// 400
 	INVALID_LESSON_NAME(HttpStatus.BAD_REQUEST, "레슨 이름이 유효하지 않습니다."),
 	INVALID_LESSON_PRICE(HttpStatus.BAD_REQUEST, "레슨 가격이 유효하지 않습니다."),
-	INVALID_LESSON_DATE(HttpStatus.BAD_REQUEST, "레슨 날짜가 유효하지 않습니다.");
+	INVALID_LESSON_DATE(HttpStatus.BAD_REQUEST, "레슨 날짜가 유효하지 않습니다."),
 
 	/*
-	 * Lesson : 예외처리
+	 * 유저 : 예외처리
 	 */
-
+	EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다."),
+	NICKNAME_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 닉네임입니다.");
 	//마지막 세미콜론 명시 ;
 
 	private final HttpStatus status;
