@@ -1,4 +1,4 @@
 package com.threestar.trainus.global.utils;
 
-public class temp {
+public class Temp {
 }

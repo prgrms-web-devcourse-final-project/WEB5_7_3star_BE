@@ -1,6 +1,5 @@
 package com.threestar.trainus.global.exception.dto;
 
-
 import lombok.Builder;
 
 @Builder
