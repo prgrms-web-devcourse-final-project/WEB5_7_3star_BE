@@ -14,19 +14,19 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalExceptionHandler {
 
 	@ExceptionHandler(BusinessException.class)
-	public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+	public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException exception) {
 		ErrorResponse errorResponse = ErrorResponse.builder()
-			.status(e.getErrorCode().getStatus().value())
-			.code(e.getErrorCode().name())
-			.message(e.getErrorCode().getMessage())
+			.status(exception.getErrorCode().getStatus().value())
+			.code(exception.getErrorCode().name())
+			.message(exception.getErrorCode().getMessage())
 			.build();
 
-		return ResponseEntity.status(e.getErrorCode().getStatus()).body(errorResponse);
+		return ResponseEntity.status(exception.getErrorCode().getStatus()).body(errorResponse);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
-		String message = e.getBindingResult()
+	public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException exception) {
+		String message = exception.getBindingResult()
 			.getFieldErrors()
 			.stream()
 			.map(err -> err.getField() + ": " + err.getDefaultMessage())
