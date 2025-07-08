@@ -54,10 +54,8 @@
 
 ## 👥 팀원 소개
 
-|                                                                                                                                |        |                                                                                                                               |        |                                                                                                                               |
-| ------------------------------------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| <a href="https://github.com/Ji-minhyeok"><img src="https://avatars.githubusercontent.com/u/87597610?v=4" width="120px" /></a><br/>**지민혁** | Backend | <a href="https://github.com/taeho4523"><img src="https://avatars.githubusercontent.com/u/126849653?v=4" width="120px" /></a><br/>**김태호** | Backend | <a href="https://github.com/iamjieunkim"><img src="https://avatars.githubusercontent.com/u/83564946?v=4" width="120px" /></a><br/>**김지은** |
-| <a href="https://github.com/cba700"><img src="https://avatars.githubusercontent.com/u/145960657?v=4" width="120px" /></a><br/>**임창인**    | Backend | <a href="https://github.com/ense333"><img src="https://avatars.githubusercontent.com/u/58220151?v=4" width="120px" /></a><br/>**나상연**  | Backend |                                                                                                                               |
+| <a href="https://github.com/Ji-minhyeok"><img src="https://avatars.githubusercontent.com/u/87597610?v=4" width="120px" /></a><br/>**지민혁**<br/>Backend | <a href="https://github.com/taeho4523"><img src="https://avatars.githubusercontent.com/u/126849653?v=4" width="120px" /></a><br/>**김태호**<br/>Backend | <a href="https://github.com/iamjieunkim"><img src="https://avatars.githubusercontent.com/u/83564946?v=4" width="120px" /></a><br/>**김지은**<br/>Backend | <a href="https://github.com/cba700"><img src="https://avatars.githubusercontent.com/u/145960657?v=4" width="120px" /></a><br/>**임창인**<br/>Backend | <a href="https://github.com/ense333"><img src="https://avatars.githubusercontent.com/u/58220151?v=4" width="120px" /></a><br/>**나상연**<br/>Backend |
+| --- | --- | --- | --- | --- |
 
 ---
 
