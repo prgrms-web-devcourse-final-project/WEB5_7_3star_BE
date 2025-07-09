@@ -46,4 +46,7 @@ public class Comment extends BaseDateEntity {
 	@Column(nullable = false)
 	private Boolean deleted;
 
+	public boolean isRoot() {
+		return parentCommentId.longValue() == commentId;
+	}
 }

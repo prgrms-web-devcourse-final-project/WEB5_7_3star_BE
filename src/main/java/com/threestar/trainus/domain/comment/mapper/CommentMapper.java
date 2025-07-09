@@ -22,7 +22,7 @@ public class CommentMapper {
 			.build();
 	}
 
-	public static CommentPageResponseDto toCommentPageResponseDto(List<CommentResponseDto> comments, long count) {
+	public static CommentPageResponseDto toCommentPageResponseDto(List<CommentResponseDto> comments, Long count) {
 		return CommentPageResponseDto.builder()
 			.comments(comments)
 			.commentCount(count)
