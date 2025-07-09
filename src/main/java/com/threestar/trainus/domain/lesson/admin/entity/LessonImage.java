@@ -1,13 +1,7 @@
 package com.threestar.trainus.domain.lesson.admin.entity;
 
-import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,10 +16,10 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "LessonParticipant")
-@EntityListeners(AuditingEntityListener.class)
+@Table(name = "lessonImages")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LessonParticipant {
+public class LessonImage {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -34,16 +28,14 @@ public class LessonParticipant {
 	@JoinColumn(name = "lesson_id", nullable = false)
 	private Lesson lesson;
 
-	@Column(nullable = false)
-	private Long userId;
-
-	@CreatedDate
-	@Column(nullable = false)
-	private LocalDateTime joinAt;
+	@Column(name = "image_url", nullable = false, length = 255)
+	private String imageUrl;
 
 	@Builder
-	public LessonParticipant(Lesson lesson, Long userId) {
+	public LessonImage(Lesson lesson, String imageUrl) {
 		this.lesson = lesson;
-		this.userId = userId;
+		this.imageUrl = imageUrl;
 	}
+
 }
+

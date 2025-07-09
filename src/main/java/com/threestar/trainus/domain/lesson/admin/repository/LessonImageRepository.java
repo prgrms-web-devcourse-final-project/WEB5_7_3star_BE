@@ -6,9 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
 
 @Repository
-public interface LessonRepository extends JpaRepository<Lesson, Long> {
-	// 강사가 개설한 레슨 목록 조회용
-	List<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader);
+public interface LessonImageRepository extends JpaRepository<LessonImage, Long> {
+
+	List<LessonImage> findByLesson(Lesson lesson);
 }
+
