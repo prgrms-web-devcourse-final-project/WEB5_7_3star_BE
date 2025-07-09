@@ -3,7 +3,10 @@ package com.threestar.trainus.domain.coupon.mapper;
 import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.entity.UserCoupon;
 
-public class UserCouponMapper {
+public final class UserCouponMapper {
+
+	private UserCouponMapper() {
+	}
 
 	public static CreateUserCouponResponseDto toCreateUserCouponResponseDto(UserCoupon userCoupon) {
 		return CreateUserCouponResponseDto.builder()
