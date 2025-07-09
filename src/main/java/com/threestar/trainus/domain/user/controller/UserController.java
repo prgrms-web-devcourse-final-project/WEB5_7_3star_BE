@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
+import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
 import com.threestar.trainus.domain.user.service.UserService;
@@ -47,5 +48,13 @@ public class UserController {
 	public ResponseEntity<BaseResponse<Void>> logout(HttpSession session) {
 		userService.logout(session);
 		return BaseResponse.ok("로그아웃이 완료되었습니다.", null, HttpStatus.OK);
+	}
+
+	@PostMapping("/verify/check-nickname")
+	public ResponseEntity<BaseResponse<Void>> checkNickname(
+		@Valid @RequestBody NicknameCheckRequestDto request
+	) {
+		userService.checkNickname(request);
+		return BaseResponse.ok("사용가능한 닉네임입니다.", null, HttpStatus.OK);
 	}
 }

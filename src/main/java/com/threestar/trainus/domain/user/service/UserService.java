@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
+import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
@@ -16,7 +17,6 @@ import com.threestar.trainus.global.exception.handler.BusinessException;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -60,5 +60,13 @@ public class UserService {
 
 	public void logout(HttpSession session) {
 		session.invalidate();
+	}
+
+	@Transactional(readOnly = true)
+	public void checkNickname(NicknameCheckRequestDto request) {
+
+		if (userRepository.existsByNickname(request.nickname())) {
+			throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+		}
 	}
 }
