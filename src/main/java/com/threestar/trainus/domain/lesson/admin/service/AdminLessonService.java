@@ -12,6 +12,8 @@ import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
 import com.threestar.trainus.domain.lesson.admin.mapper.LessonMapper;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.global.exception.domain.ErrorCode;
+import com.threestar.trainus.global.exception.handler.BusinessException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -60,6 +62,27 @@ public class AdminLessonService {
 
 		return lessonImageRepository.saveAll(lessonImages);
 
+	}
+
+	//레슨 삭제
+	@Transactional
+	public void deleteLesson(Long lessonId, Long userId) {
+		//레슨 조회
+		Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(() -> new BusinessException(
+			ErrorCode.LESSON_NOT_FOUND));
+
+		//권한 확인 -> 레슨을 올린사람만 삭제가 가능하도록
+		if (!lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_DELETE_FORBIDDEN);
+		}
+
+		//이미 삭제된 레슨인지 확인
+		if (lesson.getDeletedAt() != null) {
+			throw new BusinessException(ErrorCode.LESSON_ALREADY_DELETED);
+		}
+
+		lesson.lessonDelete();
+		lessonRepository.save(lesson);
 	}
 
 }
