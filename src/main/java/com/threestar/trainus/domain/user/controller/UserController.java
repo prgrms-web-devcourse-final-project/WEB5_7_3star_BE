@@ -54,7 +54,7 @@ public class UserController {
 	public ResponseEntity<BaseResponse<Void>> checkNickname(
 		@Valid @RequestBody NicknameCheckRequestDto request
 	) {
-		userService.checkNickname(request);
+		userService.checkNickname(request.nickname());
 		return BaseResponse.ok("사용가능한 닉네임입니다.", null, HttpStatus.OK);
 	}
 }

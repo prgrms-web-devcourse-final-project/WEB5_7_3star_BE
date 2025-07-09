@@ -8,6 +8,9 @@ import com.threestar.trainus.domain.user.entity.UserRole;
 
 public class UserMapper {
 
+	private UserMapper() {
+	}
+
 	public static User toEntity(SignupRequestDto request, String encodedPassword) {
 		return User.builder()
 			.email(request.email())
