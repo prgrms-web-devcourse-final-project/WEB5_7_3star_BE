@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.lesson.admin.entity;
 
+import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.global.entity.BaseDateEntity;
 
 import jakarta.persistence.Column;
@@ -20,7 +21,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "lessonApplication")
+@Table(name = "lesson_applications")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LessonApplication extends BaseDateEntity {
 
@@ -28,11 +29,12 @@ public class LessonApplication extends BaseDateEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
-	private Long userId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(nullable = false)
+	@JoinColumn(name = "lesson_id", nullable = false)
 	private Lesson lesson;
 
 	@Enumerated(EnumType.STRING)
@@ -40,9 +42,8 @@ public class LessonApplication extends BaseDateEntity {
 	private ApplicationStatus status;
 
 	@Builder
-
-	public LessonApplication(Long userId, Lesson lesson, ApplicationStatus status) {
-		this.userId = userId;
+	public LessonApplication(User user, Lesson lesson) {
+		this.user = user;
 		this.lesson = lesson;
 		this.status = ApplicationStatus.PENDING;
 	}

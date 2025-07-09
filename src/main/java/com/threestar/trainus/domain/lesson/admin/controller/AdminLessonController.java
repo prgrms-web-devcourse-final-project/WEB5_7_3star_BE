@@ -23,7 +23,7 @@ public class AdminLessonController {
 
 	private final AdminLessonService adminLessonService;
 
-	@PostMapping("/lesson")
+	@PostMapping("/lessons")
 	public ResponseEntity<BaseResponse<LessonResponseDto>> createLesson(
 		@Valid @RequestBody LessonCreateRequestDto requestDto,
 		HttpSession session) {

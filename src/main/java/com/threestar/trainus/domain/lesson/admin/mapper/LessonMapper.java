@@ -12,26 +12,29 @@ import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
 @Component
 public class LessonMapper {
 
+	//레슨 생성 요청 DTO를 레슨 엔티티로 변환
 	public Lesson toEntity(LessonCreateRequestDto requestDto, Long userId) {
 		return Lesson.builder()
-			.lessonLeader(userId)
-			.lessonName(requestDto.getLessonName())
-			.description(requestDto.getDescription())
-			.maxParticipants(requestDto.getMaxParticipants())
-			.startAt(requestDto.getStartAt())
-			.endAt(requestDto.getEndAt())
-			.price(requestDto.getPrice())
-			.category(requestDto.getCategory())
-			.openTime(requestDto.getOpenTime())
-			.openRun(requestDto.getOpenRun())
-			.city(requestDto.getCity())
-			.district(requestDto.getDistrict())
-			.dong(requestDto.getDong())
-			.addressDetail(requestDto.getAddressDetail())
+			.lessonLeader(userId)  //강사 id설정
+			.lessonName(requestDto.lessonName())
+			.description(requestDto.description())
+			.maxParticipants(requestDto.maxParticipants())
+			.startAt(requestDto.startAt())
+			.endAt(requestDto.endAt())
+			.price(requestDto.price())
+			.category(requestDto.category())
+			.openTime(requestDto.openTime())
+			.openRun(requestDto.openRun())
+			.city(requestDto.city())
+			.district(requestDto.district())
+			.dong(requestDto.dong())
+			.addressDetail(requestDto.addressDetail())
 			.build();
 	}
 
+	//레슨 엔티티와 이미지 목록을 레슨 응답 DTO로 변환
 	public LessonResponseDto toResponseDto(Lesson lesson, List<LessonImage> lessonImages) {
+		// 이미지 엔티티 목록에서 URL만 추출
 		List<String> imageUrls = lessonImages.stream()
 			.map(LessonImage::getImageUrl)
 			.toList();
@@ -52,9 +55,9 @@ public class LessonMapper {
 			.district(lesson.getDistrict())
 			.dong(lesson.getDong())
 			.addressDetail(lesson.getAddressDetail())
-			.status(lesson.getStatus().name()) //enum이름만 반환하도록
+			.status(lesson.getStatus().name()) // enum이름 반환
 			.createdAt(lesson.getCreatedAt())
-			.lessonImages(imageUrls)
+			.lessonImages(imageUrls) // 이미지 URL 목록
 			.build();
 	}
 }

@@ -17,29 +17,31 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AdminLessonService {
 
-	private final LessonRepository lessonRepository;
-	private final LessonImageRepository lessonImageRepository;
+	private final LessonRepository lessonRepository;           // 레슨 DB 접근
+	private final LessonImageRepository lessonImageRepository; // 레슨 이미지 DB 접근
 	private final LessonMapper lessonMapper;
 
+	// 새로운 레슨을 생성하는 메서드
 	@Transactional
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
-		// 레슨 생성
+		// DTO를 엔티티로 변환
 		Lesson lesson = lessonMapper.toEntity(requestDto, userId);
+
+		// 레슨을 DB에 저장
 		Lesson savedLesson = lessonRepository.save(lesson);
 
-		// 레슨 이미지 저장
-		List<LessonImage> savedImages = saveLessonImages(savedLesson, requestDto.getLessonImages());
+		// 레슨 이미지들을 DB에 저장
+		List<LessonImage> savedImages = saveLessonImages(savedLesson, requestDto.lessonImages());
 
-		// 응답 DTO 반환
+		// 저장된 엔티티를 응답 DTO로 변환하여 반환
 		return lessonMapper.toResponseDto(savedLesson, savedImages);
 	}
 
-	//레슨 이미지를 db에 저장하는 메서드
+	// 레슨 이미지들을 db에 저장하는 메서드
 	private List<LessonImage> saveLessonImages(Lesson lesson, List<String> imageUrls) {
-		//이미지가 없는 경우 빈 리스트 반환
+		// null 체크: 이미지가 없는 경우 빈 리스트 반환
 		if (imageUrls == null || imageUrls.isEmpty()) {
 			return List.of();
 		}
@@ -51,7 +53,8 @@ public class AdminLessonService {
 				.build())
 			.toList();
 
-		// 모든 이미지를 한 번에 DB에 저장
 		return lessonImageRepository.saveAll(lessonImages);
+
 	}
+
 }

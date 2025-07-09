@@ -2,18 +2,17 @@ package com.threestar.trainus.domain.lesson.admin.entity;
 
 import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import com.threestar.trainus.domain.user.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,8 +21,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "LessonParticipant")
-@EntityListeners(AuditingEntityListener.class)
+@Table(name = "lesson_participants")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LessonParticipant {
 	@Id
@@ -34,16 +32,21 @@ public class LessonParticipant {
 	@JoinColumn(name = "lesson_id", nullable = false)
 	private Lesson lesson;
 
-	@Column(nullable = false)
-	private Long userId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
 
-	@CreatedDate
 	@Column(nullable = false)
 	private LocalDateTime joinAt;
 
 	@Builder
-	public LessonParticipant(Lesson lesson, Long userId) {
+	public LessonParticipant(Lesson lesson, User user) {
 		this.lesson = lesson;
-		this.userId = userId;
+		this.user = user;
+	}
+
+	@PrePersist
+	private void prePersist() {
+		this.joinAt = LocalDateTime.now();
 	}
 }
