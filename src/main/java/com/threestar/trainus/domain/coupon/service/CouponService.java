@@ -41,6 +41,11 @@ public class CouponService {
 		if (coupon.getCategory() == CouponCategory.OPEN_RUN && LocalDateTime.now().isBefore(coupon.getOpenAt())) {
 			throw new BusinessException(ErrorCode.COUPON_NOT_YET_OPEN);
 		}
+		//중복 발급 방지
+		boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(userId, couponId);
+		if (alreadyIssued) {
+			throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
+		}
 		LocalDateTime expirationDate = coupon.getExpirationDate();
 
 		UserCoupon userCoupon = new UserCoupon(user, coupon, expirationDate);

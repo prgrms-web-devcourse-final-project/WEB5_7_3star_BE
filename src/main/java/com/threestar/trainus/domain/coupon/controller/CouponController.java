@@ -25,7 +25,7 @@ public class CouponController {
 	public ResponseEntity<BaseResponse<CreateUserCouponResponseDto>> createUserCoupon(@PathVariable Long couponId,
 		HttpSession session
 	) {
-		Long userId = (Long)session.getAttribute("userId");
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		CreateUserCouponResponseDto dto = couponService.createUserCoupon(userId, couponId);
 
 		return BaseResponse.ok("쿠폰 발급 완료", dto, HttpStatus.CREATED);

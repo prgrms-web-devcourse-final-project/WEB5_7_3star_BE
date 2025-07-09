@@ -32,6 +32,7 @@ public enum ErrorCode {
 	// 400
 	COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "쿠폰 발급 기간이 종료되었습니다."),
 	COUPON_NOT_YET_OPEN(HttpStatus.BAD_REQUEST, "아직 발급이 시작되지 않은 쿠폰입니다."),
+	COUPON_ALREADY_ISSUED(HttpStatus.CONFLICT, "이미 발급받은 쿠폰입니다."),
 
 	//404
 	COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 쿠폰을 찾을 수 없습니다."),
