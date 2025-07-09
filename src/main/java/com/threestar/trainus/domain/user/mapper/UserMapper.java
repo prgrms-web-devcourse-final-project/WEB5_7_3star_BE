@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.user.mapper;
 
+import com.threestar.trainus.domain.user.dto.LoginResponseDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
@@ -23,6 +24,14 @@ public class UserMapper {
 			user.getNickname(),
 			user.getRole(),
 			user.getCreatedAt()
+		);
+	}
+
+	public static LoginResponseDto toLoginResponseDto(User user) {
+		return new LoginResponseDto(
+			user.getId(),
+			user.getEmail(),
+			user.getNickname()
 		);
 	}
 }
