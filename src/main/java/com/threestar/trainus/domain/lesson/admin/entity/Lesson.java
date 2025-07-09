@@ -13,16 +13,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Table(name = "lessons")
 @Entity
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Lesson extends BaseDateEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long lessonId;
+	private Long id;
 
 	@Column(nullable = false)
 	private Long lessonLeader;
@@ -43,7 +46,7 @@ public class Lesson extends BaseDateEntity {
 	private LocalDateTime endAt;
 
 	@Column(nullable = false)
-	private int price;
+	private Integer price;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
@@ -52,12 +55,13 @@ public class Lesson extends BaseDateEntity {
 	@Column(nullable = true)
 	private LocalDateTime openTime;
 
+	//false(선착순이 아닌 레슨, 강사가 직접 승인 거절), true -> 선착순 수업
 	@Column(nullable = false)
 	private Boolean openRun;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private Status status;
+	private LessonStatus status;
 
 	//createdAt
 	//updatedAt
@@ -79,4 +83,30 @@ public class Lesson extends BaseDateEntity {
 
 	@Column(nullable = true)
 	private Integer participantCount;
+
+	@Builder
+	public Lesson(Long lessonLeader, String lessonName, String description,
+		Integer maxParticipants, LocalDateTime startAt, LocalDateTime endAt,
+		Integer price, Category category, LocalDateTime openTime,
+		Boolean openRun, String city, String district, String dong,
+		String addressDetail) {
+		this.lessonLeader = lessonLeader;
+		this.lessonName = lessonName;
+		this.description = description;
+		this.maxParticipants = maxParticipants;
+		this.startAt = startAt;
+		this.endAt = endAt;
+		this.price = price;
+		this.category = category;
+		this.openTime = openTime;
+		this.openRun = openRun;
+		this.city = city;
+		this.district = district;
+		this.dong = dong;
+		this.addressDetail = addressDetail;
+		//새로 생성된 레슨은 항상 모집중 상태로 초기값 설정
+		this.status = LessonStatus.RECRUITING;
+		//새로 생성된 참가자 수도 0명으로 시작하도록 설정
+		this.participantCount = 0;
+	}
 }
