@@ -1,8 +1,8 @@
 package com.threestar.trainus.domain.comment.dto;
 
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 public class CommentCreateRequestDto {
 	private String content;
 	private Long parentCommentId;
