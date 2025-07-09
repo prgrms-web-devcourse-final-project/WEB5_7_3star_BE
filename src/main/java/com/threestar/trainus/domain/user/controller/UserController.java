@@ -42,4 +42,10 @@ public class UserController {
 		LoginResponseDto response = userService.login(request, session);
 		return BaseResponse.ok("로그인이 완료되었습니다", response, HttpStatus.OK);
 	}
+
+	@PostMapping("/logout")
+	public ResponseEntity<BaseResponse<Void>> logout(HttpSession session) {
+		userService.logout(session);
+		return BaseResponse.ok("로그아웃이 완료되었습니다.", null, HttpStatus.OK);
+	}
 }

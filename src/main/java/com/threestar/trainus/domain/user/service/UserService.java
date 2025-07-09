@@ -16,6 +16,7 @@ import com.threestar.trainus.global.exception.handler.BusinessException;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -55,5 +56,9 @@ public class UserService {
 		session.setAttribute("LOGIN_USER", user.getId());
 
 		return UserMapper.toLoginResponseDto(user);
+	}
+
+	public void logout(HttpSession session) {
+		session.invalidate();
 	}
 }
