@@ -1,9 +1,5 @@
 package com.threestar.trainus.domain.lesson.admin.entity;
 
-import java.time.LocalDateTime;
-
-import com.threestar.trainus.domain.user.entity.User;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,7 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,9 +16,10 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "lesson_participants")
+@Table(name = "lesson_images")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LessonParticipant {
+public class LessonImage {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -32,21 +28,14 @@ public class LessonParticipant {
 	@JoinColumn(name = "lesson_id", nullable = false)
 	private Lesson lesson;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
-	private User user;
-
-	@Column(nullable = false)
-	private LocalDateTime joinAt;
+	@Column(name = "image_url", nullable = false, length = 255)
+	private String imageUrl;
 
 	@Builder
-	public LessonParticipant(Lesson lesson, User user) {
+	public LessonImage(Lesson lesson, String imageUrl) {
 		this.lesson = lesson;
-		this.user = user;
+		this.imageUrl = imageUrl;
 	}
 
-	@PrePersist
-	private void prePersist() {
-		this.joinAt = LocalDateTime.now();
-	}
 }
+
