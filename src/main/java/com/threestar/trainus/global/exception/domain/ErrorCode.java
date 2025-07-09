@@ -31,20 +31,14 @@ public enum ErrorCode {
 	// 400
 	INVALID_LESSON_NAME(HttpStatus.BAD_REQUEST, "레슨 이름이 유효하지 않습니다."),
 	INVALID_LESSON_PRICE(HttpStatus.BAD_REQUEST, "레슨 가격이 유효하지 않습니다."),
-	LESSON_START_TIME_INVALID(HttpStatus.BAD_REQUEST, "레슨 시작 시간이 현재 시간보다 과거입니다."),
-	LESSON_END_TIME_BEFORE_START(HttpStatus.BAD_REQUEST, "레슨 종료 시간이 시작 시간보다 빠릅니다."),
-	LESSON_DURATION_TOO_SHORT(HttpStatus.BAD_REQUEST, "레슨 시간이 너무 짧습니다. 최소 30분 이상이어야 합니다."),
-	LESSON_DURATION_TOO_LONG(HttpStatus.BAD_REQUEST, "레슨 시간이 너무 깁니다. 최대 8시간까지 가능합니다."),
-	LESSON_MAX_PARTICIPANTS_EXCEEDED(HttpStatus.BAD_REQUEST, "최대 참가 인원이 허용 범위를 초과했습니다."),
-	LESSON_OPEN_TIME_INVALID(HttpStatus.BAD_REQUEST, "선착순 오픈 시간이 레슨 시작 시간 이후입니다."),
-	LESSON_IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "레슨 이미지는 최대 5장까지 첨부 가능합니다."),
-	LESSON_CATEGORY_INVALID(HttpStatus.BAD_REQUEST, "유효하지 않은 레슨 카테고리입니다."),
-	INVALID_LESSON_DATE(HttpStatus.BAD_REQUEST, "레슨 날짜가 유효하지 않습니다.");
+	INVALID_LESSON_DATE(HttpStatus.BAD_REQUEST, "레슨 날짜가 유효하지 않습니다."),
 
 	/*
-	 * Lesson : 예외처리
+	 * 유저 : 예외처리
 	 */
-
+	EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다."),
+	NICKNAME_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 닉네임입니다."),
+	INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 올바르지 않습니다.");
 	//마지막 세미콜론 명시 ;
 
 	private final HttpStatus status;
