@@ -15,7 +15,7 @@ public class LessonMapper {
 	//레슨 생성 요청 DTO를 레슨 엔티티로 변환
 	public Lesson toEntity(LessonCreateRequestDto requestDto, Long userId) {
 		return Lesson.builder()
-			.lessonLeader(userId)  //강사 id설정
+			.lessonLeader(userId)  //TODO:이것도 user완성되면 .lessonLeader(user.getId())수정해야된다...
 			.lessonName(requestDto.lessonName())
 			.description(requestDto.description())
 			.maxParticipants(requestDto.maxParticipants())

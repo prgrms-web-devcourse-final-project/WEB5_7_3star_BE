@@ -22,11 +22,16 @@ public class AdminLessonService {
 	private final LessonRepository lessonRepository;           // 레슨 DB 접근
 	private final LessonImageRepository lessonImageRepository; // 레슨 이미지 DB 접근
 	private final LessonMapper lessonMapper;
+	// private final UserRepository userRepository; TODO: User 완성되면, UserRepository 추가
 
 	// 새로운 레슨을 생성하는 메서드
 	@Transactional
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
-		// DTO를 엔티티로 변환
+		// TODO: User 완성되면,  User 조회 로직 추가
+		// User user = userRepository.findById(userId)
+		//     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		// 일단은, 임시로 Long userId 사용
 		Lesson lesson = lessonMapper.toEntity(requestDto, userId);
 
 		// 레슨을 DB에 저장
