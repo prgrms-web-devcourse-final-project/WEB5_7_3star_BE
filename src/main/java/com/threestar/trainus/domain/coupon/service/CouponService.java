@@ -1,14 +1,19 @@
 package com.threestar.trainus.domain.coupon.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
+import com.threestar.trainus.domain.coupon.dto.UserCouponPageResponseDto;
+import com.threestar.trainus.domain.coupon.dto.UserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.entity.Coupon;
 import com.threestar.trainus.domain.coupon.entity.CouponCategory;
+import com.threestar.trainus.domain.coupon.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.entity.UserCoupon;
+import com.threestar.trainus.domain.coupon.mapper.UserCouponMapper;
 import com.threestar.trainus.domain.coupon.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.repository.UserCouponRepository;
 import com.threestar.trainus.domain.user.entity.User;
@@ -52,5 +57,18 @@ public class CouponService {
 		userCouponRepository.save(userCoupon);
 
 		return CreateUserCouponResponseDto.from(userCoupon);
+	}
+
+	@Transactional(readOnly = true)
+	public UserCouponPageResponseDto getUserCoupons(Long userId, CouponStatus status) {
+		List<UserCoupon> userCoupons;
+
+		if (status == null) {
+			userCoupons = userCouponRepository.findAllByUserId(userId);
+		} else {
+			userCoupons = userCouponRepository.findAllByUserIdAndStatus(userId, status);
+		}
+		List<UserCouponResponseDto> couponDtos = UserCouponMapper.toDtoList(userCoupons);
+		return new UserCouponPageResponseDto(couponDtos);
 	}
 }
