@@ -47,4 +47,10 @@ public class UserCoupon extends BaseDateEntity {
 
 	private LocalDateTime expirationDate;
 
+	public UserCoupon(User user, Coupon coupon, LocalDateTime expirationDate) {
+		this.user = user;
+		this.coupon = coupon;
+		this.expirationDate = expirationDate;
+		this.status = CouponStatus.ACTIVE;
+	}
 }
