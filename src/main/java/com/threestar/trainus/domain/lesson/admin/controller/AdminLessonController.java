@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.lesson.admin.dto.ApplicationActionDto;
-import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessDto;
+import com.threestar.trainus.domain.lesson.admin.dto.ApplicationActionRequestDto;
+import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
@@ -97,9 +97,9 @@ public class AdminLessonController {
 
 	//레슨 신청 승인/거절
 	@PostMapping("/lessons/applications/{lessonApplicationId}")
-	public ResponseEntity<BaseResponse<ApplicationProcessDto>> processLessonApplication(
+	public ResponseEntity<BaseResponse<ApplicationProcessResponseDto>> processLessonApplication(
 		@PathVariable Long lessonApplicationId,
-		@Valid @RequestBody ApplicationActionDto requestDto,
+		@Valid @RequestBody ApplicationActionRequestDto requestDto,
 		HttpSession session) {
 
 		// 세션 기반 인증 체크
@@ -112,7 +112,7 @@ public class AdminLessonController {
 		}
 
 		// 신청 승인/거절 처리
-		ApplicationProcessDto responseDto = adminLessonService
+		ApplicationProcessResponseDto responseDto = adminLessonService
 			.processLessonApplication(lessonApplicationId, requestDto.action(), userId);
 
 		return BaseResponse.ok("레슨 신청 " + (requestDto.action().equals("APPROVED") ? "승인" : "거절"), responseDto,

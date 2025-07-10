@@ -9,7 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessDto;
+import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
@@ -135,7 +135,7 @@ public class AdminLessonService {
 
 	//레슨 신청 승인/거절 처리
 	@Transactional
-	public ApplicationProcessDto processLessonApplication(
+	public ApplicationProcessResponseDto processLessonApplication(
 		Long lessonApplicationId, String action, Long userId) {
 
 		// 신청 존재 확인
@@ -165,7 +165,7 @@ public class AdminLessonService {
 		LessonApplication savedApplication = lessonApplicationRepository.save(application);
 
 		// 응답 DTO 생성
-		return ApplicationProcessDto.builder()
+		return ApplicationProcessResponseDto.builder()
 			.lessonApplicationId(savedApplication.getId())
 			.userId(savedApplication.getUser().getId())
 			.status(savedApplication.getStatus().name())
