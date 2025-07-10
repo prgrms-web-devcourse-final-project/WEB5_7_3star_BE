@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.user.dto.EmailVerificationConfirmDto;
-import com.threestar.trainus.domain.user.dto.EmailVerificationRequestDto;
-import com.threestar.trainus.domain.user.dto.EmailVerificationResponseDto;
+import com.threestar.trainus.domain.user.dto.EmailVerificationDto;
+import com.threestar.trainus.domain.user.dto.EmailSendRequestDto;
+import com.threestar.trainus.domain.user.dto.EmailSendResponseDto;
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
 import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
@@ -64,19 +64,19 @@ public class UserController {
 	}
 
 	@PostMapping("/verify/email-send")
-	public ResponseEntity<BaseResponse<EmailVerificationResponseDto>> sendVerificationCode(
-		@Valid @RequestBody EmailVerificationRequestDto request
+	public ResponseEntity<BaseResponse<EmailSendResponseDto>> sendVerificationCode(
+		@Valid @RequestBody EmailSendRequestDto request
 	) {
-		EmailVerificationResponseDto response = emailVerificationService.sendVerificationCode(request);
-		return BaseResponse.ok("인증 코드가 발송되었습니다.", response, HttpStatus.OK);
+		EmailSendResponseDto response = emailVerificationService.sendVerificationCode(request);
+		return BaseResponse.ok("인증 코드가 이메일로 발송되었습니다.", response, HttpStatus.OK);
 	}
 
 
 	@PostMapping("/verify/email-check")
 	public ResponseEntity<BaseResponse<Void>> confirmVerificationCode(
-		@Valid @RequestBody EmailVerificationConfirmDto request
+		@Valid @RequestBody EmailVerificationDto request
 	) {
-		emailVerificationService.verifyCode(request.email(), request.code());
+		emailVerificationService.verifyCode(request.email(), request.verificationCode());
 		return BaseResponse.ok("이메일 인증이 완료되었습니다.", null, HttpStatus.OK);
 	}
 }
