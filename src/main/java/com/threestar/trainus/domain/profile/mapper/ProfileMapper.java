@@ -28,4 +28,12 @@ public class ProfileMapper {
 			.intro(requestDto.intro())
 			.build();
 	}
+
+	public static Profile toDefaultEntity(User user) {
+		return Profile.builder()
+			.user(user)
+			.profileImage(null)
+			.intro(null)
+			.build();
+	}
 }

@@ -38,12 +38,4 @@ public class Profile {
 
 	@Column(length = 255)
 	private String intro;
-
-	public static Profile createDefault(User user) {
-		return Profile.builder()
-			.user(user)
-			.profileImage(null)
-			.intro(null)
-			.build();
-	}
 }

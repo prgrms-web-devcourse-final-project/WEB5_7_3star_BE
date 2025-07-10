@@ -19,10 +19,13 @@ import com.threestar.trainus.domain.user.service.EmailVerificationService;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+
+@Tag(name = "유저 API", description = "유저 API")
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor

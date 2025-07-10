@@ -22,6 +22,12 @@ public class ProfileService {
 	private final ProfileRepository profileRepository;
 	private final UserRepository userRepository;
 
+	@Transactional
+	public void createDefaultProfile(User user) {
+		Profile defaultProfile = ProfileMapper.toDefaultEntity(user);
+		profileRepository.save(defaultProfile);
+	}
+
 	@Transactional(readOnly = true)
 	public ProfileResponseDto getProfile(Long userId) {
 		User user = userRepository.findById(userId)
@@ -46,11 +52,6 @@ public class ProfileService {
 		profileRepository.save(updatedProfile);
 
 		return ProfileMapper.toResponseDto(updatedProfile, user);
-	}
-
-	public void createDefaultProfile(User user) {
-		Profile defaultProfile = Profile.createDefault(user);
-		profileRepository.save(defaultProfile);
 	}
 }
 
