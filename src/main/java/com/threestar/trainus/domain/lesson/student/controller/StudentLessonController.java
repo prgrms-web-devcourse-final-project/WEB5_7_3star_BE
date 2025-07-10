@@ -21,6 +21,7 @@ public class StudentLessonController {
 	) {
 		return "Swagger Test Check!";
 	}
+
 	@GetMapping("/test-auth")
 	public String testAuth(HttpSession session, Principal principal) {
 		return "SessionID: " + session.getId() + ", user: " + principal;
