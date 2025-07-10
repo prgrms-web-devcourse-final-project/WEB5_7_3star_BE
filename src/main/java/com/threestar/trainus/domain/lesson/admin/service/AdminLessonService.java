@@ -50,15 +50,36 @@ public class AdminLessonService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-		// User 엔티티를 전달하여 레슨 생성
+		// 동일 레슨 중복 검증(동일한 강사가 같은 이름+시간으로 레슨 생성 차단)
+		boolean isDuplicate = lessonRepository.existsDuplicateLesson(
+			userId,
+			requestDto.lessonName(),
+			requestDto.startAt()
+		);
+		if (isDuplicate) {
+			throw new BusinessException(ErrorCode.DUPLICATE_LESSON);
+		}
+
+		// 시간 겹침 검증(같은 강사가 동일 시간대에 여러 레슨 생성 차단)
+		boolean hasConflict = lessonRepository.hasTimeConflictLesson(
+			userId,
+			requestDto.startAt(),
+			requestDto.endAt()
+		);
+		if (hasConflict) {
+			throw new BusinessException(ErrorCode.LESSON_TIME_OVERLAP);
+		}
+
+		// User 엔티티로 레슨 생성
 		Lesson lesson = lessonMapper.toEntity(requestDto, user);
 
-		// 레슨을 DB에 저장
+		// 레슨 저장
 		Lesson savedLesson = lessonRepository.save(lesson);
 
-		// 레슨 이미지들을 DB에 저장
+		// 레슨 이미지 저장
 		List<LessonImage> savedImages = saveLessonImages(savedLesson, requestDto.lessonImages());
 
+		// 응답 DTO 반환
 		return lessonMapper.toResponseDto(savedLesson, savedImages);
 	}
 

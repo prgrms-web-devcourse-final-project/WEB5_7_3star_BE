@@ -69,6 +69,9 @@ public enum ErrorCode {
 
 	// 409 Conflict
 	LESSON_APPLICATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 레슨 신청입니다."),
+	DUPLICATE_LESSON(HttpStatus.CONFLICT, "동일한 이름과 시간으로 이미 생성된 레슨이 있습니다."),
+	LESSON_TIME_OVERLAP(HttpStatus.CONFLICT, "해당 시간대에 이미 다른 레슨이 예정되어 있습니다."),
+
 	/*
 	 * User : 유저 관련 예외처리
 	 */

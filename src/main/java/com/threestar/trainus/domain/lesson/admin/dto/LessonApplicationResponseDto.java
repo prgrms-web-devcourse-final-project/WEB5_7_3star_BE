@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 
 import lombok.Builder;
 
+/**
+ * 개별 레슨 신청자 정보를 담는 데이터
+ */
 @Builder
 public record LessonApplicationResponseDto(
 	Long lessonApplicationId,
