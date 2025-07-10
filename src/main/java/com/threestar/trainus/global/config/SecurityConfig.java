@@ -19,10 +19,15 @@ public class SecurityConfig {
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/api/v1/users/**").permitAll()
-				.anyRequest().authenticated()
+				.requestMatchers("/api/v1/users/**", "/api/lessons/test-auth", "/swagger-ui/**", "/v3/api-docs/**")
+				.permitAll()
+				.anyRequest()
+				.authenticated()
 			)
-			.csrf(csrf -> csrf.disable());
+			.csrf(csrf -> csrf.disable())
+			.cors(cors -> {
+			})
+		;
 
 		return http.build();
 	}
