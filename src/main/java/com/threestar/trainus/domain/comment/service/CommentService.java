@@ -76,4 +76,31 @@ public class CommentService {
 		);
 	}
 
+	@Transactional
+	public void delete(Long commentId, Long userId) {
+		commentRepository.findByCommentIdAndUserId(commentId, userId)
+			.filter(not(Comment::getDeleted))
+			.ifPresent(comment -> {
+				if (hasChildren(comment)) {
+					comment.delete();
+				} else {
+					delete(comment);
+				}
+			});
+	}
+
+	private boolean hasChildren(Comment comment) {
+		return commentRepository.countBy(comment.getLesson().getId(), comment.getCommentId(), 2L) == 2;
+	}
+
+	private void delete(Comment comment) {
+		commentRepository.delete(comment);
+		if (!comment.isRoot()) {
+			commentRepository.findById(comment.getCommentId())
+				.filter(Comment::getDeleted)
+				.filter(not(this::hasChildren))
+				.ifPresent(this::delete);
+		}
+	}
+
 }

@@ -52,4 +52,7 @@ public class Comment extends BaseDateEntity {
 		return parentCommentId.longValue() == commentId;
 	}
 
+	public void delete() {
+		deleted = true;
+	}
 }

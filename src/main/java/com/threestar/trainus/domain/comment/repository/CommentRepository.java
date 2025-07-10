@@ -1,6 +1,7 @@
 package com.threestar.trainus.domain.comment.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,12 +29,29 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
 	@Query(
 		value = "select count(*) from ("
-		+ " select comment_id from comments where lesson_id = :lessonId limit :limit"
-		+ ") t",
+			+ " select comment_id from comments where lesson_id = :lessonId limit :limit"
+			+ ") t",
 		nativeQuery = true
 	)
 	Long count(
 		@Param("lessonId") Long lessonId,
 		@Param("limit") Long limit
 	);
+
+	@Query(
+		value = "select count(*) from ("
+			+ " select comment_id from comments"
+			+ " where lesson_id = :lessonId and parent_comment_id = :parentCommentId"
+			+ " limit :limit"
+			+ ") t",
+		nativeQuery = true
+	)
+	Long countBy(
+		@Param("lessonId") Long lessonId,
+		@Param("parentCommentId") Long parentCommentId,
+		@Param("limit") Long limit
+	);
+
+	Optional<Comment> findByCommentIdAndUserId(Long commentId, Long userId);
+
 }
