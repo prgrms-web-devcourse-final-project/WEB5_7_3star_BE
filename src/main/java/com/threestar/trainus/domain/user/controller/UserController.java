@@ -7,11 +7,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.user.dto.EmailVerificationDto;
+import com.threestar.trainus.domain.user.dto.EmailSendRequestDto;
+import com.threestar.trainus.domain.user.dto.EmailSendResponseDto;
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
 import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
+import com.threestar.trainus.domain.user.service.EmailVerificationService;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
@@ -25,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
 	private final UserService userService;
+	private final EmailVerificationService emailVerificationService;
 
 	@PostMapping("/signup")
 	public ResponseEntity<BaseResponse<SignupResponseDto>> signup(
@@ -56,5 +61,22 @@ public class UserController {
 	) {
 		userService.checkNickname(request.nickname());
 		return BaseResponse.ok("사용가능한 닉네임입니다.", null, HttpStatus.OK);
+	}
+
+	@PostMapping("/verify/email-send")
+	public ResponseEntity<BaseResponse<EmailSendResponseDto>> sendVerificationCode(
+		@Valid @RequestBody EmailSendRequestDto request
+	) {
+		EmailSendResponseDto response = emailVerificationService.sendVerificationCode(request);
+		return BaseResponse.ok("인증 코드가 이메일로 발송되었습니다.", response, HttpStatus.OK);
+	}
+
+
+	@PostMapping("/verify/email-check")
+	public ResponseEntity<BaseResponse<Void>> confirmVerificationCode(
+		@Valid @RequestBody EmailVerificationDto request
+	) {
+		emailVerificationService.verifyCode(request.email(), request.verificationCode());
+		return BaseResponse.ok("이메일 인증이 완료되었습니다.", null, HttpStatus.OK);
 	}
 }
