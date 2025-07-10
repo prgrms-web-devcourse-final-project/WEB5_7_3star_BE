@@ -1,5 +1,7 @@
 package com.threestar.trainus.domain.profile.mapper;
 
+import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
+import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileUpdateRequestDto;
 import com.threestar.trainus.domain.profile.entity.Profile;

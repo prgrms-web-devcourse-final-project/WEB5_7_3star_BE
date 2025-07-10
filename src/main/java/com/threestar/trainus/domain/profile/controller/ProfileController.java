@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileUpdateRequestDto;
+import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
 import com.threestar.trainus.domain.profile.service.ProfileService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
@@ -24,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class ProfileController {
 
 	private final ProfileService profileService;
-
+	private final ProfileFacadeService facadeService;
 	@GetMapping("/{userId}")
 	public ResponseEntity<BaseResponse<ProfileResponseDto>> getProfile(
 		@PathVariable Long userId
@@ -41,5 +43,13 @@ public class ProfileController {
 		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		ProfileResponseDto response = profileService.updateProfile(userId, requestDto);
 		return BaseResponse.ok("프로필 수정이 완료되었습니다.", response, HttpStatus.OK);
+	}
+
+	@GetMapping("{userId}/detail")
+	public ResponseEntity<BaseResponse<ProfileDetailResponseDto>> getProfileDetail(
+		@PathVariable Long userId
+	) {
+		ProfileDetailResponseDto response = facadeService.getProfileDetail(userId);
+		return BaseResponse.ok("프로필 상세 조회가 완료되었습니다.", response, HttpStatus.OK);
 	}
 }
