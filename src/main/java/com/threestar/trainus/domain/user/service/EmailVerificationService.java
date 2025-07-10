@@ -6,13 +6,18 @@ import java.util.Random;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import com.threestar.trainus.domain.user.dto.EmailSendRequestDto;
 import com.threestar.trainus.domain.user.dto.EmailSendResponseDto;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,6 +26,7 @@ public class EmailVerificationService {
 
 	private final RedisTemplate<String, String> redisTemplate;
 	private final JavaMailSender mailSender;
+	private final TemplateEngine templateEngine;
 
 	public EmailSendResponseDto sendVerificationCode(EmailSendRequestDto request) {
 
@@ -29,11 +35,25 @@ public class EmailVerificationService {
 
 		redisTemplate.opsForValue().set("verificationCode:" + email, code, Duration.ofMinutes(5));
 
-		SimpleMailMessage message = new SimpleMailMessage();
-		message.setTo(email);
-		message.setSubject("[TrainUs] 인증 코드");
-		message.setText("인증 코드: " + code);
-		mailSender.send(message);
+		try {
+			MimeMessage mimeMessage = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+			Context context = new Context();
+			context.setVariable("verificationCode", code);
+			context.setVariable("email", email);
+
+			String htmlContent = templateEngine.process("verification", context);
+
+			helper.setTo(email);
+			helper.setSubject("[TrainUs] 인증 코드");
+			helper.setText(htmlContent, true);
+
+			mailSender.send(mimeMessage);
+
+		} catch (MessagingException e) {
+			throw new BusinessException(ErrorCode.EMAIL_SEND_FAILED);
+		}
 
 		return new EmailSendResponseDto(email, 5);
 	}
