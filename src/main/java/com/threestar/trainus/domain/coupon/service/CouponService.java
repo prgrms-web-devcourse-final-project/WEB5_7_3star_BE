@@ -9,6 +9,7 @@ import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.entity.Coupon;
 import com.threestar.trainus.domain.coupon.entity.CouponCategory;
 import com.threestar.trainus.domain.coupon.entity.UserCoupon;
+import com.threestar.trainus.domain.coupon.mapper.UserCouponMapper;
 import com.threestar.trainus.domain.coupon.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.repository.UserCouponRepository;
 import com.threestar.trainus.domain.user.entity.User;
@@ -51,6 +52,6 @@ public class CouponService {
 		UserCoupon userCoupon = new UserCoupon(user, coupon, expirationDate);
 		userCouponRepository.save(userCoupon);
 
-		return CreateUserCouponResponseDto.from(userCoupon);
+		return UserCouponMapper.toCreateUserCouponResponseDto(userCoupon);
 	}
 }
