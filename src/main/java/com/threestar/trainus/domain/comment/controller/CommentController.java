@@ -37,8 +37,8 @@ public class CommentController {
 
 	@GetMapping("{lessonId}")
 	public ResponseEntity<BaseResponse<CommentPageResponseDto>> readAll(@PathVariable Long lessonId,
-		@RequestParam("page") Long page,
-		@RequestParam("pageSize") Long pageSize) {
+		@RequestParam("page") int page,
+		@RequestParam("pageSize") int pageSize) {
 		return BaseResponse.ok("댓글 조회 성공", commentService.readAll(lessonId, page, pageSize), HttpStatus.OK);
 	}
 
