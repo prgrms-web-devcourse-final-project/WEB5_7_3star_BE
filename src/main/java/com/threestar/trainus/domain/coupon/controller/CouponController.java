@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.coupon.dto.CouponPageResponseDto;
 import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.dto.UserCouponPageResponseDto;
 import com.threestar.trainus.domain.coupon.entity.CouponStatus;
@@ -43,5 +44,13 @@ public class CouponController {
 		UserCouponPageResponseDto dto = couponService.getUserCoupons(userId, status);
 
 		return BaseResponse.ok("사용자 보유 쿠폰 조회 성공", dto, HttpStatus.OK);
+	}
+
+	@GetMapping
+	public ResponseEntity<BaseResponse<CouponPageResponseDto>> getCoupons(HttpSession session) {
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
+		CouponPageResponseDto dto = couponService.getCoupons(userId);
+
+		return BaseResponse.ok("발급가능한 쿠폰 조회 성공", dto, HttpStatus.OK);
 	}
 }
