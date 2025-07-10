@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Table(name = "comments")
 @Entity
@@ -41,6 +42,7 @@ public class Comment extends BaseDateEntity {
 	@Column(length = 50, nullable = false)
 	private String content;
 
+	@Setter
 	private Long parentCommentId;
 
 	@Column(nullable = false)
@@ -49,4 +51,5 @@ public class Comment extends BaseDateEntity {
 	public boolean isRoot() {
 		return parentCommentId.longValue() == commentId;
 	}
+
 }
