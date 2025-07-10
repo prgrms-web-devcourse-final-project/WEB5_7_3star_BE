@@ -56,7 +56,7 @@ public class CouponService {
 		UserCoupon userCoupon = new UserCoupon(user, coupon, expirationDate);
 		userCouponRepository.save(userCoupon);
 
-		return CreateUserCouponResponseDto.from(userCoupon);
+		return UserCouponMapper.toCreateUserCouponResponseDto(userCoupon);
 	}
 
 	@Transactional(readOnly = true)
