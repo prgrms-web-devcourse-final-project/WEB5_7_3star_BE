@@ -1,7 +1,5 @@
 package com.threestar.trainus.domain.user.service;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,14 +51,7 @@ public class UserService {
 			throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
 		}
 
-		// ✅ 스프링 시큐리티 인증 객체 생성 및 저장
-		UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
-		UsernamePasswordAuthenticationToken authentication =
-			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-		SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-		securityContext.setAuthentication(authentication);
-		session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
+		session.setAttribute("LOGIN_USER", user.getId());
 
 		return UserMapper.toLoginResponseDto(user);
 	}
