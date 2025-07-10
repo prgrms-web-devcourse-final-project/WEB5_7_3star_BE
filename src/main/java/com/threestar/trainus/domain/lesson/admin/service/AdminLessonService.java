@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
@@ -130,6 +131,46 @@ public class AdminLessonService {
 			applicationPage.getContent(),
 			applicationPage.getTotalElements()
 		);
+	}
+
+	//레슨 신청 승인/거절 처리
+	@Transactional
+	public ApplicationProcessDto processLessonApplication(
+		Long lessonApplicationId, String action, Long userId) {
+
+		// 신청 존재 확인
+		LessonApplication application = lessonApplicationRepository.findById(lessonApplicationId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
+
+		// 강사 권한 확인 -> 해당 레슨의 강사인지 확인
+		Lesson lesson = application.getLesson();
+		if (!lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
+		}
+
+		// 이미 처리된 신청인지 확인(대기중아니라면 -> 이미 승인이나 거절처리 된거니까)
+		if (!application.getStatus().equals(ApplicationStatus.PENDING)) {
+			throw new BusinessException(ErrorCode.LESSON_APPLICATION_ALREADY_PROCESSED);
+		}
+
+		//승인/거절 처리
+		if ("APPROVED".equals(action)) {
+			application.approve();
+		} else if ("DENIED".equals(action)) {
+			application.deny();
+		} else {
+			throw new BusinessException(ErrorCode.INVALID_APPLICATION_ACTION);
+		}
+
+		LessonApplication savedApplication = lessonApplicationRepository.save(application);
+
+		// 응답 DTO 생성
+		return ApplicationProcessDto.builder()
+			.lessonApplicationId(savedApplication.getId())
+			.userId(savedApplication.getUser().getId())
+			.status(savedApplication.getStatus().name())
+			.processedAt(savedApplication.getUpdatedAt())
+			.build();
 	}
 
 	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크

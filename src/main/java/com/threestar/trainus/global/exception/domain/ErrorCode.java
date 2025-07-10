@@ -58,11 +58,17 @@ public enum ErrorCode {
 	INVALID_LESSON_DATE(HttpStatus.BAD_REQUEST, "레슨 날짜가 유효하지 않습니다."),
 	LESSON_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 레슨입니다."),
 	INVALID_APPLICATION_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 신청 상태입니다. (ALL, PENDING, APPROVED, DENIED)"),
+	INVALID_APPLICATION_ACTION(HttpStatus.BAD_REQUEST, "유효하지 않은 동작입니다. (APPROVED, DENIED)"),
 
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),
 	LESSON_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 접근 권한이 없습니다. 강사만 조회할 수 있습니다."),
 
+	//404
+	LESSON_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 레슨 신청을 찾을 수 없습니다."),
+
+	// 409 Conflict
+	LESSON_APPLICATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 레슨 신청입니다."),
 	/*
 	 * User : 유저 관련 예외처리
 	 */

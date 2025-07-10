@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.lesson.admin.dto.ApplicationActionDto;
+import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
@@ -92,4 +94,29 @@ public class AdminLessonController {
 
 		return BaseResponse.ok("레슨 신청자 목록 조회 완료.", responseDto, HttpStatus.OK);
 	}
+
+	//레슨 신청 승인/거절
+	@PostMapping("/lessons/applications/{lessonApplicationId}")
+	public ResponseEntity<BaseResponse<ApplicationProcessDto>> processLessonApplication(
+		@PathVariable Long lessonApplicationId,
+		@Valid @RequestBody ApplicationActionDto requestDto,
+		HttpSession session) {
+
+		// 세션 기반 인증 체크
+		Long userId = (Long)session.getAttribute("userId");
+		if (userId == null) {
+			// 테스트용 임시 처리
+			userId = 1L;
+			session.setAttribute("userId", userId);
+			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);로 변경예정
+		}
+
+		// 신청 승인/거절 처리
+		ApplicationProcessDto responseDto = adminLessonService
+			.processLessonApplication(lessonApplicationId, requestDto.action(), userId);
+
+		return BaseResponse.ok("레슨 신청 " + (requestDto.action().equals("APPROVED") ? "승인" : "거절"), responseDto,
+			HttpStatus.OK);
+	}
+
 }
