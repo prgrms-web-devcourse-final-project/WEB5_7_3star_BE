@@ -66,12 +66,12 @@ public class CommentService {
 	}
 
 	@Transactional(readOnly = true)
-	public CommentPageResponseDto readAll(Long lessonId, Long page, Long pageSize) {
+	public CommentPageResponseDto readAll(Long lessonId, int page, int pageSize) {
 		return CommentMapper.toCommentPageResponseDto(
 			commentRepository.findAll(lessonId, (page - 1) * pageSize, pageSize)
 				.stream().map(CommentMapper::toCommentResponseDto)
 				.toList(),
-			commentRepository.count(lessonId, PageLimitCalculator.calculatePageLimit(page, pageSize, 5L))
+			commentRepository.count(lessonId, PageLimitCalculator.calculatePageLimit(page, pageSize, 5))
 			//한번에 보일 수 있는 페이지 이동 갯수 5개(프론트와 협의)
 		);
 	}
@@ -90,7 +90,7 @@ public class CommentService {
 	}
 
 	private boolean hasChildren(Comment comment) {
-		return commentRepository.countBy(comment.getLesson().getId(), comment.getCommentId(), 2L) == 2;
+		return commentRepository.countBy(comment.getLesson().getId(), comment.getCommentId(), 2) == 2;
 	}
 
 	private void delete(Comment comment) {

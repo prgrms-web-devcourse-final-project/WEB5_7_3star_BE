@@ -23,8 +23,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 	)
 	List<Comment> findAll(
 		@Param("lessonId") Long lessonId,
-		@Param("offset") Long offset,
-		@Param("limit") Long limit
+		@Param("offset") int offset,
+		@Param("limit") int limit
 	);
 
 	@Query(
@@ -35,7 +35,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 	)
 	Long count(
 		@Param("lessonId") Long lessonId,
-		@Param("limit") Long limit
+		@Param("limit") int limit
 	);
 
 	@Query(
@@ -49,7 +49,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 	Long countBy(
 		@Param("lessonId") Long lessonId,
 		@Param("parentCommentId") Long parentCommentId,
-		@Param("limit") Long limit
+		@Param("limit") int limit
 	);
 
 	Optional<Comment> findByCommentIdAndUserId(Long commentId, Long userId);
