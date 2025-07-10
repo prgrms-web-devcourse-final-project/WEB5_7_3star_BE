@@ -8,14 +8,15 @@ import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
+import com.threestar.trainus.domain.user.entity.User;
 
 @Component
 public class LessonMapper {
 
 	//레슨 생성 요청 DTO를 레슨 엔티티로 변환
-	public Lesson toEntity(LessonCreateRequestDto requestDto, Long userId) {
+	public Lesson toEntity(LessonCreateRequestDto requestDto, User user) {
 		return Lesson.builder()
-			.lessonLeader(userId)  //TODO:이것도 user완성되면 .lessonLeader(user.getId())수정해야된다...
+			.lessonLeader(user.getId())
 			.lessonName(requestDto.lessonName())
 			.description(requestDto.description())
 			.maxParticipants(requestDto.maxParticipants())

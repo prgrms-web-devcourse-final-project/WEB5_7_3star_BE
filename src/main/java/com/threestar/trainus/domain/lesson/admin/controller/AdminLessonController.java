@@ -41,10 +41,11 @@ public class AdminLessonController {
 		//로그인한 사용자만 레슨을 생성할 수 있음
 		Long userId = (Long)session.getAttribute("userId");
 		if (userId == null) {
-			//테스트용
-			userId = 1L;
+			userId = 1L;  // 자동으로 1L 설정
+			session.setAttribute("userId", userId);
 			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
+
 		LessonResponseDto responseDto = adminLessonService.createLesson(requestDto, userId);
 		return BaseResponse.ok("레슨이 생성되었습니다.", responseDto, HttpStatus.CREATED);
 	}
@@ -58,8 +59,9 @@ public class AdminLessonController {
 		//세션을 기반으로 인증
 		Long userId = (Long)session.getAttribute("userId");
 		if (userId == null) {
-			userId = 1L; // 테스트용 임시 값
-			//TODO: user업뎃하면, throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+			userId = 1L;  // 자동으로 1L 설정
+			session.setAttribute("userId", userId);
+			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 레슨 삭제
@@ -79,8 +81,9 @@ public class AdminLessonController {
 		// 세션 기반 인증 체크
 		Long userId = (Long)session.getAttribute("userId");
 		if (userId == null) {
-			userId = 1L; // 테스트용 임시
-			// TODO : throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);로 변경예정
+			userId = 1L;  // 자동으로 1L 설정
+			session.setAttribute("userId", userId);
+			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 신청자 목록 조회

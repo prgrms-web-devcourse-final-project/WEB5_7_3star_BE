@@ -57,11 +57,4 @@ public class LessonApplication extends BaseDateEntity {
 	public void deny() {
 		this.status = ApplicationStatus.DENIED;
 	}
-
-	//TODO: User완성되면 삭제, 일단은 임시로 넣어둠
-	public Long getUserId() {
-		return this.user != null ? this.user.getId() : null;
-	}
-
 }
-

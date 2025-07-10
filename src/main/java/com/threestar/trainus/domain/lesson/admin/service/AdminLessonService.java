@@ -21,6 +21,8 @@ import com.threestar.trainus.domain.lesson.admin.mapper.LessonMapper;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonApplicationRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.domain.user.entity.User;
+import com.threestar.trainus.domain.user.repository.UserRepository;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -36,19 +38,19 @@ public class AdminLessonService {
 	private final LessonRepository lessonRepository;           // 레슨 DB 접근
 	private final LessonImageRepository lessonImageRepository; // 레슨 이미지 DB 접근
 	private final LessonMapper lessonMapper;
-	// private final UserRepository userRepository; TODO: User 완성되면, UserRepository 추가
+	private final UserRepository userRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
 	private final LessonApplicationMapper lessonApplicationMapper; // 신청자 목록용 Mapper
 
 	// 새로운 레슨을 생성하는 메서드
 	@Transactional
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
-		// TODO: User 완성되면,  User 조회 로직 추가
-		// User user = userRepository.findById(userId)
-		//     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		// User 조회
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-		// 일단은, 임시로 Long userId 사용
-		Lesson lesson = lessonMapper.toEntity(requestDto, userId);
+		// User 엔티티를 전달하여 레슨 생성
+		Lesson lesson = lessonMapper.toEntity(requestDto, user);
 
 		// 레슨을 DB에 저장
 		Lesson savedLesson = lessonRepository.save(lesson);
@@ -56,13 +58,12 @@ public class AdminLessonService {
 		// 레슨 이미지들을 DB에 저장
 		List<LessonImage> savedImages = saveLessonImages(savedLesson, requestDto.lessonImages());
 
-		// 저장된 엔티티를 응답 DTO로 변환하여 반환
 		return lessonMapper.toResponseDto(savedLesson, savedImages);
 	}
 
 	// 레슨 이미지들을 db에 저장하는 메서드
 	private List<LessonImage> saveLessonImages(Lesson lesson, List<String> imageUrls) {
-		// null 체크: 이미지가 없는 경우 빈 리스트 반환
+		// 이미지가 없는 경우 빈 리스트 반환
 		if (imageUrls == null || imageUrls.isEmpty()) {
 			return List.of();
 		}
@@ -81,6 +82,10 @@ public class AdminLessonService {
 	//레슨 삭제
 	@Transactional
 	public void deleteLesson(Long lessonId, Long userId) {
+		// User 존재 확인
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
 		//레슨 조회
 		Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(() -> new BusinessException(
 			ErrorCode.LESSON_NOT_FOUND));
@@ -129,6 +134,10 @@ public class AdminLessonService {
 
 	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크
 	private Lesson validateLessonAccess(Long lessonId, Long userId) {
+		// User 존재 확인
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
 		// 레슨 존재하는지 확인
 		Lesson lesson = lessonRepository.findById(lessonId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));

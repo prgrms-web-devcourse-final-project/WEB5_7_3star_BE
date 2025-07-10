@@ -13,19 +13,16 @@ import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
 public class LessonApplicationMapper {
 	//LessonApplication 엔티티를 LessonApplicationResponseDto로 변환
 	public LessonApplicationResponseDto toResponseDto(LessonApplication application) {
-		// TODO: User 도메인 완성 후 ProfileDto 사용으로 변경
-		// UserProfileDto userProfileDto = userService.getUserProfile(application.getUser().getId());
-
-		// 일단, 임시 UserSimpleDto로
+		// User 엔티티에서 정보 가져오기
 		UserSimpleDto userDto = UserSimpleDto.builder()
-			.id(application.getUserId()) // TODO: User 엔티티 완성 후 application.getUser().getId()로 변경
-			.nickname("사용자" + application.getUserId()) // TODO: UserProfileDto의 nickname 필드로 변경
-			.profileImage("https://default-profile.com/default.jpg") // TODO: UserProfileDto의 profileImage 필드로 변경
+			.id(application.getUser().getId())
+			.nickname(application.getUser().getNickname())
+			.profileImage(application.getUser().getProfile().getProfileImage())
 			.build();
 
 		return LessonApplicationResponseDto.builder()
 			.lessonApplicationId(application.getId())
-			.user(userDto) // TODO: ProfileDto로 변경
+			.user(userDto)
 			.status(application.getStatus().name())
 			.appliedAt(application.getCreatedAt())
 			.build();
@@ -47,3 +44,4 @@ public class LessonApplicationMapper {
 			.build();
 	}
 }
+
