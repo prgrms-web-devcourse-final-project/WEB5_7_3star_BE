@@ -6,7 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
+import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
+import com.threestar.trainus.domain.metadata.repository.ProfileMetadataRepository;
 import com.threestar.trainus.domain.review.dto.ReviewCreateRequestDto;
 import com.threestar.trainus.domain.review.dto.ReviewCreateResponseDto;
 import com.threestar.trainus.domain.review.dto.ReviewPageResponseDto;
@@ -28,6 +31,8 @@ public class ReviewService {
 	private final ReviewRepository reviewRepository;
 	private final LessonRepository lessonRepository;
 	private final UserRepository userRepository;
+	private final ProfileMetadataRepository profileMetadataRepository;
+	private final LessonParticipantRepository lessonParticipantRepository;
 
 	//참여자 테이블에 있는지도 검증 필요 횟수도 한번으로 제한
 
@@ -47,6 +52,15 @@ public class ReviewService {
 		User lessonLeader = userRepository.findById(findLesson.getLessonLeader())
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+		//참여자 테이블 검증 추후 추가 -> lessonId 와 userId 다 갖고 있는지
+		if (!lessonParticipantRepository.existsByLessonIdAndUserId(findLesson.getId(),
+			findUser.getId())) {
+			throw new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT);
+		}
+		if (reviewRepository.existsByReviewer_IdAndLessonId(findUser.getId(), findLesson.getId())) {
+			throw new BusinessException(ErrorCode.INVALID_REVIEW_COUNT);
+		}
+
 		Review newReview = reviewRepository.save(Review.builder()
 			.reviewer(findUser)
 			.reviewee(lessonLeader)
@@ -56,7 +70,12 @@ public class ReviewService {
 			.image(reviewRequestDto.getReviewImage())
 			.build());
 
-		//MetaData에 데이터 추가 로직 필요
+		ProfileMetadata profileMetadata = profileMetadataRepository.findWithLockByUserId(
+				lessonLeader.getId())  //비관적 락 적용
+			.orElseThrow(() -> new BusinessException(ErrorCode.METADATA_NOT_FOUND));
+
+		profileMetadata.increaseReviewCount();
+		profileMetadata.setRating(profileMetadata.updateRating(reviewRequestDto.getRating()));
 
 		return ReviewMapper.toReviewResponseDto(newReview);
 	}

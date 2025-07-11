@@ -14,6 +14,8 @@ import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.dto.UserCouponPageResponseDto;
 import com.threestar.trainus.domain.coupon.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.service.CouponService;
+import com.threestar.trainus.global.exception.domain.ErrorCode;
+import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
 
 import jakarta.servlet.http.HttpSession;
@@ -31,6 +33,9 @@ public class CouponController {
 		HttpSession session
 	) {
 		Long userId = (Long)session.getAttribute("LOGIN_USER");
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		}
 		CreateUserCouponResponseDto dto = couponService.createUserCoupon(userId, couponId);
 
 		return BaseResponse.ok("쿠폰 발급 완료", dto, HttpStatus.CREATED);
@@ -41,6 +46,9 @@ public class CouponController {
 		@RequestParam(required = false) CouponStatus status, HttpSession session
 	) {
 		Long userId = (Long)session.getAttribute("LOGIN_USER");
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		}
 		UserCouponPageResponseDto dto = couponService.getUserCoupons(userId, status);
 
 		return BaseResponse.ok("사용자 보유 쿠폰 조회 성공", dto, HttpStatus.OK);
@@ -49,6 +57,9 @@ public class CouponController {
 	@GetMapping
 	public ResponseEntity<BaseResponse<CouponPageResponseDto>> getCoupons(HttpSession session) {
 		Long userId = (Long)session.getAttribute("LOGIN_USER");
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		}
 		CouponPageResponseDto dto = couponService.getCoupons(userId);
 
 		return BaseResponse.ok("발급가능한 쿠폰 조회 성공", dto, HttpStatus.OK);

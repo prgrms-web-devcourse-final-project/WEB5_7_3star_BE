@@ -37,22 +37,30 @@ public class CouponService {
 	public CreateUserCouponResponseDto createUserCoupon(Long userId, Long couponId) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-		Coupon coupon = couponRepository.findById(couponId)
+		Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
 
 		//쿠폰 발급 종료시각이 지났으면 예외처리
 		if (LocalDateTime.now().isAfter(coupon.getCloseAt())) {
 			throw new BusinessException(ErrorCode.COUPON_EXPIRED);
 		}
-		//선착순 쿠폰 발급 시 오픈시각 전이라면 예외처리
-		if (coupon.getCategory() == CouponCategory.OPEN_RUN && LocalDateTime.now().isBefore(coupon.getOpenAt())) {
-			throw new BusinessException(ErrorCode.COUPON_NOT_YET_OPEN);
-		}
 		//중복 발급 방지
 		boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(userId, couponId);
 		if (alreadyIssued) {
 			throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
 		}
+		if (coupon.getCategory() == CouponCategory.OPEN_RUN) {
+			//선착순 쿠폰 발급 시 오픈시각 전이라면 예외처리
+			if (LocalDateTime.now().isBefore(coupon.getOpenAt())) {
+				throw new BusinessException(ErrorCode.COUPON_NOT_YET_OPEN);
+			}
+			//선착순 쿠폰 발급 시 수량이 소진되면 예외처리
+			if (coupon.getQuantity() <= 0) {
+				throw new BusinessException(ErrorCode.COUPON_BE_EXHAUSTED);
+			}
+			coupon.decreaseQuantity();
+		}
+
 		LocalDateTime expirationDate = coupon.getExpirationDate();
 
 		UserCoupon userCoupon = new UserCoupon(user, coupon, expirationDate);
