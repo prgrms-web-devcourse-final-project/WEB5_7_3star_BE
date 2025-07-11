@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.user.entity.User;
+import com.threestar.trainus.global.entity.BaseDateEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Review {
+public class Review extends BaseDateEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
