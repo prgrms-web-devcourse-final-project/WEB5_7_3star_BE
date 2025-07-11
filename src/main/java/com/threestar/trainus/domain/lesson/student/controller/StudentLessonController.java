@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
@@ -101,5 +102,14 @@ public class StudentLessonController {
 		MyLessonApplicationListResponseDto response = studentLessonService.getMyLessonApplications(userId, page, limit,
 			status);
 		return BaseResponse.ok("나의 레슨 신청 목록 조회 완료.", response, HttpStatus.OK);
+	}
+
+	@GetMapping("/summary/{lessonId}")
+	@Operation(summary = "레슨 간단 조회", description = "레슨 ID로 간단 정보를 조회합니다.")
+	public ResponseEntity<BaseResponse<LessonSimpleResponseDto>> getLessonSimple(
+		@PathVariable Long lessonId
+	) {
+		LessonSimpleResponseDto response = studentLessonService.getLessonSimple(lessonId);
+		return BaseResponse.ok("레슨 간단 조회 완료.", response, HttpStatus.OK);
 	}
 }
