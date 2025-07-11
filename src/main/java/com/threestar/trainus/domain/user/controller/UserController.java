@@ -5,6 +5,7 @@ import java.security.Principal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +29,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 
 @Tag(name = "유저 API", description = "유저 API")
 @RestController
@@ -79,7 +79,6 @@ public class UserController {
 		return BaseResponse.ok("인증 코드가 이메일로 발송되었습니다.", response, HttpStatus.OK);
 	}
 
-
 	@PostMapping("/verify/email-check")
 	public ResponseEntity<BaseResponse<Void>> confirmVerificationCode(
 		@Valid @RequestBody EmailVerificationDto request
@@ -90,25 +89,18 @@ public class UserController {
 
 	//SecurityContext에 잘 올라간 지 테스트
 	@GetMapping("/test-context")
-	public String testSecurityContext(Principal principal, HttpSession session) {
-		Long sessionUserId = (Long) session.getAttribute("LOGIN_USER");
+	public String testSecurityContext(@AuthenticationPrincipal Long userId, HttpSession session) {
+		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
 
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		Long contextUserId = null;
 		if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
-			contextUserId = (Long) auth.getPrincipal();
+			contextUserId = (Long)auth.getPrincipal();
 		}
 
-		Long principalUserId = null;
-		if (principal != null) {
-			try {
-				principalUserId = Long.valueOf(principal.getName());
-			} catch (NumberFormatException e) {
-				principalUserId = null;
-			}
-		}
+		Long principalUserId = userId;
 
-		return String.format("Session: %s, Context: %s, Principal: %s",
+		return String.format("Session: %s, Context: %s, AuthPrincipal: %s",
 			sessionUserId, contextUserId, principalUserId);
 	}
 }
