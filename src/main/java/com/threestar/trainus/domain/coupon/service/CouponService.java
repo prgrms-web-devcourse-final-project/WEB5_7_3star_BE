@@ -70,9 +70,9 @@ public class CouponService {
 		List<UserCoupon> userCoupons;
 
 		if (status == null) {
-			userCoupons = userCouponRepository.findAllByUserId(userId);
+			userCoupons = userCouponRepository.findAllByUserIdWithCoupon(userId);
 		} else {
-			userCoupons = userCouponRepository.findAllByUserIdAndStatus(userId, status);
+			userCoupons = userCouponRepository.findAllByUserIdAndStatusWithCoupon(userId, status);
 		}
 		List<UserCouponResponseDto> couponDtos = UserCouponMapper.toDtoList(userCoupons);
 		return new UserCouponPageResponseDto(couponDtos);
