@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
+import com.threestar.trainus.domain.lesson.admin.entity.Category;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
@@ -20,8 +21,6 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponse
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
-import com.threestar.trainus.domain.lesson.student.dto.PaginationDto;
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.profile.entity.Profile;
