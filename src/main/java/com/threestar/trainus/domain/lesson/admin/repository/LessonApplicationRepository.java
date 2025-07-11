@@ -23,6 +23,10 @@ public interface LessonApplicationRepository extends JpaRepository<LessonApplica
 
 	// 특정 레슨 신청 조회
 	Optional<LessonApplication> findByLessonIdAndUserId(Long lessonId, Long userId);
+
+	Page<LessonApplication> findByUserId(Long userId, Pageable pageable);
+
+	Page<LessonApplication> findByUserIdAndStatus(Long userId, ApplicationStatus status, Pageable pageable);
 }
 
 

@@ -2,7 +2,11 @@ package com.threestar.trainus.domain.lesson.student.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
@@ -21,6 +25,9 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponse
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.LessonSummaryResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationResponseDto;
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.profile.entity.Profile;
@@ -201,5 +208,51 @@ public class StudentLessonService {
 		}
 
 		lessonApplicationRepository.delete(application);
+	}
+
+	@Transactional
+	public MyLessonApplicationListResponseDto getMyLessonApplications(Long userId, int page, int limit, String statusStr) {
+		// status enum 변환
+		ApplicationStatus status = null;
+		if (!statusStr.equalsIgnoreCase("ALL")) {
+			//status value 검증
+			try {
+				status = ApplicationStatus.valueOf(statusStr.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				throw new BusinessException(ErrorCode.INVALID_APPLICATION_STATUS);
+			}
+		}
+
+		// 페이징 정렬
+		Pageable pageable = PageRequest.of(page - 1, limit);
+
+		// 신청 내역 조회
+		Page<LessonApplication> applicationPage = (status == null)
+			? lessonApplicationRepository.findByUserId(userId, pageable)
+			: lessonApplicationRepository.findByUserIdAndStatus(userId, status, pageable);
+
+		// DTO 변환
+		List<MyLessonApplicationResponseDto> applications = applicationPage.getContent().stream()
+			.map(app -> MyLessonApplicationResponseDto.builder()
+				.lessonApplicationId(app.getId())
+				// 레슨 정보
+				.lesson(LessonSummaryResponseDto.builder()
+					.id(app.getLesson().getId())
+					.lessonName(app.getLesson().getLessonName())
+					.lessonLeader(app.getLesson().getLessonLeader())
+					.startAt(app.getLesson().getStartAt())
+					.price(app.getLesson().getPrice())
+					.addressDetail(app.getLesson().getAddressDetail())
+					.build())
+				// 신청 정보
+				.status(app.getStatus().name())
+				.appliedAt(app.getCreatedAt())
+				.build())
+			.collect(Collectors.toList());
+
+		return MyLessonApplicationListResponseDto.builder()
+			.lessonApplications(applications)
+			.count((int) applicationPage.getTotalElements())
+			.build();
 	}
 }
