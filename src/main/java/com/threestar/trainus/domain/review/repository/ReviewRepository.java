@@ -9,7 +9,10 @@ import org.springframework.data.repository.query.Param;
 import com.threestar.trainus.domain.review.entity.Review;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
+
 	List<Review> findByReviewee_Id(Long userId);
+
+	boolean existsByReviewer_IdAndLessonId(Long reviewerId, Long lessonId);
 
 	@Query(
 		value = "select count(*) from ("
