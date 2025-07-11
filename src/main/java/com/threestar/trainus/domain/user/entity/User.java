@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.threestar.trainus.domain.coupon.entity.UserCoupon;
+import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.global.entity.BaseDateEntity;
 
@@ -53,8 +54,11 @@ public class User extends BaseDateEntity {
 
 	private LocalDateTime deletedAt;
 
-	@OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
 	private Profile profile;
+
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+	private ProfileMetadata profileMetadata;
 
 	@OneToMany(mappedBy = "user")
 	private List<UserCoupon> userCoupons = new ArrayList<>();
