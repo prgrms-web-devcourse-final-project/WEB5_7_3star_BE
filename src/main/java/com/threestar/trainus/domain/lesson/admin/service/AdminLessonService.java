@@ -43,12 +43,8 @@ public class AdminLessonService {
 
 	private final LessonRepository lessonRepository;           // 레슨 DB 접근
 	private final LessonImageRepository lessonImageRepository; // 레슨 이미지 DB 접근
-	private final LessonMapper lessonMapper;
 	private final UserRepository userRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
-	private final LessonApplicationMapper lessonApplicationMapper; // 신청자 목록용 Mapper
-	private final LessonParticipantMapper lessonParticipantMapper; // 참가자 목록용 mapper
-	private final CreatedLessonMapper createdLessonMapper; //생성한 레슨 목록용 mapper
 
 	// 새로운 레슨을 생성하는 메서드
 	@Transactional
@@ -78,7 +74,7 @@ public class AdminLessonService {
 		}
 
 		// User 엔티티로 레슨 생성
-		Lesson lesson = lessonMapper.toEntity(requestDto, user);
+		Lesson lesson = LessonMapper.toEntity(requestDto, user);
 
 		// 레슨 저장
 		Lesson savedLesson = lessonRepository.save(lesson);
@@ -87,7 +83,7 @@ public class AdminLessonService {
 		List<LessonImage> savedImages = saveLessonImages(savedLesson, requestDto.lessonImages());
 
 		// 응답 DTO 반환
-		return lessonMapper.toResponseDto(savedLesson, savedImages);
+		return LessonMapper.toResponseDto(savedLesson, savedImages);
 	}
 
 	// 레슨 이미지들을 db에 저장하는 메서드
@@ -155,7 +151,7 @@ public class AdminLessonService {
 		}
 
 		//dto변환
-		return lessonApplicationMapper.toListResponseDto(
+		return LessonApplicationMapper.toListResponseDto(
 			applicationPage.getContent(),
 			applicationPage.getTotalElements()
 		);
@@ -218,7 +214,7 @@ public class AdminLessonService {
 			.findByLessonAndStatus(lesson, ApplicationStatus.APPROVED, pageable);
 
 		// dto 변환
-		return lessonParticipantMapper.toParticipantsResponseDto(
+		return LessonParticipantMapper.toParticipantsResponseDto(
 			participantPage.getContent(),
 			participantPage.getTotalElements()
 		);
@@ -247,7 +243,7 @@ public class AdminLessonService {
 		}
 
 		// dto 변환
-		return createdLessonMapper.toCreatedLessonListResponseDto(
+		return CreatedLessonMapper.toCreatedLessonListResponseDto(
 			lessonPage.getContent(),
 			lessonPage.getTotalElements()
 		);
@@ -299,4 +295,3 @@ public class AdminLessonService {
 	}
 
 }
-
