@@ -45,11 +45,9 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		//로그인한 사용자만 레슨을 생성할 수 있음
-		Long userId = (Long)session.getAttribute("userId");
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		if (userId == null) {
-			userId = 1L;  // 자동으로 1L 설정
-			session.setAttribute("userId", userId);
-			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		LessonResponseDto responseDto = adminLessonService.createLesson(requestDto, userId);
@@ -63,11 +61,9 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		//세션을 기반으로 인증
-		Long userId = (Long)session.getAttribute("userId");
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		if (userId == null) {
-			userId = 1L;  // 자동으로 1L 설정
-			session.setAttribute("userId", userId);
-			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 레슨 삭제
@@ -85,11 +81,9 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		// 세션 기반 인증 체크
-		Long userId = (Long)session.getAttribute("userId");
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		if (userId == null) {
-			userId = 1L;  // 자동으로 1L 설정
-			session.setAttribute("userId", userId);
-			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 신청자 목록 조회
@@ -107,12 +101,9 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		// 세션 기반 인증 체크
-		Long userId = (Long)session.getAttribute("userId");
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		if (userId == null) {
-			// 테스트용 임시 처리
-			userId = 1L;
-			session.setAttribute("userId", userId);
-			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);로 변경예정
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 신청 승인/거절 처리
@@ -132,12 +123,9 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		// 세션 기반 인증 체크
-		Long userId = (Long)session.getAttribute("userId");
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		if (userId == null) {
-			// 테스트용 임시 처리
-			userId = 1L;
-			session.setAttribute("userId", userId);
-			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 참가자 목록 조회
@@ -157,12 +145,9 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		// 내가 개설한 레슨만 조회 가능 -> 세션기반인증
-		Long sessionUserId = (Long)session.getAttribute("userId");
+		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
 		if (sessionUserId == null) {
-			// 테스트용 임시 처리
-			sessionUserId = 1L;
-			session.setAttribute("userId", sessionUserId);
-			// throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);로 변경예정
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 내가 개설한 레슨만 조회 가능!!
