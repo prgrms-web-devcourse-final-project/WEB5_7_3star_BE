@@ -28,7 +28,7 @@ public class SecurityConfig {
 		http
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/api/v1/users/**", "/api/lessons/test-auth", "/swagger-ui/**", "/v3/api-docs/**",
-					"/api/v1/profiles/**")
+					"/api/v1/profiles/**", "/api/v1/lessons/**")
 				.permitAll()
 				.anyRequest()
 				.authenticated()
@@ -40,7 +40,8 @@ public class SecurityConfig {
 				.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
 			)
 			.csrf(csrf -> csrf.disable())
-			.cors(cors -> {});
+			.cors(cors -> {
+			});
 
 		return http.build();
 	}
