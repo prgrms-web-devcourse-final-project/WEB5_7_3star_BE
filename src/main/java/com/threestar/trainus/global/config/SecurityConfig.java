@@ -20,7 +20,7 @@ public class SecurityConfig {
 		http
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/api/v1/users/**", "/api/v1/lessons/**", "/api/lessons/test-auth", "/swagger-ui/**",
-					"/v3/api-docs/**")
+					"/v3/api-docs/**", "/api/v1/profiles/**")
 				.permitAll()
 				.anyRequest()
 				.authenticated()
