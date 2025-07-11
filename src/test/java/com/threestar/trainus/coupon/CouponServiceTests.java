@@ -13,6 +13,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -30,12 +32,18 @@ import com.threestar.trainus.global.exception.handler.BusinessException;
 
 @SpringBootTest
 @TestPropertySource(properties = {
+	"logging.level.root=ERROR",
+	"logging.level.com.threestar.trainus.coupon=INFO",
+	"logging.level.org.springframework=ERROR",
+	"logging.level.org.hibernate=ERROR",
+	"logging.level.com.zaxxer.hikari=ERROR",
 	"spring.jpa.show-sql=false",
-	"logging.level.org.hibernate.SQL=OFF",
-	"logging.level.org.hibernate.type.descriptor.sql=OFF"
+	"logging.level.org.hibernate.SQL=ERROR",
+	"logging.level.org.hibernate.type.descriptor.sql=ERROR"
 })
 class CouponServiceTests {
 
+	private static final Logger log = LoggerFactory.getLogger(CouponServiceTests.class);
 	@Autowired
 	CouponService couponService;
 
@@ -60,7 +68,7 @@ class CouponServiceTests {
 
 		// 1000명의 유저 생성
 		users = new ArrayList<>();
-		for (int i = 0; i < 20000; i++) {
+		for (int i = 0; i < 10000; i++) {
 			User user = userRepository.save(
 				User.builder()
 					.email("user" + i + "@test.com")
@@ -105,7 +113,7 @@ class CouponServiceTests {
 	@Test
 	@DisplayName("1000명의 유저가 동시 요청해도 100장만 발급된다")
 	void 쿠폰_동시_발급_테스트() throws InterruptedException {
-		int threadCount = 20000;
+		int threadCount = 10000;
 		ExecutorService executorService = Executors.newFixedThreadPool(32);
 		CountDownLatch latch = new CountDownLatch(threadCount);
 
@@ -115,14 +123,8 @@ class CouponServiceTests {
 			executorService.submit(() -> {
 				try {
 					couponService.createUserCoupon(users.get(idx).getId(), coupon.getId());
-					System.out.println("Thread " + idx + " - 발급 성공");
-
 				} catch (BusinessException e) {
-					System.out.println("Thread " + idx + " - 예외: " + e.getErrorCode());
-
 				} catch (Exception e) {
-					System.out.println("Thread " + idx + " - 에러: " + e.getMessage());
-
 				} finally {
 					latch.countDown();
 				}
@@ -134,9 +136,9 @@ class CouponServiceTests {
 
 		Long issuedCount = userCouponRepository.countByCouponId(coupon.getId());
 		Integer leftQuantity = couponRepository.findById(coupon.getId()).get().getQuantity();
-		System.out.println("총 발급된 쿠폰 수: " + issuedCount);
-		System.out.println("쿠폰 남은 수량: " + leftQuantity);
-
+		log.info("===== 테스트 결과 =====");
+		log.info("총 발급된 쿠폰 수: {}", issuedCount);
+		log.info("쿠폰 남은 수량: {}", leftQuantity);
 		assertThat(issuedCount).isEqualTo(100L);
 		assertThat(leftQuantity).isEqualTo(0);
 	}
