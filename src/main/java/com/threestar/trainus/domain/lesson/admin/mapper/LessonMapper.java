@@ -2,20 +2,18 @@ package com.threestar.trainus.domain.lesson.admin.mapper;
 
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
+import com.threestar.trainus.domain.user.entity.User;
 
-@Component
 public class LessonMapper {
 
 	//레슨 생성 요청 DTO를 레슨 엔티티로 변환
-	public Lesson toEntity(LessonCreateRequestDto requestDto, Long userId) {
+	public static Lesson toEntity(LessonCreateRequestDto requestDto, User user) {
 		return Lesson.builder()
-			.lessonLeader(userId)  //강사 id설정
+			.lessonLeader(user.getId())
 			.lessonName(requestDto.lessonName())
 			.description(requestDto.description())
 			.maxParticipants(requestDto.maxParticipants())
@@ -33,7 +31,7 @@ public class LessonMapper {
 	}
 
 	//레슨 엔티티와 이미지 목록을 레슨 응답 DTO로 변환
-	public LessonResponseDto toResponseDto(Lesson lesson, List<LessonImage> lessonImages) {
+	public static LessonResponseDto toResponseDto(Lesson lesson, List<LessonImage> lessonImages) {
 		// 이미지 엔티티 목록에서 URL만 추출
 		List<String> imageUrls = lessonImages.stream()
 			.map(LessonImage::getImageUrl)

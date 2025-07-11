@@ -9,10 +9,10 @@ import lombok.Builder;
 
 @Builder
 public record LessonResponseDto(
-	long id,
+	Long id,
 	String lessonName,
 	String description,
-	long lessonLeader,
+	Long lessonLeader,
 	Category category,
 	int price,
 	int maxParticipants,
