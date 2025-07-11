@@ -1,9 +1,8 @@
 package com.threestar.trainus.domain.lesson.student.controller;
 
-import java.security.Principal;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,18 +30,6 @@ import lombok.RequiredArgsConstructor;
 public class StudentLessonController {
 	private final StudentLessonService studentLessonService;
 
-	@GetMapping("/swagger-test")
-	@Operation(summary = "Swagger 체크 api입니다!", description = "API 설명란 입니다!")
-	public String swaggerTest(
-	) {
-		return "Swagger Test Check!";
-	}
-
-	@GetMapping("/test-auth")
-	public String testAuth(HttpSession session, Principal principal) {
-		return "SessionID: " + session.getId() + ", user: " + principal;
-	}
-
 	@GetMapping
 	@Operation(summary = "레슨 검색 api", description = "category(필수, Default: 전체) / search(선택) / 그외 법정동 선택 필수")
 	public ResponseEntity<BaseResponse<LessonSearchListResponseDto>> searchLessons(
@@ -66,5 +53,33 @@ public class StudentLessonController {
 	) {
 		LessonDetailResponseDto response = studentLessonService.getLessonDetail(lessonId);
 		return BaseResponse.ok("레슨 상세 조회 완료", response, HttpStatus.OK);
+	}
+
+	@PostMapping("/{lessonId}/application")
+	@Operation(summary = "레슨 신청", description = "레슨 ID에 해당되는 레슨을 신청합니다.")
+	public ResponseEntity<BaseResponse<LessonApplicationResponseDto>> createLessonApplication(
+		@PathVariable Long lessonId,
+		HttpSession session
+	) {
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		}
+		LessonApplicationResponseDto response = studentLessonService.applyToLesson(lessonId, userId);
+		return BaseResponse.ok("레슨 신청 완료", response, HttpStatus.OK);
+	}
+
+	@DeleteMapping("/{lessonId}/application")
+	@Operation(summary = "레슨 신청 취소", description = "레슨 ID에 해당되는 레슨 신청을 취소합니다.")
+	public ResponseEntity<BaseResponse<Void>> deleteLessonApplication(
+		@PathVariable Long lessonId,
+		HttpSession session
+	) {
+		Long userId = (Long)session.getAttribute("LOGIN_USER");
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		}
+		studentLessonService.cancelLessonApplication(lessonId, userId);
+		return BaseResponse.ok("", null, HttpStatus.NO_CONTENT);
 	}
 }

@@ -5,10 +5,16 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonParticipant;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
 import com.threestar.trainus.domain.lesson.admin.mapper.LessonMapper;
+import com.threestar.trainus.domain.lesson.admin.repository.LessonApplicationRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepository;
+import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
@@ -34,10 +40,11 @@ public class StudentLessonService {
 
 	private final LessonRepository lessonRepository;
 	private final LessonImageRepository lessonImageRepository;
-	private final LessonMapper lessonMapper;
 	private final ProfileRepository profileRepository;
 	private final UserRepository userRepository;
 	private final ProfileMetadataService profileMetadataService;
+	private final LessonParticipantRepository lessonParticipantRepository;
+	private final LessonApplicationRepository lessonApplicationRepository;
 
 	public LessonSearchListResponseDto getLessons(
 		int page, int limit, String category, String search,
@@ -70,14 +77,9 @@ public class StudentLessonService {
 
 		List<LessonSearchResponseDto> lessonList = List.of(lesson);
 
-		PaginationDto pagination = new PaginationDto(
-			2,  // currentPage
-			5,  // totalPages
-			24, // totalCount
-			5   // limit
-		);
+		int totalCount = 24;
 
-		return new LessonSearchListResponseDto(lessonList, pagination);
+		return new LessonSearchListResponseDto(lessonList, totalCount);
 	}
 
 	@Transactional
@@ -104,7 +106,7 @@ public class StudentLessonService {
 			.map(LessonImage::getImageUrl)
 			.toList();
 
-		return lessonMapper.toLessonDetailDto(
+		return LessonMapper.toLessonDetailDto(
 			lesson,
 			leader,
 			profile,
@@ -114,7 +116,91 @@ public class StudentLessonService {
 		);
 	}
 
+	@Transactional
 	public LessonApplicationResponseDto applyToLesson(Long lessonId, Long userId) {
-		return null;
+		// 레슨 조회
+		Lesson lesson = lessonRepository.findById(lessonId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+
+		// 유저 조회
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		// 개설자 신청 불가 체크
+		if (lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_CREATOR_CANNOT_APPLY);
+		}
+
+		// 중복 체크
+		boolean alreadyParticipated = lessonParticipantRepository.existsByLessonIdAndUserId(lessonId, userId);
+		boolean alreadyApplied = lessonApplicationRepository.existsByLessonIdAndUserId(lessonId, userId);
+		if (alreadyParticipated || alreadyApplied) {
+			throw new BusinessException(ErrorCode.ALREADY_APPLIED);
+		}
+
+		// 레슨 상태 체크
+		if (lesson.getStatus() != LessonStatus.RECRUITING) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+		}
+
+		// 선착순 여부에 따라 저장 처리 분기
+		if (lesson.getOpenRun()) {
+			// 바로 참가자 등록, 인원수 증가 TODO 성능개선시 동시성 고려
+			LessonParticipant participant = LessonParticipant.builder()
+				.lesson(lesson)
+				.user(user)
+				.build();
+			lessonParticipantRepository.save(participant);
+			lesson.incrementParticipantCount();
+
+			return LessonApplicationResponseDto.builder()
+				.lessonApplicationId(participant.getId())
+				.lessonId(lesson.getId())
+				.userId(user.getId())
+				.status(ApplicationStatus.APPROVED.name())
+				.appliedAt(participant.getJoinAt())
+				.build();
+		} else {
+			// 신청만 등록
+			LessonApplication application = LessonApplication.builder()
+				.lesson(lesson)
+				.user(user)
+				.build();
+			lessonApplicationRepository.save(application);
+
+			return LessonApplicationResponseDto.builder()
+				.lessonApplicationId(application.getId())
+				.lessonId(lesson.getId())
+				.userId(user.getId())
+				.status(ApplicationStatus.PENDING.name())
+				.appliedAt(application.getCreatedAt())
+				.build();
+		}
+	}
+
+	@Transactional
+	public void cancelLessonApplication(Long lessonId, Long userId) {
+		// 레슨 조회
+		Lesson lesson = lessonRepository.findById(lessonId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+
+		// 유저 조회
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		// 선착순 레슨은 신청 취소 불가 처리
+		if (lesson.getOpenRun()) {
+			throw new BusinessException(ErrorCode.CANNOT_CANCEL_APPROVED_APPLICATION);
+		}
+
+		// PENDING 상태의 LessonApplication 삭제
+		LessonApplication application = lessonApplicationRepository.findByLessonIdAndUserId(lessonId, userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
+
+		if (application.getStatus() != ApplicationStatus.PENDING) {
+			throw new BusinessException(ErrorCode.CANNOT_CANCEL_APPROVED_APPLICATION);
+		}
+
+		lessonApplicationRepository.delete(application);
 	}
 }

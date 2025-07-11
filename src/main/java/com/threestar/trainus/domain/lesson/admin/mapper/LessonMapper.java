@@ -63,7 +63,7 @@ public class LessonMapper {
 	}
 
 	// 상세 조회 DTO 변환
-	public LessonDetailResponseDto toLessonDetailDto(
+	public static LessonDetailResponseDto toLessonDetailDto(
 		Lesson lesson,
 		User leader,
 		Profile profile,
