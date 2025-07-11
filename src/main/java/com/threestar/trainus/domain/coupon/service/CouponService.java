@@ -15,7 +15,6 @@ import com.threestar.trainus.domain.coupon.entity.Coupon;
 import com.threestar.trainus.domain.coupon.entity.CouponCategory;
 import com.threestar.trainus.domain.coupon.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.entity.UserCoupon;
-import com.threestar.trainus.domain.coupon.mapper.CouponMapper;
 import com.threestar.trainus.domain.coupon.mapper.UserCouponMapper;
 import com.threestar.trainus.domain.coupon.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.repository.UserCouponRepository;
@@ -64,8 +63,9 @@ public class CouponService {
 
 	@Transactional(readOnly = true)
 	public UserCouponPageResponseDto getUserCoupons(Long userId, CouponStatus status) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		if (!userRepository.existsById(userId)) {
+			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+		}
 
 		List<UserCoupon> userCoupons;
 
@@ -80,18 +80,12 @@ public class CouponService {
 
 	@Transactional(readOnly = true)
 	public CouponPageResponseDto getCoupons(Long userId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-		List<Coupon> coupons = couponRepository.findAllByCloseAtAfter(LocalDateTime.now());
-
-		//유저가 가진 쿠폰 id목록
-		List<Long> ownedCouponIds = userCouponRepository.findAllByUserId(userId).stream()
-			.map(uc -> uc.getCoupon().getId())
-			.toList();
+		if (!userRepository.existsById(userId)) {
+			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+		}
 
 		List<CouponResponseDto> dtoList =
-			CouponMapper.toDtoList(coupons, ownedCouponIds);
+			couponRepository.findAvailableCouponsWithOwnership(userId, LocalDateTime.now());
 
 		return CouponPageResponseDto.builder()
 			.coupons(dtoList)
