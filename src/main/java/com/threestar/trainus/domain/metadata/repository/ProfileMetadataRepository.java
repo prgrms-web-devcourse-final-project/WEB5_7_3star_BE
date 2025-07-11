@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.metadata.repositroy;
+package com.threestar.trainus.domain.metadata.repository;
 
 import java.util.Optional;
 

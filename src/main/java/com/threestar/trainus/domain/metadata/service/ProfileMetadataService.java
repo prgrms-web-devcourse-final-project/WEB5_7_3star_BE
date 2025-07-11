@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.metadata.mapper.ProfileMetadataMapper;
-import com.threestar.trainus.domain.metadata.repositroy.ProfileMetadataRepository;
+import com.threestar.trainus.domain.metadata.repository.ProfileMetadataRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.repository.UserRepository;
 import com.threestar.trainus.global.exception.domain.ErrorCode;

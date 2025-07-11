@@ -2,7 +2,6 @@ package com.threestar.trainus.domain.metadata.mapper;
 
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
-import com.threestar.trainus.domain.metadata.repositroy.ProfileMetadataRepository;
 import com.threestar.trainus.domain.user.entity.User;
 
 public class ProfileMetadataMapper {

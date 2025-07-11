@@ -38,4 +38,9 @@ public class Profile {
 
 	@Column(length = 255)
 	private String intro;
+
+	public void updateProfile(String profileImage, String intro) {
+		this.profileImage = profileImage;
+		this.intro = intro;
+	}
 }

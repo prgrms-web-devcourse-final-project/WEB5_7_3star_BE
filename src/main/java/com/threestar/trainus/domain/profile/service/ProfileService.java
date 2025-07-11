@@ -47,11 +47,9 @@ public class ProfileService {
 		Profile profile = profileRepository.findByUserId(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
 
-		Profile updatedProfile = ProfileMapper.toUpdateEntity(profile, requestDto);
+		profile.updateProfile(requestDto.profileImage(), requestDto.intro());
 
-		profileRepository.save(updatedProfile);
-
-		return ProfileMapper.toResponseDto(updatedProfile, user);
+		return ProfileMapper.toResponseDto(profile, user);
 	}
 }
 

@@ -10,7 +10,7 @@ public class ProfileDetailMapper {
 	private ProfileDetailMapper() {
 	}
 
-	public static ProfileDetailResponseDto combineToDetailDto(
+	public static ProfileDetailResponseDto toDetailResponseDto(
 		ProfileResponseDto profile,
 		ProfileMetadataResponseDto metadata
 	) {

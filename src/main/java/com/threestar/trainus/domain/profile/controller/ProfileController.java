@@ -26,6 +26,14 @@ public class ProfileController {
 
 	private final ProfileFacadeService facadeService;
 
+	@GetMapping("{userId}")
+	public ResponseEntity<BaseResponse<ProfileDetailResponseDto>> getProfileDetail(
+		@PathVariable Long userId
+	) {
+		ProfileDetailResponseDto response = facadeService.getProfileDetail(userId);
+		return BaseResponse.ok("프로필 상세 조회가 완료되었습니다.", response, HttpStatus.OK);
+	}
+
 	@PatchMapping
 	public ResponseEntity<BaseResponse<ProfileResponseDto>> updateProfile(
 		@Valid @RequestBody ProfileUpdateRequestDto requestDto,
@@ -34,13 +42,5 @@ public class ProfileController {
 		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		ProfileResponseDto response = facadeService.updateProfile(userId, requestDto);
 		return BaseResponse.ok("프로필 수정이 완료되었습니다.", response, HttpStatus.OK);
-	}
-
-	@GetMapping("{userId}")
-	public ResponseEntity<BaseResponse<ProfileDetailResponseDto>> getProfileDetail(
-		@PathVariable Long userId
-	) {
-		ProfileDetailResponseDto response = facadeService.getProfileDetail(userId);
-		return BaseResponse.ok("프로필 상세 조회가 완료되었습니다.", response, HttpStatus.OK);
 	}
 }

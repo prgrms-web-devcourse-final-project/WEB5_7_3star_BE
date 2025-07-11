@@ -20,13 +20,13 @@ public class ProfileFacadeService {
 	private final ProfileService profileService;
 	private final ProfileMetadataService metadataService;
 
-	//프로필 상세 조회 (단순 프로필 + 메타데이터)
+	//프로필 상세 조회 (단순 프로필 + 메타데이터) 단순 프로필 조회는 제거.
 	@Transactional(readOnly = true)
 	public ProfileDetailResponseDto getProfileDetail(Long userId) {
 		ProfileResponseDto profile = profileService.getProfile(userId);
 		ProfileMetadataResponseDto metadata = metadataService.getMetadata(userId);
 
-		return ProfileDetailMapper.combineToDetailDto(profile, metadata);
+		return ProfileDetailMapper.toDetailResponseDto(profile, metadata);
 	}
 
 	//프로필 수정
