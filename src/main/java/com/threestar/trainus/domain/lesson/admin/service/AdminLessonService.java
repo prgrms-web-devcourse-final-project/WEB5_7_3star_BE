@@ -13,12 +13,14 @@ import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessResponseD
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
 import com.threestar.trainus.domain.lesson.admin.mapper.LessonApplicationMapper;
 import com.threestar.trainus.domain.lesson.admin.mapper.LessonMapper;
+import com.threestar.trainus.domain.lesson.admin.mapper.LessonParticipantMapper;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonApplicationRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
@@ -42,6 +44,7 @@ public class AdminLessonService {
 	private final UserRepository userRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
 	private final LessonApplicationMapper lessonApplicationMapper; // 신청자 목록용 Mapper
+	private final LessonParticipantMapper lessonParticipantMapper; // 참가자 목록용 mapper
 
 	// 새로운 레슨을 생성하는 메서드
 	@Transactional
@@ -192,6 +195,27 @@ public class AdminLessonService {
 			.status(savedApplication.getStatus().name())
 			.processedAt(savedApplication.getUpdatedAt())
 			.build();
+	}
+
+	//레슨 참가자 목록 조회(승인된 사람들만 있음)
+	public ParticipantListResponseDto getLessonParticipants(
+		Long lessonId, int page, int limit, Long userId) {
+
+		// 레슨 존재 및 권한 확인
+		Lesson lesson = validateLessonAccess(lessonId, userId);
+
+		// 페이징 설정
+		Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").ascending());
+
+		// 승인처리(APPROVED)된 -> 레슨 신청자들만 조회
+		Page<LessonApplication> participantPage = lessonApplicationRepository
+			.findByLessonAndStatus(lesson, ApplicationStatus.APPROVED, pageable);
+
+		// dto 변환
+		return lessonParticipantMapper.toParticipantsResponseDto(
+			participantPage.getContent(),
+			participantPage.getTotalElements()
+		);
 	}
 
 	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크

@@ -40,7 +40,7 @@ public class LessonApplicationMapper {
 		// 리스트 응답 DTO 생성
 		return LessonApplicationListResponseDto.builder()
 			.lessonApplications(applicationDtos)
-			.totalCount(totalCount)
+			.count(totalCount)
 			.build();
 	}
 }

@@ -16,6 +16,7 @@ import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessResponseD
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
@@ -117,6 +118,30 @@ public class AdminLessonController {
 
 		return BaseResponse.ok("레슨 신청 " + (requestDto.action().equals("APPROVED") ? "승인" : "거절"), responseDto,
 			HttpStatus.OK);
+	}
+
+	//레슨 참가자 목록 조회
+	@GetMapping("/lessons/{lessonId}/participants")
+	public ResponseEntity<BaseResponse<ParticipantListResponseDto>> getLessonParticipants(
+		@PathVariable Long lessonId,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.") int limit,
+		HttpSession session) {
+
+		// 세션 기반 인증 체크
+		Long userId = (Long)session.getAttribute("userId");
+		if (userId == null) {
+			// 테스트용 임시 처리
+			userId = 1L;
+			session.setAttribute("userId", userId);
+			//throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		}
+
+		// 참가자 목록 조회
+		ParticipantListResponseDto responseDto = adminLessonService
+			.getLessonParticipants(lessonId, page, limit, userId);
+
+		return BaseResponse.ok("레슨 참가자 목록 조회 완료.", responseDto, HttpStatus.OK);
 	}
 
 }
