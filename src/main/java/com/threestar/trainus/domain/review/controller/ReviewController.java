@@ -16,9 +16,11 @@ import com.threestar.trainus.domain.review.dto.ReviewPageResponseDto;
 import com.threestar.trainus.domain.review.service.ReviewService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "리뷰 API", description = "리뷰 작성, 조회 관련 API")
 @RestController
 @RequestMapping("/api/v1/reviews")
 @RequiredArgsConstructor
