@@ -60,7 +60,8 @@ public enum ErrorCode {
 	INVALID_APPLICATION_ACTION(HttpStatus.BAD_REQUEST, "유효하지 않은 동작입니다. (APPROVED, DENIED)"),
 	INVALID_LESSON_STATUS(HttpStatus.BAD_REQUEST,
 		"유효하지 않은 레슨 상태입니다. (RECRUITING, RECRUITMENT_COMPLETED, IN_PROGRESS, COMPLETED, CANCELLED)"),
-
+	LESSON_CREATOR_CANNOT_APPLY(HttpStatus.BAD_REQUEST, "레슨 개설자는 자신이 개설한 레슨에 참여 신청할 수 없습니다."),
+	CANNOT_CANCEL_APPROVED_APPLICATION(HttpStatus.BAD_REQUEST, "승인된 신청은 취소할 수 없습니다."),
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),
 	LESSON_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 접근 권한이 없습니다. 강사만 조회할 수 있습니다."),
@@ -72,7 +73,10 @@ public enum ErrorCode {
 	LESSON_APPLICATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 레슨 신청입니다."),
 	DUPLICATE_LESSON(HttpStatus.CONFLICT, "동일한 이름과 시간으로 이미 생성된 레슨이 있습니다."),
 	LESSON_TIME_OVERLAP(HttpStatus.CONFLICT, "해당 시간대에 이미 다른 레슨이 예정되어 있습니다."),
+	LESSON_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "신청 불가능한 상태의 레슨입니다."),
 
+	// 409
+	ALREADY_APPLIED(HttpStatus.CONFLICT, "이미 신청한 레슨입니다."),
 	/*
 	 * Review : 리뷰 관련 예외처리
 	 */
