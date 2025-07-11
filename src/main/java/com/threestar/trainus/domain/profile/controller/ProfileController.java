@@ -13,7 +13,6 @@ import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileUpdateRequestDto;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
-import com.threestar.trainus.domain.profile.service.ProfileService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
 import jakarta.servlet.http.HttpSession;
@@ -25,15 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProfileController {
 
-	private final ProfileService profileService;
 	private final ProfileFacadeService facadeService;
-	@GetMapping("/{userId}")
-	public ResponseEntity<BaseResponse<ProfileResponseDto>> getProfile(
-		@PathVariable Long userId
-	) {
-		ProfileResponseDto response = profileService.getProfile(userId);
-		return BaseResponse.ok("프로필 조회가 완료되었습니다.", response, HttpStatus.OK);
-	}
 
 	@PatchMapping
 	public ResponseEntity<BaseResponse<ProfileResponseDto>> updateProfile(
@@ -41,11 +32,11 @@ public class ProfileController {
 		HttpSession session
 	) {
 		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		ProfileResponseDto response = profileService.updateProfile(userId, requestDto);
+		ProfileResponseDto response = facadeService.updateProfile(userId, requestDto);
 		return BaseResponse.ok("프로필 수정이 완료되었습니다.", response, HttpStatus.OK);
 	}
 
-	@GetMapping("{userId}/detail")
+	@GetMapping("{userId}")
 	public ResponseEntity<BaseResponse<ProfileDetailResponseDto>> getProfileDetail(
 		@PathVariable Long userId
 	) {

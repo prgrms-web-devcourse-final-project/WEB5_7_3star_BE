@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.profile.repository.ProfileRepository;
+import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
 import com.threestar.trainus.domain.profile.service.ProfileService;
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
@@ -27,7 +28,7 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final ProfileService profileService;
+	private final ProfileFacadeService facadeService;
 
 	@Transactional
 	public SignupResponseDto signup(SignupRequestDto request) {
@@ -42,7 +43,7 @@ public class UserService {
 
 		User newUser = userRepository.save(UserMapper.toEntity(request, encodedPassword));
 
-		profileService.createDefaultProfile(newUser); //기본 프로필 생성.
+		facadeService.createDefaultProfile(newUser); //기본 프로필 생성.
 
 		return UserMapper.toSignupResponseDto(newUser);
 	}

@@ -7,7 +7,9 @@ import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
+import com.threestar.trainus.domain.profile.dto.ProfileUpdateRequestDto;
 import com.threestar.trainus.domain.profile.mapper.ProfileDetailMapper;
+import com.threestar.trainus.domain.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,14 +20,25 @@ public class ProfileFacadeService {
 	private final ProfileService profileService;
 	private final ProfileMetadataService metadataService;
 
-	//프로필 dto랑 메타데이터 dto랑 합쳐서 응답을 내려주는 역할.
-	@Transactional
+	//프로필 상세 조회 (단순 프로필 + 메타데이터)
+	@Transactional(readOnly = true)
 	public ProfileDetailResponseDto getProfileDetail(Long userId) {
-
 		ProfileResponseDto profile = profileService.getProfile(userId);
-
 		ProfileMetadataResponseDto metadata = metadataService.getMetadata(userId);
 
 		return ProfileDetailMapper.combineToDetailDto(profile, metadata);
+	}
+
+	//프로필 수정
+	@Transactional
+	public ProfileResponseDto updateProfile(Long userId, ProfileUpdateRequestDto requestDto) {
+		return profileService.updateProfile(userId, requestDto);
+	}
+
+	//회원가입 시 프로필,메타데이터 디폴트로 생성.
+	@Transactional
+	public void createDefaultProfile(User user) {
+		profileService.createDefaultProfile(user);
+		metadataService.createDefaultMetadata(user);
 	}
 }
