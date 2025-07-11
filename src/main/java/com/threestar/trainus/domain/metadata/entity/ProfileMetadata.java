@@ -33,9 +33,9 @@ public class ProfileMetadata {
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
-	@Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+	@Column(nullable = false)
 	private Integer reviewCount;
 
-	@Column(nullable = false, columnDefinition = "FLOAT DEFAULT 0.0")
+	@Column(nullable = false)
 	private Float rating;
 }
