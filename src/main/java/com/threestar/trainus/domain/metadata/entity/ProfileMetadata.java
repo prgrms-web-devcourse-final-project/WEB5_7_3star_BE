@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Entity
@@ -36,6 +37,17 @@ public class ProfileMetadata {
 	@Column(nullable = false)
 	private Integer reviewCount;
 
+	@Setter
 	@Column(nullable = false)
 	private Float rating;
+
+	public void increaseReviewCount() {
+		this.reviewCount++;
+	}
+
+	public Float updateRating(Float newRating) {
+		Float totalRatingBefore = this.rating * (reviewCount - 1);
+		totalRatingBefore += newRating;
+		return totalRatingBefore / reviewCount;
+	}
 }

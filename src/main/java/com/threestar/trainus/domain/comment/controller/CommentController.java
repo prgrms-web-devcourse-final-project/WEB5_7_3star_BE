@@ -17,9 +17,11 @@ import com.threestar.trainus.domain.comment.dto.CommentResponseDto;
 import com.threestar.trainus.domain.comment.service.CommentService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "댓글 API", description = "댓글 작성, 조회, 삭제 관련 API")
 @RestController
 @RequestMapping(("/api/v1/comments/"))
 @RequiredArgsConstructor
