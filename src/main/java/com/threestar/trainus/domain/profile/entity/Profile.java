@@ -11,11 +11,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Builder
 @Getter
 @Table(name = "profile")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Profile {
 
 	@Id
@@ -31,4 +38,9 @@ public class Profile {
 
 	@Column(length = 255)
 	private String intro;
+
+	public void updateProfile(String profileImage, String intro) {
+		this.profileImage = profileImage;
+		this.intro = intro;
+	}
 }
