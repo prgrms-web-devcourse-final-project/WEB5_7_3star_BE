@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Size;
 public record LessonCreateRequestDto(
 
 	@NotBlank(message = "레슨 이름은 필수입니다.")
-	@Size(max = 20, message = "레슨명은 20자 이내여야 합니다.")
+	@Size(max = 50, message = "레슨명은 5m0자 이내여야 합니다.")
 	String lessonName,
 
 	@NotBlank(message = "레슨 설명은 필수입니다.")
