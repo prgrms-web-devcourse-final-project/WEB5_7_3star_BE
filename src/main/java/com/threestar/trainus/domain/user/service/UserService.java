@@ -1,5 +1,9 @@
 package com.threestar.trainus.domain.user.service;
 
+import java.util.Collections;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,11 +64,16 @@ public class UserService {
 
 		session.setAttribute("LOGIN_USER", user.getId());
 
+		UsernamePasswordAuthenticationToken authToken =
+			new UsernamePasswordAuthenticationToken(user.getId(), null, Collections.emptyList());
+		SecurityContextHolder.getContext().setAuthentication(authToken);
+
 		return UserMapper.toLoginResponseDto(user);
 	}
 
 	public void logout(HttpSession session) {
 		session.invalidate();
+		SecurityContextHolder.clearContext();
 	}
 
 	@Transactional(readOnly = true)
