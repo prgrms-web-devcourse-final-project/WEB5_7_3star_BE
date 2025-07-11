@@ -80,6 +80,6 @@ public class StudentLessonController {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 		studentLessonService.cancelLessonApplication(lessonId, userId);
-		return BaseResponse.ok("", null, HttpStatus.NO_CONTENT);
+		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}
 }
