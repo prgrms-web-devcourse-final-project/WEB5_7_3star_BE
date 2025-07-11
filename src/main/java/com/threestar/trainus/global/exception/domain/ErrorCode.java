@@ -50,6 +50,12 @@ public enum ErrorCode {
 	INVALID_LESSON_DATE(HttpStatus.BAD_REQUEST, "레슨 날짜가 유효하지 않습니다."),
 
 	/*
+	 * Review : 리뷰 관련 예외처리
+	 */
+	//400
+	INVALID_REVIEW_DATE(HttpStatus.BAD_REQUEST, "레슨 작성 가능 기간이 아닙니다."),
+
+	/*
 	 * User : 유저 관련 예외처리
 	 */
 	EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다."),

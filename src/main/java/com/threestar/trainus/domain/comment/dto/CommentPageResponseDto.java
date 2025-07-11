@@ -10,5 +10,5 @@ import lombok.Getter;
 public class CommentPageResponseDto {
 
 	private List<CommentResponseDto> comments;
-	private Long commentCount;
+	private Long count;
 }
