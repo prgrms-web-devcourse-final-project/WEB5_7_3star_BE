@@ -4,19 +4,20 @@ import java.util.List;
 
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationResponseDto;
-import com.threestar.trainus.domain.lesson.admin.dto.UserSimpleDto;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
+import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 
 public class LessonApplicationMapper {
 
 	//LessonApplication 엔티티를 LessonApplicationResponseDto로 변환
 	public static LessonApplicationResponseDto toResponseDto(LessonApplication application) {
 		// User 엔티티에서 정보 가져오기
-		UserSimpleDto userDto = UserSimpleDto.builder()
-			.id(application.getUser().getId())
-			.nickname(application.getUser().getNickname())
-			.profileImage(application.getUser().getProfile().getProfileImage())
-			.build();
+		ProfileResponseDto userDto = new ProfileResponseDto(
+			application.getUser().getId(),
+			application.getUser().getNickname(),
+			application.getUser().getProfile().getProfileImage(),
+			application.getUser().getProfile().getIntro()
+		);
 
 		return LessonApplicationResponseDto.builder()
 			.lessonApplicationId(application.getId())
