@@ -36,7 +36,6 @@ public enum ErrorCode {
 
 	//404
 	COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 쿠폰을 찾을 수 없습니다."),
-
 	/*
 	 * Coupon : 예외처리
 	 */
@@ -51,6 +50,12 @@ public enum ErrorCode {
 	INVALID_LESSON_DATE(HttpStatus.BAD_REQUEST, "레슨 날짜가 유효하지 않습니다."),
 
 	/*
+	 * Review : 리뷰 관련 예외처리
+	 */
+	//400
+	INVALID_REVIEW_DATE(HttpStatus.BAD_REQUEST, "레슨 작성 가능 기간이 아닙니다."),
+
+	/*
 	 * User : 유저 관련 예외처리
 	 */
 	EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다."),
@@ -59,7 +64,13 @@ public enum ErrorCode {
 	INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "유효하지 않은 인증 코드입니다."),
 	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증 코드가 만료되었습니다."),
 	EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증이 완료되지 않았습니다."),
-	EMAIL_SEND_FAILED(HttpStatus.BAD_REQUEST, "이메일 발송을 실패했습니다.");
+	EMAIL_SEND_FAILED(HttpStatus.BAD_REQUEST, "이메일 발송을 실패했습니다."),
+
+	/*
+	 * Profile : 프로필 관련 예외처리
+	 */
+	PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 프로필을 찾을 수 없습니다"),
+	METADATA_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 메타데이터를 찾을 수 없습니다");
 	//마지막 세미콜론 명시 ;
 
 	private final HttpStatus status;

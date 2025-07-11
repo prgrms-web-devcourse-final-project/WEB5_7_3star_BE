@@ -4,6 +4,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.threestar.trainus.domain.profile.entity.Profile;
+import com.threestar.trainus.domain.profile.repository.ProfileRepository;
+import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
+import com.threestar.trainus.domain.profile.service.ProfileService;
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
 import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
@@ -24,6 +28,7 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final ProfileFacadeService facadeService;
 
 	@Transactional
 	public SignupResponseDto signup(SignupRequestDto request) {
@@ -37,6 +42,8 @@ public class UserService {
 		String encodedPassword = passwordEncoder.encode(request.password());
 
 		User newUser = userRepository.save(UserMapper.toEntity(request, encodedPassword));
+
+		facadeService.createDefaultProfile(newUser); //기본 프로필 생성.
 
 		return UserMapper.toSignupResponseDto(newUser);
 	}

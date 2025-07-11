@@ -1,14 +1,21 @@
 package com.threestar.trainus.domain.coupon.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.threestar.trainus.domain.coupon.dto.CouponPageResponseDto;
+import com.threestar.trainus.domain.coupon.dto.CouponResponseDto;
 import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
+import com.threestar.trainus.domain.coupon.dto.UserCouponPageResponseDto;
+import com.threestar.trainus.domain.coupon.dto.UserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.entity.Coupon;
 import com.threestar.trainus.domain.coupon.entity.CouponCategory;
+import com.threestar.trainus.domain.coupon.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.entity.UserCoupon;
+import com.threestar.trainus.domain.coupon.mapper.CouponMapper;
 import com.threestar.trainus.domain.coupon.mapper.UserCouponMapper;
 import com.threestar.trainus.domain.coupon.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.repository.UserCouponRepository;
@@ -53,5 +60,41 @@ public class CouponService {
 		userCouponRepository.save(userCoupon);
 
 		return UserCouponMapper.toCreateUserCouponResponseDto(userCoupon);
+	}
+
+	@Transactional(readOnly = true)
+	public UserCouponPageResponseDto getUserCoupons(Long userId, CouponStatus status) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		List<UserCoupon> userCoupons;
+
+		if (status == null) {
+			userCoupons = userCouponRepository.findAllByUserId(userId);
+		} else {
+			userCoupons = userCouponRepository.findAllByUserIdAndStatus(userId, status);
+		}
+		List<UserCouponResponseDto> couponDtos = UserCouponMapper.toDtoList(userCoupons);
+		return new UserCouponPageResponseDto(couponDtos);
+	}
+
+	@Transactional(readOnly = true)
+	public CouponPageResponseDto getCoupons(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		List<Coupon> coupons = couponRepository.findAllByCloseAtAfter(LocalDateTime.now());
+
+		//유저가 가진 쿠폰 id목록
+		List<Long> ownedCouponIds = userCouponRepository.findAllByUserId(userId).stream()
+			.map(uc -> uc.getCoupon().getId())
+			.toList();
+
+		List<CouponResponseDto> dtoList =
+			CouponMapper.toDtoList(coupons, ownedCouponIds);
+
+		return CouponPageResponseDto.builder()
+			.coupons(dtoList)
+			.build();
 	}
 }
