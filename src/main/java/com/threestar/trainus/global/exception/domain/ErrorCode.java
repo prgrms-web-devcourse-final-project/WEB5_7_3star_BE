@@ -82,6 +82,8 @@ public enum ErrorCode {
 	 */
 	//400
 	INVALID_REVIEW_DATE(HttpStatus.BAD_REQUEST, "레슨 작성 가능 기간이 아닙니다."),
+	INVALID_LESSON_PARTICIPANT(HttpStatus.BAD_REQUEST, "올바른 레슨 참여자가 아닙니다."),
+	INVALID_REVIEW_COUNT(HttpStatus.BAD_REQUEST, "이미 해당 리뷰를 작성했습니다."),
 
 	/*
 	 * User : 유저 관련 예외처리

@@ -18,6 +18,7 @@ import com.threestar.trainus.global.unit.BaseResponse;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "리뷰 API", description = "리뷰 작성, 조회 관련 API")
@@ -30,7 +31,7 @@ public class ReviewController {
 
 	@PostMapping("/{lessonId}")
 	public ResponseEntity<BaseResponse<ReviewCreateResponseDto>> createReview(@PathVariable Long lessonId,
-		@RequestBody ReviewCreateRequestDto request,
+		@Valid @RequestBody ReviewCreateRequestDto request,
 		HttpSession session) {
 		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		ReviewCreateResponseDto review = reviewService.createReview(request, lessonId, userId);
