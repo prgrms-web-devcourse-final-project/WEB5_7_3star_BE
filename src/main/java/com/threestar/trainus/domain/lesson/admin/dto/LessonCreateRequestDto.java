@@ -10,6 +10,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 레슨 생성 요청 데이터
+ */
 public record LessonCreateRequestDto(
 
 	@NotBlank(message = "레슨 이름은 필수입니다.")

@@ -57,6 +57,4 @@ public class LessonApplication extends BaseDateEntity {
 	public void deny() {
 		this.status = ApplicationStatus.DENIED;
 	}
-
 }
-
