@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.CreatedLessonListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
@@ -18,6 +19,8 @@ import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
+import com.threestar.trainus.domain.lesson.admin.mapper.CreatedLessonMapper;
 import com.threestar.trainus.domain.lesson.admin.mapper.LessonApplicationMapper;
 import com.threestar.trainus.domain.lesson.admin.mapper.LessonMapper;
 import com.threestar.trainus.domain.lesson.admin.mapper.LessonParticipantMapper;
@@ -45,6 +48,7 @@ public class AdminLessonService {
 	private final LessonApplicationRepository lessonApplicationRepository;
 	private final LessonApplicationMapper lessonApplicationMapper; // 신청자 목록용 Mapper
 	private final LessonParticipantMapper lessonParticipantMapper; // 참가자 목록용 mapper
+	private final CreatedLessonMapper createdLessonMapper; //생성한 레슨 목록용 mapper
 
 	// 새로운 레슨을 생성하는 메서드
 	@Transactional
@@ -137,7 +141,7 @@ public class AdminLessonService {
 		Lesson lesson = validateLessonAccess(lessonId, userId);
 
 		// 상태 파라미터 검증
-		ApplicationStatus applicationStatus = validateAndParseStatus(status);
+		ApplicationStatus applicationStatus = validateStatus(status);
 
 		// 페이징 설정
 		Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
@@ -180,6 +184,8 @@ public class AdminLessonService {
 		//승인/거절 처리
 		if ("APPROVED".equals(action)) {
 			application.approve();
+			// 승인 시 레슨 참가자수 증가
+			lesson.incrementParticipantCount();
 		} else if ("DENIED".equals(action)) {
 			application.deny();
 		} else {
@@ -218,6 +224,35 @@ public class AdminLessonService {
 		);
 	}
 
+	//강사가 개설한 레슨 목록 조회
+	public CreatedLessonListResponseDto getCreatedLessons(
+		Long userId, int page, int limit, String status) {
+
+		// User 존재 확인
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		// 페이징 설정
+		Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
+
+		// 레슨 상태에 따른 조회
+		Page<Lesson> lessonPage;
+		if (status != null && !status.isEmpty()) {
+			// 레슨 상태에 따라서 필터링
+			LessonStatus lessonStatus = validateLessonStatus(status);
+			lessonPage = lessonRepository.findByLessonLeaderAndStatusAndDeletedAtIsNull(userId, lessonStatus, pageable);
+		} else {
+			// 전체조회
+			lessonPage = lessonRepository.findByLessonLeaderAndDeletedAtIsNull(userId, pageable);
+		}
+
+		// dto 변환
+		return createdLessonMapper.toCreatedLessonListResponseDto(
+			lessonPage.getContent(),
+			lessonPage.getTotalElements()
+		);
+	}
+
 	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크
 	private Lesson validateLessonAccess(Long lessonId, Long userId) {
 		// User 존재 확인
@@ -241,8 +276,8 @@ public class AdminLessonService {
 		return lesson;
 	}
 
-	//상태파라미터 검증
-	private ApplicationStatus validateAndParseStatus(String status) {
+	//레슨 상태 검증
+	private ApplicationStatus validateStatus(String status) {
 		if ("ALL".equals(status)) {
 			return null; // ALL인 경우 null 반환해서 필터링 안함
 		}
@@ -253,4 +288,15 @@ public class AdminLessonService {
 			throw new BusinessException(ErrorCode.INVALID_APPLICATION_STATUS);
 		}
 	}
+
+	//레슨 신청 상태 검증
+	private LessonStatus validateLessonStatus(String status) {
+		try {
+			return LessonStatus.valueOf(status);
+		} catch (IllegalArgumentException e) {
+			throw new BusinessException(ErrorCode.INVALID_LESSON_STATUS);
+		}
+	}
+
 }
+

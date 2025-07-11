@@ -59,6 +59,8 @@ public enum ErrorCode {
 	LESSON_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 레슨입니다."),
 	INVALID_APPLICATION_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 신청 상태입니다. (ALL, PENDING, APPROVED, DENIED)"),
 	INVALID_APPLICATION_ACTION(HttpStatus.BAD_REQUEST, "유효하지 않은 동작입니다. (APPROVED, DENIED)"),
+	INVALID_LESSON_STATUS(HttpStatus.BAD_REQUEST,
+		"유효하지 않은 레슨 상태입니다. (RECRUITING, RECRUITMENT_COMPLETED, IN_PROGRESS, COMPLETED, CANCELLED)"),
 
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),

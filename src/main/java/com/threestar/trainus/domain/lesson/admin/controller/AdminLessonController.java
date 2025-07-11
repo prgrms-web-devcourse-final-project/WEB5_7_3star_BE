@@ -13,11 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.threestar.trainus.domain.lesson.admin.dto.ApplicationActionRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.CreatedLessonListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListResponseDto;
 import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
+import com.threestar.trainus.global.exception.domain.ErrorCode;
+import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
 
 import jakarta.servlet.http.HttpSession;
@@ -142,6 +145,36 @@ public class AdminLessonController {
 			.getLessonParticipants(lessonId, page, limit, userId);
 
 		return BaseResponse.ok("레슨 참가자 목록 조회 완료.", responseDto, HttpStatus.OK);
+	}
+
+	//강사가 개설한 레슨 목록 조회
+	@GetMapping("/lessons/{userId}/created-lessons")
+	public ResponseEntity<BaseResponse<CreatedLessonListResponseDto>> getCreatedLessons(
+		@PathVariable Long userId,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.") int limit,
+		@RequestParam(required = false) String status,
+		HttpSession session) {
+
+		// 내가 개설한 레슨만 조회 가능 -> 세션기반인증
+		Long sessionUserId = (Long)session.getAttribute("userId");
+		if (sessionUserId == null) {
+			// 테스트용 임시 처리
+			sessionUserId = 1L;
+			session.setAttribute("userId", sessionUserId);
+			// throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);로 변경예정
+		}
+
+		// 내가 개설한 레슨만 조회 가능!!
+		if (!sessionUserId.equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
+		}
+
+		// 개설한 레슨 목록 조회
+		CreatedLessonListResponseDto responseDto = adminLessonService
+			.getCreatedLessons(userId, page, limit, status);
+
+		return BaseResponse.ok("개설한 레슨 목록 조회 완료.", responseDto, HttpStatus.OK);
 	}
 
 }
