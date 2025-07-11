@@ -45,12 +45,12 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		//로그인한 사용자만 레슨을 생성할 수 있음
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
+		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
+		if (sessionUserId == null) {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
-		LessonResponseDto responseDto = adminLessonService.createLesson(requestDto, userId);
+		LessonResponseDto responseDto = adminLessonService.createLesson(requestDto, sessionUserId);
 		return BaseResponse.ok("레슨이 생성되었습니다.", responseDto, HttpStatus.CREATED);
 	}
 
@@ -61,13 +61,13 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		//세션을 기반으로 인증
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
+		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
+		if (sessionUserId == null) {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 레슨 삭제
-		adminLessonService.deleteLesson(lessonId, userId);
+		adminLessonService.deleteLesson(lessonId, sessionUserId);
 		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}
 
@@ -81,14 +81,14 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		// 세션 기반 인증 체크
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
+		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
+		if (sessionUserId == null) {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 신청자 목록 조회
 		LessonApplicationListResponseDto responseDto = adminLessonService
-			.getLessonApplications(lessonId, page, limit, status, userId);
+			.getLessonApplications(lessonId, page, limit, status, sessionUserId);
 
 		return BaseResponse.ok("레슨 신청자 목록 조회 완료.", responseDto, HttpStatus.OK);
 	}
@@ -101,14 +101,14 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		// 세션 기반 인증 체크
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
+		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
+		if (sessionUserId == null) {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 신청 승인/거절 처리
 		ApplicationProcessResponseDto responseDto = adminLessonService
-			.processLessonApplication(lessonApplicationId, requestDto.action(), userId);
+			.processLessonApplication(lessonApplicationId, requestDto.action(), sessionUserId);
 
 		return BaseResponse.ok("레슨 신청 " + (requestDto.action().equals("APPROVED") ? "승인" : "거절"), responseDto,
 			HttpStatus.OK);
@@ -123,14 +123,14 @@ public class AdminLessonController {
 		HttpSession session) {
 
 		// 세션 기반 인증 체크
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
+		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
+		if (sessionUserId == null) {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		// 참가자 목록 조회
 		ParticipantListResponseDto responseDto = adminLessonService
-			.getLessonParticipants(lessonId, page, limit, userId);
+			.getLessonParticipants(lessonId, page, limit, sessionUserId);
 
 		return BaseResponse.ok("레슨 참가자 목록 조회 완료.", responseDto, HttpStatus.OK);
 	}
