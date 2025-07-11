@@ -6,7 +6,6 @@ import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
-import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.user.entity.User;
