@@ -109,4 +109,25 @@ public class Lesson extends BaseDateEntity {
 		//새로 생성된 참가자 수도 0명으로 시작하도록 설정
 		this.participantCount = 0;
 	}
+
+	//레슨을 삭제 상태로 만들어주는 메소드(삭제시간을 현재시간으로)
+	public void lessonDelete() {
+		this.deletedAt = LocalDateTime.now();
+	}
+
+	//레슨이 삭제된 상태인지 확인
+	public boolean isDeleted() {
+		return this.deletedAt != null;
+	}
+
+	// 참가자 수 증가
+	public void incrementParticipantCount() {
+		this.participantCount++;
+
+		// 정원 달성 시 -> 모집완료로 상태 변경
+		if (this.participantCount >= this.maxParticipants) {
+			this.status = LessonStatus.RECRUITMENT_COMPLETED;
+		}
+	}
+
 }
