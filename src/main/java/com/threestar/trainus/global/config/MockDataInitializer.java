@@ -186,7 +186,9 @@ public class MockDataInitializer implements CommandLineRunner {
 				.filter(lesson -> lesson.getLessonLeader().equals(instructor.getId()))
 				.toList();
 
-			if (instructorLessons.isEmpty()) continue;
+			if (instructorLessons.isEmpty()) {
+				continue;
+			}
 
 			// reviewCount만큼 실제 리뷰 생성
 			int reviewCount = metadata.getReviewCount();
