@@ -30,7 +30,7 @@ public class Lesson extends BaseDateEntity {
 	@Column(nullable = false)
 	private Long lessonLeader;
 
-	@Column(nullable = false, length = 20)
+	@Column(nullable = false, length = 40)
 	private String lessonName;
 
 	@Column(nullable = false, length = 255)
