@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.threestar.trainus.global.entity.BaseDateEntity;
+import com.threestar.trainus.global.exception.domain.ErrorCode;
+import com.threestar.trainus.global.exception.handler.BusinessException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -63,4 +65,10 @@ public class Coupon extends BaseDateEntity {
 	@Column(nullable = false)
 	private LocalDateTime closeAt;
 
+	public void decreaseQuantity() {
+		if (this.quantity <= 0) {
+			throw new BusinessException(ErrorCode.COUPON_BE_EXHAUSTED);
+		}
+		this.quantity--;
+	}
 }
