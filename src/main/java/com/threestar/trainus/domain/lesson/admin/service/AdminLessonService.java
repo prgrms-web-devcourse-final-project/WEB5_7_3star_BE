@@ -54,6 +54,11 @@ public class AdminLessonService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+		// 최대 참가 인원 검증 -> 100명이하로 제한
+		if (requestDto.maxParticipants() > 100) {
+			throw new BusinessException(ErrorCode.LESSON_MAX_PARTICIPANTS_EXCEEDED);
+		}
+
 		// 동일 레슨 중복 검증(동일한 강사가 같은 이름+시간으로 레슨 생성 차단)
 		boolean isDuplicate = lessonRepository.existsDuplicateLesson(
 			userId,
