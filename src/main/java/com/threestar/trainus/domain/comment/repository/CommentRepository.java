@@ -11,6 +11,7 @@ import com.threestar.trainus.domain.comment.entity.Comment;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
+	//create index idx_lesson_id_parent_comment_id_comment_id on comments(lesson_id, parent_comment_id asc, comment_id asc); 인덱스 통해 조회 성능 최적화
 	@Query(value = """
 		select comments.comment_id, comments.lesson_id, comments.user_id, comments.content, 
 		comments.parent_comment_id, comments.deleted, comments.created_at, comments.updated_at  
