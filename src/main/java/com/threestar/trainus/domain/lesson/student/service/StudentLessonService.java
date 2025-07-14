@@ -29,6 +29,7 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSummaryResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.student.mapper.LessonSearchMapper;
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.profile.entity.Profile;
@@ -53,40 +54,51 @@ public class StudentLessonService {
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
 
-	public LessonSearchListResponseDto getLessons(
-		int page, int limit, String category, String search,
+	@Transactional
+	public LessonSearchListResponseDto searchLessons(
+		int page, int limit,
+		String category, String search,
 		String city, String district, String dong
 	) {
-		// 목데이터 반환중 TODO 구현 필요
-		LessonSearchResponseDto lesson = new LessonSearchResponseDto(
-			1L,
-			"이동국의 축구교실",
-			"이동국",
-			"https://example.com/leader-image.jpg",
-			2,
-			24,
-			4.5f,
-			Category.FOOTBALL,
-			40000,
-			10,
-			8,
-			"모집중",
-			LocalDateTime.parse("2025-07-04T10:00:00"),
-			LocalDateTime.parse("2025-07-04T10:00:00"),
-			LocalDateTime.parse("2025-07-04T10:00:00"),
-			true,
-			"경기도",
-			"고양시 덕양구",
-			"고양동",
-			LocalDateTime.parse("2025-07-04T10:00:00"),
-			List.of("https://example.com/image1.jpg", "https://example.com/image2.jpg")
+		Pageable pageable = PageRequest.of(page - 1, limit);
+
+		Category categoryEnum = null;
+		if (!category.equalsIgnoreCase("ALL")) {
+			try {
+				categoryEnum = Category.valueOf(category.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				throw new BusinessException(ErrorCode.INVALID_CATEGORY);
+			}
+		}
+
+		Page<Lesson> lessonPage = lessonRepository.findBySearchConditions(
+			categoryEnum, city, district, dong, search, pageable
 		);
 
-		List<LessonSearchResponseDto> lessonList = List.of(lesson);
+		// 응답 DTO 리스트 매핑
+		List<LessonSearchResponseDto> lessonDtos = lessonPage.getContent().stream()
+			.map(lesson -> {
+				// 레슨장 정보 조회
+				User leader = userRepository.findById(lesson.getLessonLeader())
+					.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-		int totalCount = 24;
+				// 프로필 이미지
+				Profile profile = profileRepository.findByUserId(leader.getId())
+					.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
 
-		return new LessonSearchListResponseDto(lessonList, totalCount);
+				// 리뷰 개수, 평점 등 메타데이터
+				ProfileMetadataResponseDto metadata = profileMetadataService.getMetadata(leader.getId());
+
+				// 이미지 URL 목록
+				List<String> imageUrls = lessonImageRepository.findAllByLessonId(lesson.getId()).stream()
+					.map(LessonImage::getImageUrl)
+					.toList();
+
+				return LessonSearchMapper.toLessonSearchResponseDto(lesson, leader, profile, metadata, imageUrls);
+			})
+			.toList();
+
+		return new LessonSearchListResponseDto(lessonDtos, (int) lessonPage.getTotalElements());
 	}
 
 	@Transactional

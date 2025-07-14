@@ -23,7 +23,6 @@ import com.threestar.trainus.global.unit.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "수강생 레슨 API", description = "수강생 조회/등록 관련 API")
@@ -34,7 +33,7 @@ public class StudentLessonController {
 	private final StudentLessonService studentLessonService;
 
 	@GetMapping
-	@Operation(summary = "레슨 검색 api", description = "category(필수, Default: 전체) / search(선택) / 그외 법정동 선택 필수")
+	@Operation(summary = "레슨 검색 api", description = "category(필수, Default: \"ALL\") / search(선택) / 그외 법정동 선택 필수")
 	public ResponseEntity<BaseResponse<LessonSearchListResponseDto>> searchLessons(
 		@RequestParam(required = false, defaultValue = "1") int page,
 		@RequestParam(required = false, defaultValue = "10") int limit,
@@ -44,7 +43,7 @@ public class StudentLessonController {
 		@RequestParam String district,
 		@RequestParam String dong
 	) {
-		LessonSearchListResponseDto lessonList = studentLessonService.getLessons(page, limit, category, search, city,
+		LessonSearchListResponseDto lessonList = studentLessonService.searchLessons(page, limit, category, search, city,
 			district, dong);
 		return BaseResponse.ok("레슨 검색 조회 완료.", lessonList, HttpStatus.OK);
 	}

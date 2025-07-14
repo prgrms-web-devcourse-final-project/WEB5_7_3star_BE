@@ -66,6 +66,8 @@ public enum ErrorCode {
 		"유효하지 않은 레슨 상태입니다. (RECRUITING, RECRUITMENT_COMPLETED, IN_PROGRESS, COMPLETED, CANCELLED)"),
 	LESSON_CREATOR_CANNOT_APPLY(HttpStatus.BAD_REQUEST, "레슨 개설자는 자신이 개설한 레슨에 참여 신청할 수 없습니다."),
 	CANNOT_CANCEL_APPROVED_APPLICATION(HttpStatus.BAD_REQUEST, "승인된 신청은 취소할 수 없습니다."),
+	INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "잘못된 카테고리입니다."),
+
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),
 	LESSON_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 접근 권한이 없습니다. 강사만 조회할 수 있습니다."),
@@ -103,8 +105,6 @@ public enum ErrorCode {
 	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증 코드가 만료되었습니다."),
 
 	EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증이 완료되지 않았습니다."),
-
-	EMAIL_SEND_FAILED(HttpStatus.BAD_REQUEST, "이메일 발송을 실패했습니다.");
 
 	EMAIL_SEND_FAILED(HttpStatus.BAD_REQUEST, "이메일 발송을 실패했습니다."),
 
