@@ -24,14 +24,18 @@ import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 /**
  * 이 컨트롤러는 전부 강사용 api!!!
  */
+@Tag(name = "강사용 레슨 API", description = "레슨 개설, 삭제, 승인/거절, 조회(수강생조회,내레슨조회등) 관련 API")
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -41,6 +45,7 @@ public class AdminLessonController {
 
 	//레슨 생성
 	@PostMapping("/lessons")
+	@Operation(summary = "레슨 생성 api", description = "레슨생성")
 	public ResponseEntity<BaseResponse<LessonResponseDto>> createLesson(
 		@Valid @RequestBody LessonCreateRequestDto requestDto,
 		HttpSession session) {
@@ -57,6 +62,7 @@ public class AdminLessonController {
 
 	//레슨 삭제
 	@DeleteMapping("/lessons/{lessonId}")
+	@Operation(summary = "레슨 삭제 api", description = "현재는 무료 레슨만 있기때문에 참가자가 있어도 마음대로 삭제가능")
 	public ResponseEntity<BaseResponse<Void>> deleteLesson(
 		@PathVariable Long lessonId,
 		HttpSession session) {
@@ -74,10 +80,13 @@ public class AdminLessonController {
 
 	//레슨 신청자 목록 조회
 	@GetMapping("/lessons/{lessonId}/applications")
+	@Operation(summary = "레슨 신청자 목록 조회 api", description = "레슨 신청자의 목록을 조회 가능함.")
 	public ResponseEntity<BaseResponse<LessonApplicationListResponseDto>> getLessonApplications(
 		@PathVariable Long lessonId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.") int limit,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
+		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
 		@RequestParam(defaultValue = "ALL") String status,
 		HttpSession session) {
 
@@ -96,6 +105,7 @@ public class AdminLessonController {
 
 	//레슨 신청 승인/거절
 	@PostMapping("/lessons/applications/{lessonApplicationId}")
+	@Operation(summary = "레슨 신청 승인/거절 api", description = "")
 	public ResponseEntity<BaseResponse<ApplicationProcessResponseDto>> processLessonApplication(
 		@PathVariable Long lessonApplicationId,
 		@Valid @RequestBody ApplicationActionRequestDto requestDto,
@@ -117,10 +127,13 @@ public class AdminLessonController {
 
 	//레슨 참가자 목록 조회
 	@GetMapping("/lessons/{lessonId}/participants")
+	@Operation(summary = "레슨 참가자 목록 조회 api", description = "")
 	public ResponseEntity<BaseResponse<ParticipantListResponseDto>> getLessonParticipants(
 		@PathVariable Long lessonId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.") int limit,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
+		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
 		HttpSession session) {
 
 		// 세션 기반 인증 체크
@@ -138,10 +151,13 @@ public class AdminLessonController {
 
 	//강사가 개설한 레슨 목록 조회
 	@GetMapping("/lessons/{userId}/created-lessons")
+	@Operation(summary = "강사가 개설한 레슨 목록 조회 api", description = "")
 	public ResponseEntity<BaseResponse<CreatedLessonListResponseDto>> getCreatedLessons(
 		@PathVariable Long userId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.") int limit,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
+		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
 		@RequestParam(required = false) String status,
 		HttpSession session) {
 
