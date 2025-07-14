@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.review.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import com.threestar.trainus.domain.review.dto.ReviewPageResponseDto;
 import com.threestar.trainus.domain.review.service.ReviewService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -28,8 +30,11 @@ import lombok.RequiredArgsConstructor;
 public class ReviewController {
 
 	private final ReviewService reviewService;
+	@Value("${spring.page.size.limit}")
+	private int pageSizeLimit;
 
 	@PostMapping("/{lessonId}")
+	@Operation(summary = "리뷰 작성", description = "레슨 ID에 해당되는 리뷰를 작성합니다.")
 	public ResponseEntity<BaseResponse<ReviewCreateResponseDto>> createReview(@PathVariable Long lessonId,
 		@Valid @RequestBody ReviewCreateRequestDto request,
 		HttpSession session) {
@@ -39,11 +44,14 @@ public class ReviewController {
 	}
 
 	@GetMapping("/{userId}")
+	@Operation(summary = "리뷰 조회", description = "유저 ID에 해당되는 리뷰들을 조회합니다.")
 	public ResponseEntity<BaseResponse<ReviewPageResponseDto>> readAll(@PathVariable Long userId,
 		@RequestParam("page") int page,
 		@RequestParam("pageSize") int pageSize
 	) {
-		ReviewPageResponseDto reviews = reviewService.readAll(userId, page, pageSize);
+		int correctPage = Math.max(page, 1);
+		int correctPageSize = Math.max(1, Math.max(pageSize, pageSizeLimit));
+		ReviewPageResponseDto reviews = reviewService.readAll(userId, correctPage, correctPageSize);
 		return BaseResponse.ok("조회가 완료됐습니다.", reviews, HttpStatus.OK);
 	}
 
