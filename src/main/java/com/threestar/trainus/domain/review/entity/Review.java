@@ -46,7 +46,7 @@ public class Review extends BaseDateEntity {
 	private Lesson lesson;
 
 	@Column(nullable = false)
-	private Float rating;
+	private Double rating;
 
 	@Column(length = 255, nullable = false)
 	private String content;

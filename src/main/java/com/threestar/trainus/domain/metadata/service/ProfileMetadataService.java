@@ -43,6 +43,6 @@ public class ProfileMetadataService {
 		ProfileMetadata profileMetadata = profileMetadataRepository.findWithLockByUserId(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.METADATA_NOT_FOUND));
 		profileMetadata.increaseReviewCount();
-		profileMetadata.setRating(newRating);
+		profileMetadata.setRating(profileMetadata.updateRating(newRating));
 	}
 }

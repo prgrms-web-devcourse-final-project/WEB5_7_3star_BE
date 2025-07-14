@@ -198,9 +198,9 @@ public class MockDataInitializer implements CommandLineRunner {
 				Lesson randomLesson = instructorLessons.get(random.nextInt(instructorLessons.size()));
 
 				// 평점은 metadata의 rating 주변으로 생성
-				float baseRating = metadata.getRating();
-				float reviewRating = Math.max(1.0f, Math.min(5.0f,
-					baseRating + (random.nextFloat() - 0.5f) * 2)); // ±1점 범위
+				double baseRating = metadata.getRating();
+				double reviewRating = Math.max(1.0d, Math.min(5.0d,
+					baseRating + (random.nextFloat() - 0.5d) * 2)); // ±1점 범위
 
 				Review review = Review.builder()
 					.reviewer(randomStudent)
@@ -226,9 +226,9 @@ public class MockDataInitializer implements CommandLineRunner {
 		}
 	}
 
-	private float generateRating() {
+	private double generateRating() {
 		// 3.0 ~ 5.0 사이의 평점 생성 (소수점 1자리)
-		float rating = 3.0f + random.nextFloat() * 2.0f;
-		return Math.round(rating * 10) / 10.0f;
+		double rating = 3.0d + random.nextFloat() * 2.0d;
+		return Math.round(rating * 10) / 10.0d;
 	}
 }
