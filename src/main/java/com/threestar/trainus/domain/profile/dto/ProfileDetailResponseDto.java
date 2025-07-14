@@ -6,6 +6,6 @@ public record ProfileDetailResponseDto(
 	String profileImage,
 	String intro,
 	Integer reviewCount,
-	Float rating
+	Double rating
 ) {
 }

@@ -39,14 +39,14 @@ public class ProfileMetadata {
 
 	@Setter
 	@Column(nullable = false)
-	private Float rating;
+	private Double rating;
 
 	public void increaseReviewCount() {
 		this.reviewCount++;
 	}
 
-	public Float updateRating(Float newRating) {
-		Float totalRatingBefore = this.rating * (reviewCount - 1);
+	public double updateRating(double newRating) {
+		double totalRatingBefore = this.rating * (reviewCount - 1);
 		totalRatingBefore += newRating;
 		return totalRatingBefore / reviewCount;
 	}

@@ -15,6 +15,6 @@ public class ReviewViewResponseDto {
 	private String reviewerNickname;
 	private String reviewImage;
 	private String content;
-	private Float rating;
+	private Double rating;
 	private LocalDateTime createdAt;
 }

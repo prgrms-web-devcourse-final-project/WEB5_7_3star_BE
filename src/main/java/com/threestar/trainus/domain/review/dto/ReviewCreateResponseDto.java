@@ -8,6 +8,6 @@ import lombok.Getter;
 public class ReviewCreateResponseDto {
 	private Long reviewId;
 	private String content;
-	private Float rating;
+	private Double rating;
 	private String reviewImage;
 }

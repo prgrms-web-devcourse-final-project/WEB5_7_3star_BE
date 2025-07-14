@@ -22,7 +22,7 @@ public class ProfileMetadataMapper {
 		return ProfileMetadata.builder()
 			.user(user)
 			.reviewCount(0)
-			.rating(0.0F)
+			.rating(0.0d)
 			.build();
 	}
 }

@@ -16,7 +16,7 @@ public record LessonDetailResponseDto(
 	String profileImage,
 	int likeCount,
 	int reviewCount,
-	float rating,
+	double rating,
 	String category,
 	int price,
 	int maxParticipants,

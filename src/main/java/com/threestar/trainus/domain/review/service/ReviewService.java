@@ -8,8 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
-import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
-import com.threestar.trainus.domain.metadata.repository.ProfileMetadataRepository;
+import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.review.dto.ReviewCreateRequestDto;
 import com.threestar.trainus.domain.review.dto.ReviewCreateResponseDto;
 import com.threestar.trainus.domain.review.dto.ReviewPageResponseDto;
@@ -28,10 +27,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReviewService {
 
+	private final ProfileMetadataService profileMetadataService;
 	private final ReviewRepository reviewRepository;
 	private final LessonRepository lessonRepository;
 	private final UserRepository userRepository;
-	private final ProfileMetadataRepository profileMetadataRepository;
 	private final LessonParticipantRepository lessonParticipantRepository;
 
 	//참여자 테이블에 있는지도 검증 필요 횟수도 한번으로 제한
@@ -70,13 +69,7 @@ public class ReviewService {
 			.image(reviewRequestDto.getReviewImage())
 			.build());
 
-		ProfileMetadata profileMetadata = profileMetadataRepository.findWithLockByUserId(
-				lessonLeader.getId())  //비관적 락 적용
-			.orElseThrow(() -> new BusinessException(ErrorCode.METADATA_NOT_FOUND));
-
-		profileMetadata.increaseReviewCount();
-		profileMetadata.setRating(profileMetadata.updateRating(reviewRequestDto.getRating()));
-
+		profileMetadataService.increaseReviewCountAndRating(lessonLeader.getId(), reviewRequestDto.getRating());
 		return ReviewMapper.toReviewResponseDto(newReview);
 	}
 

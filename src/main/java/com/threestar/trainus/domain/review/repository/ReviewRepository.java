@@ -14,12 +14,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 	boolean existsByReviewer_IdAndLessonId(Long reviewerId, Long lessonId);
 
-	@Query(
-		value = "select count(*) from ("
-			+ " select review_id from reviews where reviewee_id = :userId limit :limit"
-			+ ") t",
-		nativeQuery = true
-	)
+	@Query(value = """
+		select count(*) from (select review_id from reviews where reviewee_id = :userId limit :limit ) t
+		""", nativeQuery = true)
 	Long count(
 		@Param("userId") Long userId,
 		@Param("limit") int limit
