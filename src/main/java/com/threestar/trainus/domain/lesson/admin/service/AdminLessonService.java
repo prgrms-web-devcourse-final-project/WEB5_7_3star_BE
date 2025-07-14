@@ -31,6 +31,7 @@ import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepositor
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -47,11 +48,12 @@ public class AdminLessonService {
 	private final LessonImageRepository lessonImageRepository; // 레슨 이미지 DB 접근
 	private final UserRepository userRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
+	private final UserService userService;
 
 	// 새로운 레슨을 생성하는 메서드
-	@Transactional
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
 		// User 조회
+		//TODO: 공통메소드
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -117,22 +119,18 @@ public class AdminLessonService {
 	@Transactional
 	public void deleteLesson(Long lessonId, Long userId) {
 		// User 존재 확인
+		//TODO: 공통메소드
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		//레슨 조회
-		Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(() -> new BusinessException(
-			ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = findLessonById(lessonId);
 
 		//권한 확인 -> 레슨을 올린사람만 삭제가 가능하도록
-		if (!lesson.getLessonLeader().equals(userId)) {
-			throw new BusinessException(ErrorCode.LESSON_DELETE_FORBIDDEN);
-		}
+		validateIsYourLesson(lesson, userId);
 
 		//이미 삭제된 레슨인지 확인
-		if (lesson.getDeletedAt() != null) {
-			throw new BusinessException(ErrorCode.LESSON_ALREADY_DELETED);
-		}
+		validateLessonNotDeleted(lesson);
 
 		lessonEditable(lesson);
 
@@ -179,9 +177,7 @@ public class AdminLessonService {
 
 		// 강사 권한 확인 -> 해당 레슨의 강사인지 확인
 		Lesson lesson = application.getLesson();
-		if (!lesson.getLessonLeader().equals(userId)) {
-			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
-		}
+		validateIsYourLesson(lesson, userId);
 
 		// 이미 처리된 신청인지 확인(대기중아니라면 -> 이미 승인이나 거절처리 된거니까)
 		if (!application.getStatus().equals(ApplicationStatus.PENDING)) {
@@ -235,6 +231,7 @@ public class AdminLessonService {
 		Long userId, int page, int limit, String status) {
 
 		// User 존재 확인
+		//TODO: 공통메소드
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -294,25 +291,47 @@ public class AdminLessonService {
 		}
 	}
 
+	//레슨 조회 및 검증
+	public Lesson findLessonById(Long lessonId) {
+		return lessonRepository.findById(lessonId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+	}
+
+	//레슨 application조회 및 검증
+	public LessonApplication findApplicationById(Long applicationId) {
+		return lessonApplicationRepository.findById(applicationId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
+	}
+
+	//강사 권한 검증
+	public void validateIsYourLesson(Lesson lesson, Long userId) {
+		if (!lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
+		}
+	}
+
+	//레슨 삭제 여부 검증
+	public void validateLessonNotDeleted(Lesson lesson) {
+		if (lesson.isDeleted()) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_FOUND);
+		}
+	}
+
 	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크
 	private Lesson validateLessonAccess(Long lessonId, Long userId) {
 		// User 존재 확인
+		//TODO : 공통메서드
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		// 레슨 존재하는지 확인
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = findLessonById(lessonId);
 
 		// 삭제된 레슨 확인
-		if (lesson.isDeleted()) {
-			throw new BusinessException(ErrorCode.LESSON_NOT_FOUND);
-		}
+		validateLessonNotDeleted(lesson);
 
 		// 강사 본인 확인
-		if (!lesson.getLessonLeader().equals(userId)) {
-			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
-		}
+		validateIsYourLesson(lesson, userId);
 
 		return lesson;
 	}
