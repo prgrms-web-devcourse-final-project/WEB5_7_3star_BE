@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.lesson.admin.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListRespon
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.entity.ApplicationAction;
 import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
@@ -29,6 +31,7 @@ import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepositor
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -45,13 +48,21 @@ public class AdminLessonService {
 	private final LessonImageRepository lessonImageRepository; // 레슨 이미지 DB 접근
 	private final UserRepository userRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
+	private final UserService userService;
 
 	// 새로운 레슨을 생성하는 메서드
-	@Transactional
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
 		// User 조회
+		//TODO: 공통메소드
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		validateLessonTimes(requestDto.startAt(), requestDto.endAt());
+
+		// 최대 참가 인원 검증 -> 100명이하로 제한
+		if (requestDto.maxParticipants() > 100) {
+			throw new BusinessException(ErrorCode.LESSON_MAX_PARTICIPANTS_EXCEEDED);
+		}
 
 		// 동일 레슨 중복 검증(동일한 강사가 같은 이름+시간으로 레슨 생성 차단)
 		boolean isDuplicate = lessonRepository.existsDuplicateLesson(
@@ -108,22 +119,20 @@ public class AdminLessonService {
 	@Transactional
 	public void deleteLesson(Long lessonId, Long userId) {
 		// User 존재 확인
+		//TODO: 공통메소드
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		//레슨 조회
-		Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(() -> new BusinessException(
-			ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = findLessonById(lessonId);
 
 		//권한 확인 -> 레슨을 올린사람만 삭제가 가능하도록
-		if (!lesson.getLessonLeader().equals(userId)) {
-			throw new BusinessException(ErrorCode.LESSON_DELETE_FORBIDDEN);
-		}
+		validateIsYourLesson(lesson, userId);
 
 		//이미 삭제된 레슨인지 확인
-		if (lesson.getDeletedAt() != null) {
-			throw new BusinessException(ErrorCode.LESSON_ALREADY_DELETED);
-		}
+		validateLessonNotDeleted(lesson);
+
+		lessonEditable(lesson);
 
 		lesson.lessonDelete();
 		lessonRepository.save(lesson);
@@ -160,17 +169,15 @@ public class AdminLessonService {
 	//레슨 신청 승인/거절 처리
 	@Transactional
 	public ApplicationProcessResponseDto processLessonApplication(
-		Long lessonApplicationId, String action, Long userId) {
+		Long lessonApplicationId, ApplicationAction action, Long userId) {
 
-		// 신청 존재 확인
+		// 신청이 있는지 확인
 		LessonApplication application = lessonApplicationRepository.findById(lessonApplicationId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
 
 		// 강사 권한 확인 -> 해당 레슨의 강사인지 확인
 		Lesson lesson = application.getLesson();
-		if (!lesson.getLessonLeader().equals(userId)) {
-			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
-		}
+		validateIsYourLesson(lesson, userId);
 
 		// 이미 처리된 신청인지 확인(대기중아니라면 -> 이미 승인이나 거절처리 된거니까)
 		if (!application.getStatus().equals(ApplicationStatus.PENDING)) {
@@ -178,14 +185,13 @@ public class AdminLessonService {
 		}
 
 		//승인/거절 처리
-		if ("APPROVED".equals(action)) {
+		if (action == ApplicationAction.APPROVED) {
+			validateCapacity(lesson);
 			application.approve();
 			// 승인 시 레슨 참가자수 증가
 			lesson.incrementParticipantCount();
-		} else if ("DENIED".equals(action)) {
+		} else if (action == ApplicationAction.DENIED) {
 			application.deny();
-		} else {
-			throw new BusinessException(ErrorCode.INVALID_APPLICATION_ACTION);
 		}
 
 		LessonApplication savedApplication = lessonApplicationRepository.save(application);
@@ -194,7 +200,7 @@ public class AdminLessonService {
 		return ApplicationProcessResponseDto.builder()
 			.lessonApplicationId(savedApplication.getId())
 			.userId(savedApplication.getUser().getId())
-			.status(savedApplication.getStatus().name())
+			.status(savedApplication.getStatus())
 			.processedAt(savedApplication.getUpdatedAt())
 			.build();
 	}
@@ -225,6 +231,7 @@ public class AdminLessonService {
 		Long userId, int page, int limit, String status) {
 
 		// User 존재 확인
+		//TODO: 공통메소드
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -249,25 +256,82 @@ public class AdminLessonService {
 		);
 	}
 
+	//시간 검증: 시작시간이 종료시간보다 앞에 있는지, 시작시간이 과거가 아닌지
+	private void validateLessonTimes(LocalDateTime startAt, LocalDateTime endAt) {
+		LocalDateTime now = LocalDateTime.now();
+
+		// 시작시간이 현재시간보다 과거인지 확인
+		if (startAt.isBefore(now)) {
+			throw new BusinessException(ErrorCode.LESSON_START_TIME_INVALID);
+		}
+
+		// 종료시간이 시작시간보다 이전인지 확인
+		if (endAt.isBefore(startAt) || endAt.isEqual(startAt)) {
+			throw new BusinessException(ErrorCode.LESSON_END_TIME_BEFORE_START);
+		}
+	}
+
+	//정원 초과 검증-> 승인 시 maxParticipants 초과하지 않는지
+	private void validateCapacity(Lesson lesson) {
+		if (lesson.getParticipantCount() >= lesson.getMaxParticipants()) {
+			throw new BusinessException(ErrorCode.LESSON_MAX_PARTICIPANTS_EXCEEDED);
+		}
+	}
+
+	//레슨 상태 검증: 이미 시작되거나 완료된 레슨 수정/삭제 방지
+	private void lessonEditable(Lesson lesson) {
+		// 진행중이거나 완료된 레슨은 수정/삭제 불가
+		if (lesson.getStatus() == LessonStatus.IN_PROGRESS || lesson.getStatus() == LessonStatus.COMPLETED) {
+			throw new BusinessException(ErrorCode.INVALID_LESSON_DATE);
+		}
+
+		// 레슨 시작 시간이 지났는지도 확인
+		if (lesson.getStartAt().isBefore(LocalDateTime.now())) {
+			throw new BusinessException(ErrorCode.LESSON_START_TIME_INVALID);
+		}
+	}
+
+	//레슨 조회 및 검증
+	public Lesson findLessonById(Long lessonId) {
+		return lessonRepository.findById(lessonId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+	}
+
+	//레슨 application조회 및 검증
+	public LessonApplication findApplicationById(Long applicationId) {
+		return lessonApplicationRepository.findById(applicationId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
+	}
+
+	//강사 권한 검증
+	public void validateIsYourLesson(Lesson lesson, Long userId) {
+		if (!lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
+		}
+	}
+
+	//레슨 삭제 여부 검증
+	public void validateLessonNotDeleted(Lesson lesson) {
+		if (lesson.isDeleted()) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_FOUND);
+		}
+	}
+
 	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크
 	private Lesson validateLessonAccess(Long lessonId, Long userId) {
 		// User 존재 확인
+		//TODO : 공통메서드
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		// 레슨 존재하는지 확인
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = findLessonById(lessonId);
 
 		// 삭제된 레슨 확인
-		if (lesson.isDeleted()) {
-			throw new BusinessException(ErrorCode.LESSON_NOT_FOUND);
-		}
+		validateLessonNotDeleted(lesson);
 
 		// 강사 본인 확인
-		if (!lesson.getLessonLeader().equals(userId)) {
-			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
-		}
+		validateIsYourLesson(lesson, userId);
 
 		return lesson;
 	}

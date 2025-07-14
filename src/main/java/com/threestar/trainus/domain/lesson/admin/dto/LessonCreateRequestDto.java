@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.threestar.trainus.domain.lesson.admin.entity.Category;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -32,6 +33,7 @@ public record LessonCreateRequestDto(
 
 	@NotNull(message = "최대 참가 인원은 필수입니다.")
 	@Min(value = 1, message = "최대 참가 인원은 1명 이상이어야 합니다.")
+	@Max(value = 100, message = "최대 참가 인원은 100명 이하여야 합니다.")
 	Integer maxParticipants,
 
 	@NotNull(message = "레슨 시작 시간은 필수입니다.")

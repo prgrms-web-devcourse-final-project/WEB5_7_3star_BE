@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.threestar.trainus.domain.lesson.admin.entity.Category;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
 
@@ -38,4 +39,26 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 	Page<Lesson> findByLessonLeaderAndStatusAndDeletedAtIsNull(Long lessonLeader, LessonStatus status,
 		Pageable pageable);
 
+	// 레슨 검색
+	@Query("""
+		SELECT l FROM Lesson l
+		WHERE
+			(:category IS NULL OR l.category = :category)
+			AND l.city = :city
+			AND l.district = :district
+			AND l.dong = :dong
+			AND (
+				:search IS NULL OR
+				LOWER(l.lessonName) LIKE LOWER(CONCAT('%', :search, '%'))
+			)
+		"""
+	)
+	Page<Lesson> findBySearchConditions(
+		@Param("category") Category category,
+		@Param("city") String city,
+		@Param("district") String district,
+		@Param("dong") String dong,
+		@Param("search") String search,
+		Pageable pageable
+	);
 }

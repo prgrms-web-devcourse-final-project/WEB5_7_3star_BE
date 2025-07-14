@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.lesson.admin.dto;
 
 import java.time.LocalDateTime;
 
+import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 
 import lombok.Builder;
@@ -13,8 +14,8 @@ import lombok.Builder;
 public record LessonApplicationResponseDto(
 	Long lessonApplicationId,
 	ProfileResponseDto user,
-	String status,
+	ApplicationStatus status,
 	LocalDateTime appliedAt
 ) {
-}
 
+}

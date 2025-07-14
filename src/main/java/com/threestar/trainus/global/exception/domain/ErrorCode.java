@@ -52,8 +52,8 @@ public enum ErrorCode {
 	INVALID_LESSON_PRICE(HttpStatus.BAD_REQUEST, "레슨 가격이 유효하지 않습니다."),
 	LESSON_START_TIME_INVALID(HttpStatus.BAD_REQUEST, "레슨 시작 시간이 현재 시간보다 과거입니다."),
 	LESSON_END_TIME_BEFORE_START(HttpStatus.BAD_REQUEST, "레슨 종료 시간이 시작 시간보다 빠릅니다."),
-	LESSON_DURATION_TOO_SHORT(HttpStatus.BAD_REQUEST, "레슨 시간이 너무 짧습니다. 최소 30분 이상이어야 합니다."),
-	LESSON_DURATION_TOO_LONG(HttpStatus.BAD_REQUEST, "레슨 시간이 너무 깁니다. 최대 8시간까지 가능합니다."),
+	LESSON_DURATION_TOO_SHORT(HttpStatus.BAD_REQUEST, "레슨 시간이 너무 짧습니다. 최소 10분 이상이어야 합니다."),
+	LESSON_DURATION_TOO_LONG(HttpStatus.BAD_REQUEST, "레슨 시간이 너무 깁니다. 최대 10시간까지 가능합니다."),
 	LESSON_MAX_PARTICIPANTS_EXCEEDED(HttpStatus.BAD_REQUEST, "최대 참가 인원이 허용 범위를 초과했습니다."),
 	LESSON_OPEN_TIME_INVALID(HttpStatus.BAD_REQUEST, "선착순 오픈 시간이 레슨 시작 시간 이후입니다."),
 	LESSON_IMAGE_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "레슨 이미지는 최대 5장까지 첨부 가능합니다."),
@@ -66,6 +66,8 @@ public enum ErrorCode {
 		"유효하지 않은 레슨 상태입니다. (RECRUITING, RECRUITMENT_COMPLETED, IN_PROGRESS, COMPLETED, CANCELLED)"),
 	LESSON_CREATOR_CANNOT_APPLY(HttpStatus.BAD_REQUEST, "레슨 개설자는 자신이 개설한 레슨에 참여 신청할 수 없습니다."),
 	CANNOT_CANCEL_APPROVED_APPLICATION(HttpStatus.BAD_REQUEST, "승인된 신청은 취소할 수 없습니다."),
+	INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "잘못된 카테고리입니다."),
+
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),
 	LESSON_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 접근 권한이 없습니다. 강사만 조회할 수 있습니다."),
@@ -103,8 +105,6 @@ public enum ErrorCode {
 	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증 코드가 만료되었습니다."),
 
 	EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증이 완료되지 않았습니다."),
-
-	EMAIL_SEND_FAILED(HttpStatus.BAD_REQUEST, "이메일 발송을 실패했습니다.");
 
 	EMAIL_SEND_FAILED(HttpStatus.BAD_REQUEST, "이메일 발송을 실패했습니다."),
 

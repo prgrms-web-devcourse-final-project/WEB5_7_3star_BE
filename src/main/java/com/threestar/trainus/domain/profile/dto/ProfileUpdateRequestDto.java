@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record ProfileUpdateRequestDto(
 
-	@Size(max = 255, message = "프로필 이미지 URL은 255자 이하여야 합니다.")
+	@Size(max = 2048, message = "프로필 이미지 URL은 2048자 이하여야 합니다.")
 	@Pattern(
 		regexp = "^$|^https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+$",
 		message = "올바른 URL 형식이어야 합니다."

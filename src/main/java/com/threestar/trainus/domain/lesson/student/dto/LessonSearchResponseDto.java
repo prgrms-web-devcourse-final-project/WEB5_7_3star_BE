@@ -10,7 +10,6 @@ public record LessonSearchResponseDto(
 	String lessonName,
 	String lessonLeaderName,
 	String lessonLeaderImage,
-	int likeCount,
 	int reviewCount,
 	float rating,
 	Category category,
@@ -28,5 +27,4 @@ public record LessonSearchResponseDto(
 	LocalDateTime createdAt,
 	List<String> lessonImages
 ) {
-
 }
