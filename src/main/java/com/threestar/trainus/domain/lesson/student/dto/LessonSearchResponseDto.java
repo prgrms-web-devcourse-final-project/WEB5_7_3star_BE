@@ -11,7 +11,7 @@ public record LessonSearchResponseDto(
 	String lessonLeaderName,
 	String lessonLeaderImage,
 	int reviewCount,
-	float rating,
+	double rating,
 	Category category,
 	int price,
 	int maxParticipants,

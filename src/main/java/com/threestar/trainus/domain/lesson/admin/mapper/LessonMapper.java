@@ -67,7 +67,7 @@ public class LessonMapper {
 		User leader,
 		Profile profile,
 		int reviewCount,
-		float rating,
+		double rating,
 		List<String> lessonImages
 	) {
 		return LessonDetailResponseDto.builder()
