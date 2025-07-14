@@ -18,19 +18,24 @@ import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListRespon
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.entity.ApplicationAction;
 import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
+import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
 
-import jakarta.servlet.http.HttpSession;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 /**
  * 이 컨트롤러는 전부 강사용 api!!!
  */
+@Tag(name = "강사용 레슨 API", description = "레슨 개설, 삭제, 승인/거절, 조회(수강생조회,내레슨조회등) 관련 API")
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -40,118 +45,94 @@ public class AdminLessonController {
 
 	//레슨 생성
 	@PostMapping("/lessons")
+	@Operation(summary = "레슨 생성 api", description = "레슨생성")
 	public ResponseEntity<BaseResponse<LessonResponseDto>> createLesson(
 		@Valid @RequestBody LessonCreateRequestDto requestDto,
-		HttpSession session) {
+		@LoginUser Long loginUserId) {
 
-		//로그인한 사용자만 레슨을 생성할 수 있음
-		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
-		if (sessionUserId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
-
-		LessonResponseDto responseDto = adminLessonService.createLesson(requestDto, sessionUserId);
+		LessonResponseDto responseDto = adminLessonService.createLesson(requestDto, loginUserId);
 		return BaseResponse.ok("레슨이 생성되었습니다.", responseDto, HttpStatus.CREATED);
 	}
 
 	//레슨 삭제
 	@DeleteMapping("/lessons/{lessonId}")
+	@Operation(summary = "레슨 삭제 api", description = "현재는 무료 레슨만 있기때문에 참가자가 있어도 마음대로 삭제가능")
 	public ResponseEntity<BaseResponse<Void>> deleteLesson(
 		@PathVariable Long lessonId,
-		HttpSession session) {
-
-		//세션을 기반으로 인증
-		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
-		if (sessionUserId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
+		@LoginUser Long loginUserId) {
 
 		// 레슨 삭제
-		adminLessonService.deleteLesson(lessonId, sessionUserId);
+		adminLessonService.deleteLesson(lessonId, loginUserId);
 		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}
 
 	//레슨 신청자 목록 조회
 	@GetMapping("/lessons/{lessonId}/applications")
+	@Operation(summary = "레슨 신청자 목록 조회 api", description = "레슨 신청자의 목록을 조회 가능함.")
 	public ResponseEntity<BaseResponse<LessonApplicationListResponseDto>> getLessonApplications(
 		@PathVariable Long lessonId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.") int limit,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
+		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
 		@RequestParam(defaultValue = "ALL") String status,
-		HttpSession session) {
-
-		// 세션 기반 인증 체크
-		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
-		if (sessionUserId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
+		@LoginUser Long loginUserId) {
 
 		// 신청자 목록 조회
 		LessonApplicationListResponseDto responseDto = adminLessonService
-			.getLessonApplications(lessonId, page, limit, status, sessionUserId);
+			.getLessonApplications(lessonId, page, limit, status, loginUserId);
 
 		return BaseResponse.ok("레슨 신청자 목록 조회 완료.", responseDto, HttpStatus.OK);
 	}
 
 	//레슨 신청 승인/거절
 	@PostMapping("/lessons/applications/{lessonApplicationId}")
+	@Operation(summary = "레슨 신청 승인/거절 api", description = "")
 	public ResponseEntity<BaseResponse<ApplicationProcessResponseDto>> processLessonApplication(
 		@PathVariable Long lessonApplicationId,
 		@Valid @RequestBody ApplicationActionRequestDto requestDto,
-		HttpSession session) {
-
-		// 세션 기반 인증 체크
-		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
-		if (sessionUserId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
+		@LoginUser Long loginUserId) {
 
 		// 신청 승인/거절 처리
 		ApplicationProcessResponseDto responseDto = adminLessonService
-			.processLessonApplication(lessonApplicationId, requestDto.action(), sessionUserId);
+			.processLessonApplication(lessonApplicationId, requestDto.action(), loginUserId);
 
-		return BaseResponse.ok("레슨 신청 " + (requestDto.action().equals("APPROVED") ? "승인" : "거절"), responseDto,
-			HttpStatus.OK);
+		String message = (requestDto.action() == ApplicationAction.APPROVED) ? "승인" : "거절";
+		return BaseResponse.ok("레슨 신청 " + message, responseDto, HttpStatus.OK);
 	}
 
 	//레슨 참가자 목록 조회
 	@GetMapping("/lessons/{lessonId}/participants")
+	@Operation(summary = "레슨 참가자 목록 조회 api", description = "")
 	public ResponseEntity<BaseResponse<ParticipantListResponseDto>> getLessonParticipants(
 		@PathVariable Long lessonId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.") int limit,
-		HttpSession session) {
-
-		// 세션 기반 인증 체크
-		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
-		if (sessionUserId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
+		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
+		@LoginUser Long loginUserId) {
 
 		// 참가자 목록 조회
 		ParticipantListResponseDto responseDto = adminLessonService
-			.getLessonParticipants(lessonId, page, limit, sessionUserId);
+			.getLessonParticipants(lessonId, page, limit, loginUserId);
 
 		return BaseResponse.ok("레슨 참가자 목록 조회 완료.", responseDto, HttpStatus.OK);
 	}
 
 	//강사가 개설한 레슨 목록 조회
 	@GetMapping("/lessons/{userId}/created-lessons")
+	@Operation(summary = "강사가 개설한 레슨 목록 조회 api", description = "")
 	public ResponseEntity<BaseResponse<CreatedLessonListResponseDto>> getCreatedLessons(
 		@PathVariable Long userId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.") int limit,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
+		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
 		@RequestParam(required = false) String status,
-		HttpSession session) {
-
-		// 내가 개설한 레슨만 조회 가능 -> 세션기반인증
-		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
-		if (sessionUserId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
+		@LoginUser Long loginUserId) {
 
 		// 내가 개설한 레슨만 조회 가능!!
-		if (!sessionUserId.equals(userId)) {
+		if (!loginUserId.equals(userId)) {
 			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
 		}
 

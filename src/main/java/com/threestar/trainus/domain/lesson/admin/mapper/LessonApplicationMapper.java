@@ -22,7 +22,7 @@ public class LessonApplicationMapper {
 		return LessonApplicationResponseDto.builder()
 			.lessonApplicationId(application.getId())
 			.user(userDto)
-			.status(application.getStatus().name())
+			.status(application.getStatus())
 			.appliedAt(application.getCreatedAt())
 			.build();
 	}
