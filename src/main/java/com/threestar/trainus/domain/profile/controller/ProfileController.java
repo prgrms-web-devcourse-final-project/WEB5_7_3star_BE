@@ -15,10 +15,12 @@ import com.threestar.trainus.domain.profile.dto.ProfileUpdateRequestDto;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "유저 프로필 API", description = "유저 프로필 조회/수정 API")
 @RestController
 @RequestMapping("api/v1/profiles")
 @RequiredArgsConstructor
