@@ -12,8 +12,10 @@ import com.threestar.trainus.domain.ranking.dto.RankingResponseDto;
 import com.threestar.trainus.domain.ranking.service.RankingService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "랭킹 조회 API", description = "랭킹 조회(카테고리 상관없이 전체 1~10등) API")
 @RestController
 @RequestMapping("/api/v1/rankings")
 @RequiredArgsConstructor
