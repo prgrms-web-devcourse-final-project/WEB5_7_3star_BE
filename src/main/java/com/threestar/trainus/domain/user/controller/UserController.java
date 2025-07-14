@@ -86,21 +86,4 @@ public class UserController {
 		emailVerificationService.verifyCode(request.email(), request.verificationCode());
 		return BaseResponse.ok("이메일 인증이 완료되었습니다.", null, HttpStatus.OK);
 	}
-
-	//SecurityContext에 잘 올라간 지 테스트
-	@GetMapping("/test-context")
-	public String testSecurityContext(@AuthenticationPrincipal Long userId, HttpSession session) {
-		Long sessionUserId = (Long)session.getAttribute("LOGIN_USER");
-
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		Long contextUserId = null;
-		if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
-			contextUserId = (Long)auth.getPrincipal();
-		}
-
-		Long principalUserId = userId;
-
-		return String.format("Session: %s, Context: %s, AuthPrincipal: %s",
-			sessionUserId, contextUserId, principalUserId);
-	}
 }
