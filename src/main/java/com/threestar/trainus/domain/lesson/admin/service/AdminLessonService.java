@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.lesson.admin.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -53,6 +54,8 @@ public class AdminLessonService {
 		// User 조회
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		validateLessonTimes(requestDto.startAt(), requestDto.endAt());
 
 		// 최대 참가 인원 검증 -> 100명이하로 제한
 		if (requestDto.maxParticipants() > 100) {
@@ -131,6 +134,8 @@ public class AdminLessonService {
 			throw new BusinessException(ErrorCode.LESSON_ALREADY_DELETED);
 		}
 
+		lessonEditable(lesson);
+
 		lesson.lessonDelete();
 		lessonRepository.save(lesson);
 	}
@@ -185,6 +190,7 @@ public class AdminLessonService {
 
 		//승인/거절 처리
 		if (action == ApplicationAction.APPROVED) {
+			validateCapacity(lesson);
 			application.approve();
 			// 승인 시 레슨 참가자수 증가
 			lesson.incrementParticipantCount();
@@ -251,6 +257,41 @@ public class AdminLessonService {
 			lessonPage.getContent(),
 			lessonPage.getTotalElements()
 		);
+	}
+
+	//시간 검증: 시작시간이 종료시간보다 앞에 있는지, 시작시간이 과거가 아닌지
+	private void validateLessonTimes(LocalDateTime startAt, LocalDateTime endAt) {
+		LocalDateTime now = LocalDateTime.now();
+
+		// 시작시간이 현재시간보다 과거인지 확인
+		if (startAt.isBefore(now)) {
+			throw new BusinessException(ErrorCode.LESSON_START_TIME_INVALID);
+		}
+
+		// 종료시간이 시작시간보다 이전인지 확인
+		if (endAt.isBefore(startAt) || endAt.isEqual(startAt)) {
+			throw new BusinessException(ErrorCode.LESSON_END_TIME_BEFORE_START);
+		}
+	}
+
+	//정원 초과 검증-> 승인 시 maxParticipants 초과하지 않는지
+	private void validateCapacity(Lesson lesson) {
+		if (lesson.getParticipantCount() >= lesson.getMaxParticipants()) {
+			throw new BusinessException(ErrorCode.LESSON_MAX_PARTICIPANTS_EXCEEDED);
+		}
+	}
+
+	//레슨 상태 검증: 이미 시작되거나 완료된 레슨 수정/삭제 방지
+	private void lessonEditable(Lesson lesson) {
+		// 진행중이거나 완료된 레슨은 수정/삭제 불가
+		if (lesson.getStatus() == LessonStatus.IN_PROGRESS || lesson.getStatus() == LessonStatus.COMPLETED) {
+			throw new BusinessException(ErrorCode.INVALID_LESSON_DATE);
+		}
+
+		// 레슨 시작 시간이 지났는지도 확인
+		if (lesson.getStartAt().isBefore(LocalDateTime.now())) {
+			throw new BusinessException(ErrorCode.LESSON_START_TIME_INVALID);
+		}
 	}
 
 	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크
