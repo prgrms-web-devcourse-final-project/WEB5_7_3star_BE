@@ -23,6 +23,8 @@ import com.threestar.trainus.global.unit.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "수강생 레슨 API", description = "수강생 조회/등록 관련 API")
@@ -35,8 +37,10 @@ public class StudentLessonController {
 	@GetMapping
 	@Operation(summary = "레슨 검색 api", description = "category(필수, Default: \"ALL\") / search(선택) / 그외 법정동 선택 필수")
 	public ResponseEntity<BaseResponse<LessonSearchListResponseDto>> searchLessons(
-		@RequestParam(required = false, defaultValue = "1") int page,
-		@RequestParam(required = false, defaultValue = "10") int limit,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
+		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
 		@RequestParam String category,
 		@RequestParam(required = false) String search,
 		@RequestParam String city,
@@ -88,8 +92,10 @@ public class StudentLessonController {
 	@GetMapping("/my-applications")
 	@Operation(summary = "나의 레슨 신청 목록 조회", description = "현재 로그인한 사용자의 레슨 신청 목록을 조회합니다.")
 	public ResponseEntity<BaseResponse<MyLessonApplicationListResponseDto>> getMyLessonApplications(
-		@RequestParam(defaultValue = "1") int page,
-		@RequestParam(defaultValue = "5") int limit,
+		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
+		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
+		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
+		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
 		@RequestParam(defaultValue = "ALL") String status,
 		HttpSession session
 	) {
