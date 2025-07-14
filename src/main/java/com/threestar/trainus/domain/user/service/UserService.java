@@ -77,4 +77,11 @@ public class UserService {
 		session.invalidate();
 		SecurityContextHolder.clearContext();
 	}
+
+	@Transactional(readOnly = true)
+	public void checkNickname(String nickname) {
+		if (userRepository.existsByNickname(nickname)) {
+			throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+		}
+	}
 }
