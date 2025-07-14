@@ -6,10 +6,11 @@ import com.threestar.trainus.domain.user.dto.SignupResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
 
-public class UserMapper {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-	private UserMapper() {
-	}
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class UserMapper {
 
 	public static User toEntity(SignupRequestDto request, String encodedPassword) {
 		return User.builder()

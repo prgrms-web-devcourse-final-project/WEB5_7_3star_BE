@@ -4,10 +4,11 @@ import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.user.entity.User;
 
-public class ProfileMetadataMapper {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-	private ProfileMetadataMapper() {
-	}
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class ProfileMetadataMapper {
 
 	public static ProfileMetadataResponseDto toResponseDto(ProfileMetadata profileMetadata, User user) {
 		return new ProfileMetadataResponseDto(

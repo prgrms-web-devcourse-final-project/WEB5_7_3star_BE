@@ -8,7 +8,7 @@ public record EmailSendRequestDto(
 
 	@NotBlank(message = "이메일은 필수입니다.")
 	@Email(message = "올바른 이메일 형식이 아닙니다.")
-	@Size(max = 30, message = "이메일은 최대 30자 입니다.")
+	@Size(max = 100, message = "이메일은 최대 100자 입니다.")
 	String email
 ) {
 }

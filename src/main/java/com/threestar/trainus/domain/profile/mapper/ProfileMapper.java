@@ -4,11 +4,11 @@ import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.user.entity.User;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProfileMapper {
-
-	private ProfileMapper() {
-
-	}
 
 	public static ProfileResponseDto toResponseDto(Profile profile, User user) {
 		return new ProfileResponseDto(

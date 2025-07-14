@@ -41,7 +41,9 @@ public class UserService {
 			throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
 		}
 
-		checkNickname(request.nickname());
+		if (userRepository.existsByNickname(request.nickname())) {
+			throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+		}
 
 		String encodedPassword = passwordEncoder.encode(request.password());
 
@@ -74,13 +76,5 @@ public class UserService {
 	public void logout(HttpSession session) {
 		session.invalidate();
 		SecurityContextHolder.clearContext();
-	}
-
-	@Transactional(readOnly = true)
-	public void checkNickname(String nickname) {
-
-		if (userRepository.existsByNickname(nickname)) {
-			throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
-		}
 	}
 }
