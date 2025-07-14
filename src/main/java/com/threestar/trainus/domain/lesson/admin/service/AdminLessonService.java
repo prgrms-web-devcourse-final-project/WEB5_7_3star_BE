@@ -15,6 +15,7 @@ import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListRespon
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.entity.ApplicationAction;
 import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
@@ -160,9 +161,9 @@ public class AdminLessonService {
 	//레슨 신청 승인/거절 처리
 	@Transactional
 	public ApplicationProcessResponseDto processLessonApplication(
-		Long lessonApplicationId, String action, Long userId) {
+		Long lessonApplicationId, ApplicationAction action, Long userId) {
 
-		// 신청 존재 확인
+		// 신청이 있는지 확인
 		LessonApplication application = lessonApplicationRepository.findById(lessonApplicationId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
 
@@ -178,14 +179,12 @@ public class AdminLessonService {
 		}
 
 		//승인/거절 처리
-		if ("APPROVED".equals(action)) {
+		if (action == ApplicationAction.APPROVED) {
 			application.approve();
 			// 승인 시 레슨 참가자수 증가
 			lesson.incrementParticipantCount();
-		} else if ("DENIED".equals(action)) {
+		} else if (action == ApplicationAction.DENIED) {
 			application.deny();
-		} else {
-			throw new BusinessException(ErrorCode.INVALID_APPLICATION_ACTION);
 		}
 
 		LessonApplication savedApplication = lessonApplicationRepository.save(application);
@@ -194,7 +193,7 @@ public class AdminLessonService {
 		return ApplicationProcessResponseDto.builder()
 			.lessonApplicationId(savedApplication.getId())
 			.userId(savedApplication.getUser().getId())
-			.status(savedApplication.getStatus().name())
+			.status(savedApplication.getStatus())
 			.processedAt(savedApplication.getUpdatedAt())
 			.build();
 	}

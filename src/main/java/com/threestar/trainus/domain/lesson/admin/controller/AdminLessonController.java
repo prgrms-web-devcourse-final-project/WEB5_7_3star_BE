@@ -18,6 +18,7 @@ import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListRespon
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.entity.ApplicationAction;
 import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
@@ -110,8 +111,8 @@ public class AdminLessonController {
 		ApplicationProcessResponseDto responseDto = adminLessonService
 			.processLessonApplication(lessonApplicationId, requestDto.action(), sessionUserId);
 
-		return BaseResponse.ok("레슨 신청 " + (requestDto.action().equals("APPROVED") ? "승인" : "거절"), responseDto,
-			HttpStatus.OK);
+		String message = (requestDto.action() == ApplicationAction.APPROVED) ? "승인" : "거절";
+		return BaseResponse.ok("레슨 신청 " + message, responseDto, HttpStatus.OK);
 	}
 
 	//레슨 참가자 목록 조회
