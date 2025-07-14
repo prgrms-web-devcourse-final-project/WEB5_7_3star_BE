@@ -20,6 +20,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.threestar.trainus.domain.lesson.admin.entity.Category;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonParticipant;
+import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.metadata.repository.ProfileMetadataRepository;
@@ -48,6 +50,9 @@ class ReviewControllerTest {
 
 	@Autowired
 	private ReviewRepository reviewRepository;
+
+	@Autowired
+	private LessonParticipantRepository lessonParticipantRepository;
 
 	@Autowired
 	private ProfileMetadataRepository profileMetadataRepository;
@@ -104,6 +109,7 @@ class ReviewControllerTest {
 
 	@AfterEach
 	void tearDown() {
+		lessonParticipantRepository.deleteAll();
 		reviewRepository.deleteAll();
 		lessonRepository.deleteAll();
 		userRepository.deleteAll();
@@ -115,16 +121,26 @@ class ReviewControllerTest {
 		profileMetadataRepository.save(ProfileMetadata.builder()
 			.user(reviewee)
 			.reviewCount(0)
-			.rating(0.0f)
+			.rating(0.0D)
 			.build());
 
 		ReviewCreateRequestDto request = new ReviewCreateRequestDto();
 		request.setContent("테스트 리뷰1");
-		request.setRating(3.5f);
+		request.setRating(3.5D);
 		request.setReviewImage("https://example.com/image.png");
 
 		MockHttpSession session = new MockHttpSession();
 		session.setAttribute("LOGIN_USER", reviewer1.getId());
+
+		lessonParticipantRepository.save(LessonParticipant.builder()
+			.lesson(lesson)
+			.user(reviewer1)
+			.build());
+
+		lessonParticipantRepository.save(LessonParticipant.builder()
+			.lesson(lesson)
+			.user(reviewer2)
+			.build());
 
 		mockMvc.perform(post("/api/v1/reviews/" + lessonId)
 				.session(session)
@@ -137,11 +153,11 @@ class ReviewControllerTest {
 
 		ProfileMetadata profileMetadata = profileMetadataRepository.findByUserId(reviewee.getId()).orElseThrow();
 		Assertions.assertEquals(1, profileMetadata.getReviewCount());
-		Assertions.assertEquals(3.5f, profileMetadata.getRating());
+		Assertions.assertEquals(3.5D, profileMetadata.getRating());
 
 		ReviewCreateRequestDto request2 = new ReviewCreateRequestDto();
 		request2.setContent("테스트 리뷰2");
-		request2.setRating(4.5f);
+		request2.setRating(4.5D);
 		request2.setReviewImage("https://example.com/image.png");
 
 		session.setAttribute("LOGIN_USER", reviewer2.getId());
@@ -157,7 +173,7 @@ class ReviewControllerTest {
 
 		ProfileMetadata profileMetadata2 = profileMetadataRepository.findByUserId(reviewee.getId()).orElseThrow();
 		Assertions.assertEquals(2, profileMetadata2.getReviewCount());
-		Assertions.assertEquals(4.0f, profileMetadata2.getRating());
+		Assertions.assertEquals(4.0D, profileMetadata2.getRating());
 	}
 
 	@Test
@@ -167,7 +183,7 @@ class ReviewControllerTest {
 			.reviewee(reviewee)
 			.lesson(lesson)
 			.content("리뷰1")
-			.rating(5.0f)
+			.rating(5.0D)
 			.build());
 
 		reviewRepository.save(Review.builder()
@@ -175,7 +191,7 @@ class ReviewControllerTest {
 			.reviewee(reviewee)
 			.lesson(lesson)
 			.content("리뷰1")
-			.rating(4.5f)
+			.rating(4.5D)
 			.build());
 
 		mockMvc.perform(get("/api/v1/reviews/" + reviewee.getId())
