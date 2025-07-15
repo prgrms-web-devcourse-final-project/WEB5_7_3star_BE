@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,7 +28,17 @@ public class RankingController {
 	@GetMapping
 	@Operation(summary = "전체 랭킹 조회 api", description = "카테고리와 관계없이 전체 랭킹 Top10을 조회")
 	public ResponseEntity<BaseResponse<List<RankingResponseDto>>> getRankings() {
-		List<RankingResponseDto> rankings = rankingService.getTopRankings();
+		List<RankingResponseDto> rankings = rankingService.getTopRankings("ALL");
 		return BaseResponse.ok("전체 랭킹 조회 성공", rankings, HttpStatus.OK);
 	}
+
+	@GetMapping("/{category}")
+	@Operation(summary = "특정 카테고리 랭킹 조회 api", description = "지정된 카테고리의 랭킹을 조회")
+	public ResponseEntity<BaseResponse<List<RankingResponseDto>>> getRankingsByCategory(
+		@PathVariable String category
+	) {
+		List<RankingResponseDto> rankings = rankingService.getTopRankings(category);
+		return BaseResponse.ok(category + "카테고리별 랭킹 조회 성공", rankings, HttpStatus.OK);
+	}
+
 }
