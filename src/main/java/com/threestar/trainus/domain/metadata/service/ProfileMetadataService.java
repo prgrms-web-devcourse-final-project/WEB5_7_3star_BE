@@ -8,6 +8,7 @@ import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.metadata.mapper.ProfileMetadataMapper;
 import com.threestar.trainus.domain.metadata.repository.ProfileMetadataRepository;
 import com.threestar.trainus.domain.user.entity.User;
+import com.threestar.trainus.domain.user.repository.UserRepository;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
@@ -19,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class ProfileMetadataService {
 
 	private final ProfileMetadataRepository profileMetadataRepository;
-	private final UserService userService;
+	private final UserRepository userRepository;
 
 	@Transactional
 	public void createDefaultMetadata(User user) {
@@ -29,7 +30,8 @@ public class ProfileMetadataService {
 
 	@Transactional(readOnly = true)
 	public ProfileMetadataResponseDto getMetadata(Long userId) {
-		User user = userService.getUserById(userId);
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		ProfileMetadata profileMetadata = profileMetadataRepository.findByUserId(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.METADATA_NOT_FOUND));
