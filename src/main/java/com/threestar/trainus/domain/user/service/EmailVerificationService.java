@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.user.service;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Random;
 
@@ -27,23 +28,69 @@ public class EmailVerificationService {
 	private final RedisTemplate<String, String> redisTemplate;
 	private final JavaMailSender mailSender;
 	private final TemplateEngine templateEngine;
+	private final SecureRandom secureRandom = new SecureRandom();
+
+	private static final String VERIFICATION_CODE_KEY_PREFIX = "verificationCode";
+	private static final String VERIFIED_KEY_PREFIX = "verified";
+
+	private static final int VERIFICATION_CODE_EXPIRY_MINUTES = 5;
+	private static final int VERIFIED_STATUS_EXPIRY_MINUTES = 30;
 
 	public EmailSendResponseDto sendVerificationCode(EmailSendRequestDto request) {
 
 		String email = request.email();
-		String code = String.format("%06d", new Random().nextInt(1000000));
+		String code = generateVerificationCode();
 
-		redisTemplate.opsForValue().set("verificationCode:" + email, code, Duration.ofMinutes(5));
+		String codeKey = VERIFICATION_CODE_KEY_PREFIX + email;
 
+		redisTemplate.opsForValue().set(
+			codeKey,
+			code,
+			Duration.ofMinutes(VERIFICATION_CODE_EXPIRY_MINUTES)
+		);
+
+		sendVerificationEmail(email, code);
+
+		return new EmailSendResponseDto(email, VERIFICATION_CODE_EXPIRY_MINUTES);
+	}
+
+	public void verifyCode(String email, String inputCode) {
+		String codeKey = VERIFICATION_CODE_KEY_PREFIX + email;
+		String storedCode = redisTemplate.opsForValue().get(codeKey);
+
+		if (storedCode == null) {
+			throw new BusinessException(ErrorCode.VERIFICATION_CODE_EXPIRED);
+		}
+
+		if (!storedCode.equals(inputCode)) {
+			throw new BusinessException(ErrorCode.INVALID_VERIFICATION_CODE);
+		}
+
+		redisTemplate.delete(codeKey);
+
+		String verifiedKey = VERIFIED_KEY_PREFIX + email;
+
+		redisTemplate.opsForValue().set(
+			verifiedKey,
+			"true",
+			Duration.ofMinutes(VERIFIED_STATUS_EXPIRY_MINUTES)
+		);
+	}
+
+	private String generateVerificationCode() {
+		return String.format("%06d", secureRandom.nextInt(1000000));
+	}
+
+	private void sendVerificationEmail(String email, String code) {
 		try {
 			MimeMessage mimeMessage = mailSender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
 			Context context = new Context();
-			context.setVariable("verificationCode", code);
+			context.setVariable(VERIFICATION_CODE_KEY_PREFIX, code);
 			context.setVariable("email", email);
 
-			String htmlContent = templateEngine.process("verification", context);
+			String htmlContent = templateEngine.process(VERIFIED_KEY_PREFIX, context);
 
 			helper.setTo(email);
 			helper.setSubject("[TrainUs] 인증 코드");
@@ -54,23 +101,5 @@ public class EmailVerificationService {
 		} catch (MessagingException e) {
 			throw new BusinessException(ErrorCode.EMAIL_SEND_FAILED);
 		}
-
-		return new EmailSendResponseDto(email, 5);
-	}
-
-	public void verifyCode(String email, String inputCode) {
-
-		String storedCode = redisTemplate.opsForValue().get("verificationCode:" + email);
-
-		if (storedCode == null) {
-			throw new BusinessException(ErrorCode.VERIFICATION_CODE_EXPIRED);
-		}
-
-		if (!storedCode.equals(inputCode)) {
-			throw new BusinessException(ErrorCode.INVALID_VERIFICATION_CODE);
-		}
-
-		redisTemplate.delete("verificationCode:" + email);
-		redisTemplate.opsForValue().set("verified:" + email, "true", Duration.ofMinutes(30));
 	}
 }
