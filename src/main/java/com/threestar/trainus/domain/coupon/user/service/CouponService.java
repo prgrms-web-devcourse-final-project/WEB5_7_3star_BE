@@ -19,7 +19,7 @@ import com.threestar.trainus.domain.coupon.user.mapper.UserCouponMapper;
 import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.user.entity.User;
-import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -31,12 +31,11 @@ public class CouponService {
 
 	private final CouponRepository couponRepository;
 	private final UserCouponRepository userCouponRepository;
-	private final UserRepository userRepository;
+	private final UserService userService;
 
 	@Transactional
 	public CreateUserCouponResponseDto createUserCoupon(Long userId, Long couponId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User user = userService.getUserById(userId);
 		Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
 
@@ -71,9 +70,7 @@ public class CouponService {
 
 	@Transactional(readOnly = true)
 	public UserCouponPageResponseDto getUserCoupons(Long userId, CouponStatus status) {
-		if (!userRepository.existsById(userId)) {
-			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-		}
+		userService.validateUserExists(userId);
 
 		List<UserCoupon> userCoupons;
 
@@ -88,9 +85,7 @@ public class CouponService {
 
 	@Transactional(readOnly = true)
 	public CouponPageResponseDto getCoupons(Long userId) {
-		if (!userRepository.existsById(userId)) {
-			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-		}
+		userService.validateUserExists(userId);
 
 		List<CouponResponseDto> dtoList =
 			couponRepository.findAvailableCouponsWithOwnership(userId, LocalDateTime.now());
