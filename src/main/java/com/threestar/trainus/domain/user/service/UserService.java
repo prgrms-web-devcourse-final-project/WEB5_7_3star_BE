@@ -33,9 +33,14 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final ProfileFacadeService facadeService;
+	private final EmailVerificationService emailVerificationService;
 
 	@Transactional
 	public SignupResponseDto signup(SignupRequestDto request) {
+
+		if (!emailVerificationService.isEmailVerified(request.email())) {
+			throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+		}
 
 		if (userRepository.existsByEmail(request.email())) {
 			throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);

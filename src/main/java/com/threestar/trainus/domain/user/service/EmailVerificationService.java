@@ -77,6 +77,11 @@ public class EmailVerificationService {
 		);
 	}
 
+	public boolean isEmailVerified(String email) {
+		String verifiedKey = VERIFIED_KEY_PREFIX + email;
+		return redisTemplate.hasKey(verifiedKey);
+	}
+
 	private String generateVerificationCode() {
 		return String.format("%06d", secureRandom.nextInt(1000000));
 	}
