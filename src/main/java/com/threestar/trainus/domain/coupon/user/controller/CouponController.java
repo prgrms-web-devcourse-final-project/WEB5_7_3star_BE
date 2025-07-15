@@ -14,8 +14,7 @@ import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.user.dto.UserCouponPageResponseDto;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
-import com.threestar.trainus.global.exception.domain.ErrorCode;
-import com.threestar.trainus.global.exception.handler.BusinessException;
+import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
