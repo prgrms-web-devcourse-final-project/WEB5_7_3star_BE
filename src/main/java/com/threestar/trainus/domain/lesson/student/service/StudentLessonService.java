@@ -1,7 +1,6 @@
 package com.threestar.trainus.domain.lesson.student.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,10 +25,11 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
-import com.threestar.trainus.domain.lesson.student.dto.LessonSummaryResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
-import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.student.mapper.LessonApplicationMapper;
+import com.threestar.trainus.domain.lesson.student.mapper.LessonApplyMapper;
 import com.threestar.trainus.domain.lesson.student.mapper.LessonSearchMapper;
+import com.threestar.trainus.domain.lesson.student.mapper.LessonSimpleMapper;
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.profile.entity.Profile;
@@ -98,7 +98,7 @@ public class StudentLessonService {
 			})
 			.toList();
 
-		return new LessonSearchListResponseDto(lessonDtos, (int) lessonPage.getTotalElements());
+		return new LessonSearchListResponseDto(lessonDtos, (int)lessonPage.getTotalElements());
 	}
 
 	@Transactional
@@ -168,13 +168,12 @@ public class StudentLessonService {
 			lessonParticipantRepository.save(participant);
 			lesson.incrementParticipantCount();
 
-			return LessonApplicationResponseDto.builder()
-				.lessonApplicationId(participant.getId())
-				.lessonId(lesson.getId())
-				.userId(user.getId())
-				.status(ApplicationStatus.APPROVED.name())
-				.appliedAt(participant.getJoinAt())
-				.build();
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.APPROVED,
+				participant.getJoinAt()
+			);
 		} else {
 			// 신청만 등록
 			LessonApplication application = LessonApplication.builder()
@@ -183,13 +182,12 @@ public class StudentLessonService {
 				.build();
 			lessonApplicationRepository.save(application);
 
-			return LessonApplicationResponseDto.builder()
-				.lessonApplicationId(application.getId())
-				.lessonId(lesson.getId())
-				.userId(user.getId())
-				.status(ApplicationStatus.PENDING.name())
-				.appliedAt(application.getCreatedAt())
-				.build();
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.PENDING,
+				application.getCreatedAt()
+			);
 		}
 	}
 
@@ -240,28 +238,10 @@ public class StudentLessonService {
 			: lessonApplicationRepository.findByUserIdAndStatus(userId, status, pageable);
 
 		// DTO 변환
-		List<MyLessonApplicationResponseDto> applications = applicationPage.getContent().stream()
-			.map(app -> MyLessonApplicationResponseDto.builder()
-				.lessonApplicationId(app.getId())
-				// 레슨 정보
-				.lesson(LessonSummaryResponseDto.builder()
-					.id(app.getLesson().getId())
-					.lessonName(app.getLesson().getLessonName())
-					.lessonLeader(app.getLesson().getLessonLeader())
-					.startAt(app.getLesson().getStartAt())
-					.price(app.getLesson().getPrice())
-					.addressDetail(app.getLesson().getAddressDetail())
-					.build())
-				// 신청 정보
-				.status(app.getStatus().name())
-				.appliedAt(app.getCreatedAt())
-				.build())
-			.collect(Collectors.toList());
-
-		return MyLessonApplicationListResponseDto.builder()
-			.lessonApplications(applications)
-			.count((int) applicationPage.getTotalElements())
-			.build();
+		return LessonApplicationMapper.toDtoListWithCount(
+			applicationPage.getContent(),
+			(int)applicationPage.getTotalElements()
+		);
 	}
 
 	@Transactional
@@ -269,13 +249,6 @@ public class StudentLessonService {
 		// 레슨 검증
 		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
-		return LessonSimpleResponseDto.builder()
-			.lessonId(lesson.getId())
-			.lessonName(lesson.getLessonName())
-			.startAt(lesson.getStartAt())
-			.endAt(lesson.getEndAt())
-			.price(Long.valueOf(lesson.getPrice()))
-			.addressDetail(lesson.getAddressDetail())
-			.build();
+		return LessonSimpleMapper.toLessonSimpleDto(lesson);
 	}
 }
