@@ -76,6 +76,9 @@ public class AdminCouponService {
 			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
 		}
 
+		// 상태와 오픈 시간 논리적으로 맞는지 검증
+		validateStatusConsistency(request.status(), request.couponOpenAt());
+
 		// 선착순 쿠폰 검증
 		if (request.category() == CouponCategory.OPEN_RUN) {
 			// 선착순 쿠폰은 수량이 필수
@@ -123,6 +126,21 @@ public class AdminCouponService {
 			} catch (NumberFormatException e) {
 				throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
 			}
+		}
+	}
+
+	//status랑 오픈시각이랑 검증 메서드 -> open시간이 미래인데 active일경우
+	private void validateStatusConsistency(CouponStatus status, LocalDateTime openAt) {
+		LocalDateTime now = LocalDateTime.now();
+
+		// ACTIVE 상태인데 오픈 시간이 미래인 경우
+		if (status == CouponStatus.ACTIVE && openAt.isAfter(now)) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
+		}
+
+		// INACTIVE 상태인데 오픈 시간이 과거인 경우
+		if (status == CouponStatus.INACTIVE && openAt.isBefore(now)) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
 		}
 	}
 }
