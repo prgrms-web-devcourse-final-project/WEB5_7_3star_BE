@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.coupon.dto;
+package com.threestar.trainus.domain.coupon.user.dto;
 
 import java.util.List;
 
