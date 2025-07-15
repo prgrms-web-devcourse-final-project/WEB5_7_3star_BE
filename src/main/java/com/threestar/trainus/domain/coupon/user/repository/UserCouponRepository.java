@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.coupon.repository;
+package com.threestar.trainus.domain.coupon.user.repository;
 
 import java.util.List;
 
@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.threestar.trainus.domain.coupon.entity.CouponStatus;
-import com.threestar.trainus.domain.coupon.entity.UserCoupon;
+import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
+import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
 
 public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
 	boolean existsByUserIdAndCouponId(Long userId, Long couponId);

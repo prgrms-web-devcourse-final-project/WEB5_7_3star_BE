@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.coupon.controller;
+package com.threestar.trainus.domain.coupon.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,12 +9,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.coupon.dto.CouponPageResponseDto;
-import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
-import com.threestar.trainus.domain.coupon.dto.UserCouponPageResponseDto;
-import com.threestar.trainus.domain.coupon.entity.CouponStatus;
-import com.threestar.trainus.domain.coupon.service.CouponService;
-import com.threestar.trainus.global.annotation.LoginUser;
+import com.threestar.trainus.domain.coupon.user.dto.CouponPageResponseDto;
+import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
+import com.threestar.trainus.domain.coupon.user.dto.UserCouponPageResponseDto;
+import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
+import com.threestar.trainus.domain.coupon.user.service.CouponService;
+import com.threestar.trainus.global.exception.domain.ErrorCode;
+import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;

@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.coupon.entity;
+package com.threestar.trainus.domain.coupon.user.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
