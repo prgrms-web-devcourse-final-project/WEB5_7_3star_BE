@@ -18,8 +18,8 @@ public class AdminCouponMapper {
 			.status(request.status())
 			.quantity(request.quantity())
 			.category(request.category())
-			.openAt(request.openTime())
-			.closeAt(request.closeTime())
+			.openAt(request.couponOpenAt())
+			.closeAt(request.couponDeadlineAt())
 			.build();
 	}
 

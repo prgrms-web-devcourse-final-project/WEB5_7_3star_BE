@@ -35,9 +35,9 @@ public record CouponCreateRequestDto(
 	CouponCategory category,
 
 	@NotNull(message = "오픈 시간은 필수입니다")
-	LocalDateTime openTime,
+	LocalDateTime couponOpenAt,
 
 	@NotNull(message = "마감 시간은 필수입니다")
-	LocalDateTime closeTime
+	LocalDateTime couponDeadlineAt
 ) {
 }

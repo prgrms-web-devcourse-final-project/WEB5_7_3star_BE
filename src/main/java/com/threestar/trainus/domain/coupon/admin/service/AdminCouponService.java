@@ -44,12 +44,12 @@ public class AdminCouponService {
 		validateDiscountPrice(request.discountPrice());
 
 		// 오픈 시간이 마감 시간보다 늦으면 안됨
-		if (request.openTime().isAfter(request.closeTime())) {
+		if (request.couponOpenAt().isAfter(request.couponDeadlineAt())) {
 			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
 		}
 
 		// 오픈 시간이 현재 시간보다 과거면 안됨 -> 즉시 오픈은 허용함!
-		if (request.openTime().isBefore(LocalDateTime.now().minusMinutes(1))) {
+		if (request.couponOpenAt().isBefore(LocalDateTime.now().minusMinutes(1))) {
 			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
 		}
 
