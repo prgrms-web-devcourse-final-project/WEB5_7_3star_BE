@@ -90,4 +90,11 @@ public class UserService {
 		return userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 	}
+
+	@Transactional(readOnly = true)
+	public void validateUserExists(Long userId) {
+		if (!userRepository.existsById(userId)) {
+			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+		}
+	}
 }
