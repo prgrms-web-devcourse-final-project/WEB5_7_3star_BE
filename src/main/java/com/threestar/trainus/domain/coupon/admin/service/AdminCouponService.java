@@ -2,14 +2,20 @@ package com.threestar.trainus.domain.coupon.admin.service;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
 import com.threestar.trainus.domain.coupon.admin.mapper.AdminCouponMapper;
 import com.threestar.trainus.domain.coupon.user.entity.Coupon;
 import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
+import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
@@ -24,6 +30,7 @@ public class AdminCouponService {
 	private final CouponRepository couponRepository;
 	private final UserService userService;
 
+	//쿠폰 생성
 	@Transactional
 	public CouponCreateResponseDto createCoupon(CouponCreateRequestDto request, Long userId) {
 		// 관리자 권한 검증
@@ -37,6 +44,22 @@ public class AdminCouponService {
 
 		// 응답 DTO 반환
 		return AdminCouponMapper.toCreateResponseDto(savedCoupon);
+	}
+
+	//쿠폰 조회
+	@Transactional(readOnly = true)
+	public CouponListResponseDto getCoupons(int page, int limit, CouponStatus status, CouponCategory category,
+		Long userId) {
+		// 관리자 권한 검증
+		userService.validateAdminRole(userId);
+
+		Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
+
+		// 조건에 따른 쿠폰 조회
+		Page<Coupon> couponPage = couponRepository.findCouponsWithFilters(status, category, pageable);
+
+		//응답 DTO 변환
+		return AdminCouponMapper.toCouponListResponseDto(couponPage);
 	}
 
 	private void validateCouponRequest(CouponCreateRequestDto request) {

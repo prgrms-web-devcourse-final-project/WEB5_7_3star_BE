@@ -1,7 +1,11 @@
 package com.threestar.trainus.domain.coupon.admin.mapper;
 
+import org.springframework.data.domain.Page;
+
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponListItemDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
 import com.threestar.trainus.domain.coupon.user.entity.Coupon;
 
 public class AdminCouponMapper {
@@ -29,6 +33,32 @@ public class AdminCouponMapper {
 			coupon.getName(),
 			coupon.getStatus().name(),
 			coupon.getCreatedAt()
+		);
+	}
+
+	public static CouponListItemDto toCouponListItemDto(Coupon coupon) {
+		return new CouponListItemDto(
+			coupon.getId(),
+			coupon.getName(),
+			coupon.getExpirationDate(),
+			coupon.getDiscountPrice(),
+			coupon.getMinOrderPrice(),
+			coupon.getCreatedAt(),
+			coupon.getUpdatedAt(),
+			coupon.getStatus().name(),
+			coupon.getQuantity(),
+			coupon.getCategory().name(),
+			coupon.getOpenAt(),
+			coupon.getCloseAt()
+		);
+	}
+
+	public static CouponListResponseDto toCouponListResponseDto(Page<Coupon> couponPage) {
+		return new CouponListResponseDto(
+			couponPage.getTotalElements(),
+			couponPage.getContent().stream()
+				.map(AdminCouponMapper::toCouponListItemDto)
+				.toList()
 		);
 	}
 }
