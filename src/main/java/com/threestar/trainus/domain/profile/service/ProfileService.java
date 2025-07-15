@@ -9,7 +9,7 @@ import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.profile.mapper.ProfileMapper;
 import com.threestar.trainus.domain.profile.repository.ProfileRepository;
 import com.threestar.trainus.domain.user.entity.User;
-import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class ProfileService {
 
 	private final ProfileRepository profileRepository;
-	private final UserRepository userRepository;
+	private final UserService userService;
 
 	@Transactional
 	public void createDefaultProfile(User user) {
@@ -30,8 +30,7 @@ public class ProfileService {
 
 	@Transactional(readOnly = true)
 	public ProfileResponseDto getProfile(Long userId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User user = userService.getUserById(userId);
 
 		Profile profile = profileRepository.findByUserId(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
@@ -41,8 +40,7 @@ public class ProfileService {
 
 	@Transactional
 	public ProfileResponseDto updateProfile(Long userId, ProfileUpdateRequestDto requestDto) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User user = userService.getUserById(userId);
 
 		Profile profile = profileRepository.findByUserId(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
