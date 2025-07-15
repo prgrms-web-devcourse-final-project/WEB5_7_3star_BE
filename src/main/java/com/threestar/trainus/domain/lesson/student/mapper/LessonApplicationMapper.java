@@ -8,6 +8,10 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonSummaryResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationResponseDto;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LessonApplicationMapper {
 
 	public static MyLessonApplicationResponseDto toMyLessonApplicationDto(LessonApplication app) {
@@ -33,7 +37,7 @@ public class LessonApplicationMapper {
 	public static List<MyLessonApplicationResponseDto> toDtoList(List<LessonApplication> applications) {
 		return applications.stream()
 			.map(LessonApplicationMapper::toMyLessonApplicationDto)
-			.collect(Collectors.toList());
+			.toList();
 	}
 
 	public static MyLessonApplicationListResponseDto toDtoListWithCount(List<LessonApplication> applications, int count) {

@@ -3,6 +3,10 @@ package com.threestar.trainus.domain.lesson.student.mapper;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LessonSimpleMapper {
 
 	public static LessonSimpleResponseDto toLessonSimpleDto(Lesson lesson) {
