@@ -84,4 +84,10 @@ public class UserService {
 			throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
 		}
 	}
+
+	@Transactional(readOnly = true)
+	public User getUserById(Long userId) {
+		return userRepository.findById(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+	}
 }
