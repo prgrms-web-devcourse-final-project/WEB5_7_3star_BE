@@ -1,6 +1,5 @@
 package com.threestar.trainus.domain.lesson.student.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +20,7 @@ import com.threestar.trainus.domain.lesson.admin.repository.LessonApplicationRep
 import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
@@ -35,7 +35,7 @@ import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.profile.repository.ProfileRepository;
 import com.threestar.trainus.domain.user.entity.User;
-import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -49,7 +49,8 @@ public class StudentLessonService {
 	private final LessonRepository lessonRepository;
 	private final LessonImageRepository lessonImageRepository;
 	private final ProfileRepository profileRepository;
-	private final UserRepository userRepository;
+	private final UserService userService;
+	private final AdminLessonService adminLessonService;
 	private final ProfileMetadataService profileMetadataService;
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
@@ -78,9 +79,8 @@ public class StudentLessonService {
 		// 응답 DTO 리스트 매핑
 		List<LessonSearchResponseDto> lessonDtos = lessonPage.getContent().stream()
 			.map(lesson -> {
-				// 레슨장 정보 조회
-				User leader = userRepository.findById(lesson.getLessonLeader())
-					.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+				// 개설자 정보 조회
+				User leader = userService.getUserById(lesson.getLessonLeader());
 
 				// 프로필 이미지
 				Profile profile = profileRepository.findByUserId(leader.getId())
@@ -105,12 +105,10 @@ public class StudentLessonService {
 	public LessonDetailResponseDto getLessonDetail(Long lessonId) {
 
 		// 레슨 조회
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		// 유저 조회
-		User leader = userRepository.findById(lesson.getLessonLeader())
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User leader = userService.getUserById(lesson.getLessonLeader());
 
 		// 유저 프로필 조회
 		Profile profile = profileRepository.findByUserId(leader.getId())
@@ -138,12 +136,10 @@ public class StudentLessonService {
 	@Transactional
 	public LessonApplicationResponseDto applyToLesson(Long lessonId, Long userId) {
 		// 레슨 조회
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		// 유저 조회
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User user = userService.getUserById(userId);
 
 		// 개설자 신청 불가 체크
 		if (lesson.getLessonLeader().equals(userId)) {
@@ -200,12 +196,10 @@ public class StudentLessonService {
 	@Transactional
 	public void cancelLessonApplication(Long lessonId, Long userId) {
 		// 레슨 조회
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		// 유저 조회
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		userService.validateUserExists(userId);
 
 		// 선착순 레슨은 신청 취소 불가 처리
 		if (lesson.getOpenRun()) {
@@ -273,8 +267,7 @@ public class StudentLessonService {
 	@Transactional
 	public LessonSimpleResponseDto getLessonSimple(Long lessonId) {
 		// 레슨 검증
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		return LessonSimpleResponseDto.builder()
 			.lessonId(lesson.getId())
