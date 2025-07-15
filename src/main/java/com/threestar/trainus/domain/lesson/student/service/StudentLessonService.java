@@ -1,8 +1,6 @@
 package com.threestar.trainus.domain.lesson.student.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,21 +19,23 @@ import com.threestar.trainus.domain.lesson.admin.repository.LessonApplicationRep
 import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
-import com.threestar.trainus.domain.lesson.student.dto.LessonSummaryResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
-import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.student.mapper.LessonApplicationMapper;
+import com.threestar.trainus.domain.lesson.student.mapper.LessonApplyMapper;
 import com.threestar.trainus.domain.lesson.student.mapper.LessonSearchMapper;
+import com.threestar.trainus.domain.lesson.student.mapper.LessonSimpleMapper;
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.profile.repository.ProfileRepository;
 import com.threestar.trainus.domain.user.entity.User;
-import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -49,7 +49,8 @@ public class StudentLessonService {
 	private final LessonRepository lessonRepository;
 	private final LessonImageRepository lessonImageRepository;
 	private final ProfileRepository profileRepository;
-	private final UserRepository userRepository;
+	private final UserService userService;
+	private final AdminLessonService adminLessonService;
 	private final ProfileMetadataService profileMetadataService;
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
@@ -78,9 +79,8 @@ public class StudentLessonService {
 		// 응답 DTO 리스트 매핑
 		List<LessonSearchResponseDto> lessonDtos = lessonPage.getContent().stream()
 			.map(lesson -> {
-				// 레슨장 정보 조회
-				User leader = userRepository.findById(lesson.getLessonLeader())
-					.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+				// 개설자 정보 조회
+				User leader = userService.getUserById(lesson.getLessonLeader());
 
 				// 프로필 이미지
 				Profile profile = profileRepository.findByUserId(leader.getId())
@@ -98,19 +98,17 @@ public class StudentLessonService {
 			})
 			.toList();
 
-		return new LessonSearchListResponseDto(lessonDtos, (int) lessonPage.getTotalElements());
+		return new LessonSearchListResponseDto(lessonDtos, (int)lessonPage.getTotalElements());
 	}
 
 	@Transactional
 	public LessonDetailResponseDto getLessonDetail(Long lessonId) {
 
 		// 레슨 조회
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		// 유저 조회
-		User leader = userRepository.findById(lesson.getLessonLeader())
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User leader = userService.getUserById(lesson.getLessonLeader());
 
 		// 유저 프로필 조회
 		Profile profile = profileRepository.findByUserId(leader.getId())
@@ -138,12 +136,10 @@ public class StudentLessonService {
 	@Transactional
 	public LessonApplicationResponseDto applyToLesson(Long lessonId, Long userId) {
 		// 레슨 조회
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		// 유저 조회
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User user = userService.getUserById(userId);
 
 		// 개설자 신청 불가 체크
 		if (lesson.getLessonLeader().equals(userId)) {
@@ -172,13 +168,12 @@ public class StudentLessonService {
 			lessonParticipantRepository.save(participant);
 			lesson.incrementParticipantCount();
 
-			return LessonApplicationResponseDto.builder()
-				.lessonApplicationId(participant.getId())
-				.lessonId(lesson.getId())
-				.userId(user.getId())
-				.status(ApplicationStatus.APPROVED.name())
-				.appliedAt(participant.getJoinAt())
-				.build();
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.APPROVED,
+				participant.getJoinAt()
+			);
 		} else {
 			// 신청만 등록
 			LessonApplication application = LessonApplication.builder()
@@ -187,25 +182,22 @@ public class StudentLessonService {
 				.build();
 			lessonApplicationRepository.save(application);
 
-			return LessonApplicationResponseDto.builder()
-				.lessonApplicationId(application.getId())
-				.lessonId(lesson.getId())
-				.userId(user.getId())
-				.status(ApplicationStatus.PENDING.name())
-				.appliedAt(application.getCreatedAt())
-				.build();
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.PENDING,
+				application.getCreatedAt()
+			);
 		}
 	}
 
 	@Transactional
 	public void cancelLessonApplication(Long lessonId, Long userId) {
 		// 레슨 조회
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		// 유저 조회
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		userService.validateUserExists(userId);
 
 		// 선착순 레슨은 신청 취소 불가 처리
 		if (lesson.getOpenRun()) {
@@ -246,43 +238,17 @@ public class StudentLessonService {
 			: lessonApplicationRepository.findByUserIdAndStatus(userId, status, pageable);
 
 		// DTO 변환
-		List<MyLessonApplicationResponseDto> applications = applicationPage.getContent().stream()
-			.map(app -> MyLessonApplicationResponseDto.builder()
-				.lessonApplicationId(app.getId())
-				// 레슨 정보
-				.lesson(LessonSummaryResponseDto.builder()
-					.id(app.getLesson().getId())
-					.lessonName(app.getLesson().getLessonName())
-					.lessonLeader(app.getLesson().getLessonLeader())
-					.startAt(app.getLesson().getStartAt())
-					.price(app.getLesson().getPrice())
-					.addressDetail(app.getLesson().getAddressDetail())
-					.build())
-				// 신청 정보
-				.status(app.getStatus().name())
-				.appliedAt(app.getCreatedAt())
-				.build())
-			.collect(Collectors.toList());
-
-		return MyLessonApplicationListResponseDto.builder()
-			.lessonApplications(applications)
-			.count((int) applicationPage.getTotalElements())
-			.build();
+		return LessonApplicationMapper.toDtoListWithCount(
+			applicationPage.getContent(),
+			(int)applicationPage.getTotalElements()
+		);
 	}
 
 	@Transactional
 	public LessonSimpleResponseDto getLessonSimple(Long lessonId) {
 		// 레슨 검증
-		Lesson lesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
-		return LessonSimpleResponseDto.builder()
-			.lessonId(lesson.getId())
-			.lessonName(lesson.getLessonName())
-			.startAt(lesson.getStartAt())
-			.endAt(lesson.getEndAt())
-			.price(Long.valueOf(lesson.getPrice()))
-			.addressDetail(lesson.getAddressDetail())
-			.build();
+		return LessonSimpleMapper.toLessonSimpleDto(lesson);
 	}
 }
