@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.coupon.service;
+package com.threestar.trainus.domain.coupon.user.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -6,18 +6,18 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.threestar.trainus.domain.coupon.dto.CouponPageResponseDto;
-import com.threestar.trainus.domain.coupon.dto.CouponResponseDto;
-import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
-import com.threestar.trainus.domain.coupon.dto.UserCouponPageResponseDto;
-import com.threestar.trainus.domain.coupon.dto.UserCouponResponseDto;
-import com.threestar.trainus.domain.coupon.entity.Coupon;
-import com.threestar.trainus.domain.coupon.entity.CouponCategory;
-import com.threestar.trainus.domain.coupon.entity.CouponStatus;
-import com.threestar.trainus.domain.coupon.entity.UserCoupon;
-import com.threestar.trainus.domain.coupon.mapper.UserCouponMapper;
-import com.threestar.trainus.domain.coupon.repository.CouponRepository;
-import com.threestar.trainus.domain.coupon.repository.UserCouponRepository;
+import com.threestar.trainus.domain.coupon.user.dto.CouponPageResponseDto;
+import com.threestar.trainus.domain.coupon.user.dto.CouponResponseDto;
+import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
+import com.threestar.trainus.domain.coupon.user.dto.UserCouponPageResponseDto;
+import com.threestar.trainus.domain.coupon.user.dto.UserCouponResponseDto;
+import com.threestar.trainus.domain.coupon.user.entity.Coupon;
+import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
+import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
+import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
+import com.threestar.trainus.domain.coupon.user.mapper.UserCouponMapper;
+import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
+import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.repository.UserRepository;
 import com.threestar.trainus.global.exception.domain.ErrorCode;

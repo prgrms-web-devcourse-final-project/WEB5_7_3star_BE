@@ -8,16 +8,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.threestar.trainus.domain.profile.entity.Profile;
-import com.threestar.trainus.domain.profile.repository.ProfileRepository;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
-import com.threestar.trainus.domain.profile.service.ProfileService;
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
-import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
+import com.threestar.trainus.domain.user.entity.UserRole;
 import com.threestar.trainus.domain.user.mapper.UserMapper;
 import com.threestar.trainus.domain.user.repository.UserRepository;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
@@ -102,4 +99,24 @@ public class UserService {
 			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
 		}
 	}
+
+	//관리자 권한 검증
+	@Transactional(readOnly = true)
+	public void validateAdminRole(Long userId) {
+		User user = getUserById(userId);
+		if (user.getRole() != UserRole.ADMIN) {
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		}
+	}
+
+	//사용자 조회 + 관리자 권한 검증
+	@Transactional(readOnly = true)
+	public User getAdminUser(Long userId) {
+		User user = getUserById(userId);
+		if (user.getRole() != UserRole.ADMIN) {
+			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		}
+		return user;
+	}
+
 }

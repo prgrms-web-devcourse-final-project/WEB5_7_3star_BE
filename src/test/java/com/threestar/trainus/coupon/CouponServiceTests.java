@@ -19,12 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
-import com.threestar.trainus.domain.coupon.entity.Coupon;
-import com.threestar.trainus.domain.coupon.entity.CouponCategory;
-import com.threestar.trainus.domain.coupon.entity.CouponStatus;
-import com.threestar.trainus.domain.coupon.repository.CouponRepository;
-import com.threestar.trainus.domain.coupon.repository.UserCouponRepository;
-import com.threestar.trainus.domain.coupon.service.CouponService;
+import com.threestar.trainus.domain.coupon.user.entity.Coupon;
+import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
+import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
+import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
+import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
+import com.threestar.trainus.domain.coupon.user.service.CouponService;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
 import com.threestar.trainus.domain.user.repository.UserRepository;
