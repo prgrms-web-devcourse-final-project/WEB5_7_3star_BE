@@ -12,6 +12,7 @@ import com.threestar.trainus.domain.ranking.dto.RankingResponseDto;
 import com.threestar.trainus.domain.ranking.service.RankingService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +25,7 @@ public class RankingController {
 	private final RankingService rankingService;
 
 	@GetMapping
+	@Operation(summary = "전체 랭킹 조회 api", description = "카테고리와 관계없이 전체 랭킹 Top10을 조회")
 	public ResponseEntity<BaseResponse<List<RankingResponseDto>>> getRankings() {
 		List<RankingResponseDto> rankings = rankingService.getTopRankings();
 		return BaseResponse.ok("전체 랭킹 조회 성공", rankings, HttpStatus.OK);
