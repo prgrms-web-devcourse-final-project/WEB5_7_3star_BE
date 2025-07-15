@@ -10,6 +10,7 @@ import com.threestar.trainus.domain.profile.mapper.ProfileMapper;
 import com.threestar.trainus.domain.profile.repository.ProfileRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 

@@ -1,9 +1,9 @@
-package com.threestar.trainus.domain.coupon.dto;
+package com.threestar.trainus.domain.coupon.user.dto;
 
 import java.time.LocalDateTime;
 
-import com.threestar.trainus.domain.coupon.entity.CouponCategory;
-import com.threestar.trainus.domain.coupon.entity.OwnedStatus;
+import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
+import com.threestar.trainus.domain.coupon.user.entity.OwnedStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
