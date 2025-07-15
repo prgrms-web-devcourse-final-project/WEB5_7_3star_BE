@@ -15,6 +15,7 @@ import com.threestar.trainus.domain.profile.dto.ProfileUpdateRequestDto;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ public class ProfileController {
 	private final ProfileFacadeService facadeService;
 
 	@GetMapping("{userId}")
+	@Operation(summary = "유저 프로필 상세 조회 api")
 	public ResponseEntity<BaseResponse<ProfileDetailResponseDto>> getProfileDetail(
 		@PathVariable Long userId
 	) {
@@ -37,6 +39,7 @@ public class ProfileController {
 	}
 
 	@PatchMapping
+	@Operation(summary = "유저 프로필 수정 api")
 	public ResponseEntity<BaseResponse<ProfileResponseDto>> updateProfile(
 		@Valid @RequestBody ProfileUpdateRequestDto requestDto,
 		HttpSession session
