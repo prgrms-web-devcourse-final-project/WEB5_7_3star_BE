@@ -108,6 +108,7 @@ public enum ErrorCode {
 
 	EMAIL_SEND_FAILED(HttpStatus.BAD_REQUEST, "이메일 발송을 실패했습니다."),
 
+	EMAIL_SEND_TOO_FREQUENT(HttpStatus.TOO_MANY_REQUESTS, "이메일 발송은 1분에 한 번만 가능합니다."),
 	/*
 	 * Profile : 프로필 관련 예외처리
 	 */
