@@ -50,13 +50,15 @@ public class PaymentController {
 		@RequestBody SaveAmountRequest request) {
 		Integer amount = (Integer)session.getAttribute(request.getOrderId());
 		log.info("amount = {}", amount);
-		if (amount == null || !amount.equals(request.getAmount())) {
-			//todo 세션 삭제 안했는데 괜찮은지
-			return BaseResponse.error("결제 금액 정보가 유효하지 않습니다", null, HttpStatus.BAD_REQUEST);
-		}
 
-		session.removeAttribute(request.getOrderId());
-		return BaseResponse.ok("Payment is valid", null, HttpStatus.OK);
+		try {
+			if (amount == null || !amount.equals(request.getAmount())) {
+				return BaseResponse.error("결제 금액 정보가 유효하지 않습니다", null, HttpStatus.BAD_REQUEST);
+			}
+			return BaseResponse.ok("Payment is valid", null, HttpStatus.OK);
+		} finally {
+			session.removeAttribute(request.getOrderId());
+		}
 	}
 
 	@PostMapping("/confirm")
