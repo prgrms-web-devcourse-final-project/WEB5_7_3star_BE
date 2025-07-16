@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,10 +14,12 @@ import com.threestar.trainus.domain.user.dto.EmailVerificationDto;
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
 import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
+import com.threestar.trainus.domain.user.dto.PasswordUpdateDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
 import com.threestar.trainus.domain.user.service.EmailVerificationService;
 import com.threestar.trainus.domain.user.service.UserService;
+import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -86,5 +89,15 @@ public class UserController {
 	) {
 		emailVerificationService.verifyCode(request.email(), request.verificationCode());
 		return BaseResponse.ok("이메일 인증이 완료되었습니다.", null, HttpStatus.OK);
+	}
+
+	@PatchMapping("/password")
+	@Operation(summary = "비밀번호 변경 api")
+	public ResponseEntity<BaseResponse<Void>> updatePassword(
+		@Valid @RequestBody PasswordUpdateDto request,
+		@LoginUser Long loginUserId
+	) {
+		userService.updatePassword(request, loginUserId);
+		return BaseResponse.ok("비밀번호 변경이 완료되었습니다.", null, HttpStatus.OK);
 	}
 }

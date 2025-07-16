@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
+import com.threestar.trainus.domain.user.dto.PasswordUpdateDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
@@ -119,4 +120,22 @@ public class UserService {
 		return user;
 	}
 
+	public void updatePassword(PasswordUpdateDto request, Long userId) {
+		//새 비밀번호와 새 비밀번호 확인끼리의 검증
+		if (!request.newPassword().equals(request.confirmPassword())) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
+		}
+
+		User user = getUserById(userId);
+		//유저의 현재 비밀번호 검증
+		if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
+		}
+
+		String encordedNewPassword = passwordEncoder.encode(request.newPassword());
+
+		user.updatePassword(encordedNewPassword);
+
+		userRepository.save(user);
+	}
 }
