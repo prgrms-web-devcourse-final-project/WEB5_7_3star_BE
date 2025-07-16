@@ -17,13 +17,16 @@ import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponDeleteResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponDetailResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponListWrapperDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateResponseDto;
+import com.threestar.trainus.domain.coupon.admin.mapper.AdminCouponMapper;
 import com.threestar.trainus.domain.coupon.admin.service.AdminCouponService;
 import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
+import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,7 +55,7 @@ public class AdminCouponController {
 
 	@GetMapping
 	@Operation(summary = "쿠폰 목록 조회", description = "관리자가 쿠폰 목록을 조회")
-	public ResponseEntity<BaseResponse<CouponListResponseDto>> getCoupons(
+	public ResponseEntity<PagedResponse<CouponListWrapperDto>> getCoupons(
 		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
 		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
 		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
@@ -61,8 +64,11 @@ public class AdminCouponController {
 		@RequestParam(required = false) CouponCategory category,
 		@LoginUser Long loginUserId
 	) {
-		CouponListResponseDto response = adminCouponService.getCoupons(page, limit, status, category, loginUserId);
-		return BaseResponse.ok("쿠폰 목록 조회 완료.", response, HttpStatus.OK);
+		CouponListResponseDto couponsInfo = adminCouponService.getCoupons(page, limit, status, category, loginUserId);
+
+		CouponListWrapperDto coupons = AdminCouponMapper.toCouponListWrapperDto(couponsInfo);
+
+		return PagedResponse.ok("쿠폰 목록 조회 완료.", coupons, couponsInfo.totalCount(), HttpStatus.OK);
 	}
 
 	@GetMapping("/{couponId}")

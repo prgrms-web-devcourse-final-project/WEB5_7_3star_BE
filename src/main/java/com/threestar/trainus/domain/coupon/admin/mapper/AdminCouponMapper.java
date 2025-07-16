@@ -8,6 +8,7 @@ import com.threestar.trainus.domain.coupon.admin.dto.CouponDeleteResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponDetailResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListItemDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponListWrapperDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateResponseDto;
 import com.threestar.trainus.domain.coupon.user.entity.Coupon;
 
@@ -58,7 +59,7 @@ public class AdminCouponMapper {
 
 	public static CouponListResponseDto toCouponListResponseDto(Page<Coupon> couponPage) {
 		return new CouponListResponseDto(
-			couponPage.getTotalElements(),
+			(int)couponPage.getTotalElements(),
 			couponPage.getContent().stream()
 				.map(AdminCouponMapper::toCouponListItemDto)
 				.toList()
@@ -101,5 +102,9 @@ public class AdminCouponMapper {
 			coupon.getName(),
 			coupon.getDeletedAt()
 		);
+	}
+
+	public static CouponListWrapperDto toCouponListWrapperDto(CouponListResponseDto couponsInfo) {
+		return new CouponListWrapperDto(couponsInfo.couponList());
 	}
 }
