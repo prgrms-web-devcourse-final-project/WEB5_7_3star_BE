@@ -13,12 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListWrapperDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListWrapperDto;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
+import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +39,7 @@ public class StudentLessonController {
 
 	@GetMapping
 	@Operation(summary = "레슨 검색 api", description = "category(필수, Default: \"ALL\") / search(선택) / 그외 법정동 선택 필수")
-	public ResponseEntity<BaseResponse<LessonSearchListResponseDto>> searchLessons(
+	public ResponseEntity<PagedResponse<LessonSearchListWrapperDto>> searchLessons(
 		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
 		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
 		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
@@ -47,9 +50,13 @@ public class StudentLessonController {
 		@RequestParam String district,
 		@RequestParam String dong
 	) {
-		LessonSearchListResponseDto lessonList = studentLessonService.searchLessons(page, limit, category, search, city,
-			district, dong);
-		return BaseResponse.ok("레슨 검색 조회 완료.", lessonList, HttpStatus.OK);
+
+		LessonSearchListResponseDto serviceResponse = studentLessonService.searchLessons(
+			page, limit, category, search, city, district, dong
+		);
+		LessonSearchListWrapperDto response = new LessonSearchListWrapperDto(serviceResponse.lessons());
+
+		return PagedResponse.ok("레슨 검색 조회 완료.", response, serviceResponse.count(), HttpStatus.OK);
 	}
 
 	@GetMapping("/{lessonId}")
@@ -91,7 +98,7 @@ public class StudentLessonController {
 
 	@GetMapping("/my-applications")
 	@Operation(summary = "나의 레슨 신청 목록 조회", description = "현재 로그인한 사용자의 레슨 신청 목록을 조회합니다.")
-	public ResponseEntity<BaseResponse<MyLessonApplicationListResponseDto>> getMyLessonApplications(
+	public ResponseEntity<PagedResponse<MyLessonApplicationListWrapperDto>> getMyLessonApplications(
 		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
 		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
 		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
@@ -104,9 +111,12 @@ public class StudentLessonController {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
-		MyLessonApplicationListResponseDto response = studentLessonService.getMyLessonApplications(userId, page, limit,
-			status);
-		return BaseResponse.ok("나의 레슨 신청 목록 조회 완료.", response, HttpStatus.OK);
+		MyLessonApplicationListResponseDto serviceResponse = studentLessonService.getMyLessonApplications(userId, page,
+			limit, status);
+		MyLessonApplicationListWrapperDto response = new MyLessonApplicationListWrapperDto(
+			serviceResponse.lessonApplications());
+
+		return PagedResponse.ok("나의 레슨 신청 목록 조회 완료.", response, serviceResponse.count(), HttpStatus.OK);
 	}
 
 	@GetMapping("/summary/{lessonId}")
