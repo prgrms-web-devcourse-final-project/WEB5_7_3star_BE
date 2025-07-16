@@ -3,6 +3,8 @@ package com.threestar.trainus.domain.coupon.admin.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,7 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponDetailResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateRequestDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateResponseDto;
 import com.threestar.trainus.domain.coupon.admin.service.AdminCouponService;
 import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
@@ -57,4 +62,26 @@ public class AdminCouponController {
 		CouponListResponseDto response = adminCouponService.getCoupons(page, limit, status, category, loginUserId);
 		return BaseResponse.ok("쿠폰 목록 조회 완료.", response, HttpStatus.OK);
 	}
+
+	@GetMapping("/{couponId}")
+	@Operation(summary = "쿠폰 상세 조회", description = "관리자가 특정 쿠폰의 상세 정보를 조회")
+	public ResponseEntity<BaseResponse<CouponDetailResponseDto>> getCouponDetail(
+		@PathVariable Long couponId,
+		@LoginUser Long loginUserId
+	) {
+		CouponDetailResponseDto response = adminCouponService.getCouponDetail(couponId, loginUserId);
+		return BaseResponse.ok("쿠폰 상세 조회 완료", response, HttpStatus.OK);
+	}
+
+	@PatchMapping("/{couponId}")
+	@Operation(summary = "쿠폰 수정", description = "관리자가 쿠폰 정보를 수정")
+	public ResponseEntity<BaseResponse<CouponUpdateResponseDto>> updateCoupon(
+		@PathVariable Long couponId,
+		@Valid @RequestBody CouponUpdateRequestDto request,
+		@LoginUser Long loginUserId
+	) {
+		CouponUpdateResponseDto response = adminCouponService.updateCoupon(couponId, request, loginUserId);
+		return BaseResponse.ok("쿠폰 수정이 완료되었습니다.", response, HttpStatus.OK);
+	}
+
 }

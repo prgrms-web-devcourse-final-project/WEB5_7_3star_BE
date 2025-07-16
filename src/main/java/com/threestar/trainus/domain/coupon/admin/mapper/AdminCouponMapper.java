@@ -4,8 +4,10 @@ import org.springframework.data.domain.Page;
 
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponDetailResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListItemDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateResponseDto;
 import com.threestar.trainus.domain.coupon.user.entity.Coupon;
 
 public class AdminCouponMapper {
@@ -59,6 +61,36 @@ public class AdminCouponMapper {
 			couponPage.getContent().stream()
 				.map(AdminCouponMapper::toCouponListItemDto)
 				.toList()
+		);
+	}
+
+	public static CouponDetailResponseDto toCouponDetailResponseDto(Coupon coupon, Integer issuedCount) {
+		return new CouponDetailResponseDto(
+			coupon.getId(),
+			coupon.getName(),
+			coupon.getExpirationDate(),
+			coupon.getDiscountPrice(),
+			coupon.getMinOrderPrice(),
+			coupon.getStatus().name(),
+			coupon.getQuantity(),
+			coupon.getCategory().name(),
+			coupon.getOpenAt(),
+			coupon.getCloseAt(),
+			coupon.getCreatedAt(),
+			coupon.getUpdatedAt(),
+			issuedCount
+		);
+	}
+
+	public static CouponUpdateResponseDto toCouponUpdateResponseDto(Coupon coupon) {
+		return new CouponUpdateResponseDto(
+			coupon.getName(),
+			coupon.getStatus().name(),
+			coupon.getQuantity(),
+			coupon.getCategory().name(),
+			coupon.getOpenAt(),
+			coupon.getCloseAt(),
+			coupon.getUpdatedAt()
 		);
 	}
 }

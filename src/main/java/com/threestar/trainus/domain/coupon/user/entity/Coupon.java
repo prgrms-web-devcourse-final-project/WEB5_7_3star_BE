@@ -71,4 +71,30 @@ public class Coupon extends BaseDateEntity {
 		}
 		this.quantity--;
 	}
+
+	//쿠폰 수정 관련 메서드 추가
+	public void updateName(String name) {
+		this.name = name;
+	}
+
+	public void updateStatus(CouponStatus status) {
+		this.status = status;
+	}
+
+	public void updateQuantity(Integer quantity) {
+		this.quantity = quantity;
+	}
+
+	public void updateCategory(CouponCategory category) {
+		this.category = category;
+	}
+
+	public void updateOpenAt(LocalDateTime openAt) {
+		this.openAt = openAt;
+	}
+
+	public void updateCloseAt(LocalDateTime closeAt) {
+		this.closeAt = closeAt;
+	}
+
 }
