@@ -3,6 +3,7 @@ package com.threestar.trainus.domain.comment.mapper;
 import java.util.List;
 
 import com.threestar.trainus.domain.comment.dto.CommentPageResponseDto;
+import com.threestar.trainus.domain.comment.dto.CommentPageWrapperDto;
 import com.threestar.trainus.domain.comment.dto.CommentResponseDto;
 import com.threestar.trainus.domain.comment.entity.Comment;
 
@@ -22,10 +23,16 @@ public class CommentMapper {
 			.build();
 	}
 
-	public static CommentPageResponseDto toCommentPageResponseDto(List<CommentResponseDto> comments, Long count) {
+	public static CommentPageResponseDto toCommentPageResponseDto(List<CommentResponseDto> comments, Integer count) {
 		return CommentPageResponseDto.builder()
 			.comments(comments)
 			.count(count)
+			.build();
+	}
+
+	public static CommentPageWrapperDto toCommentPageWrapperDto(CommentPageResponseDto commentPageResponseDto) {
+		return CommentPageWrapperDto.builder()
+			.comments(commentPageResponseDto.getComments())
 			.build();
 	}
 }

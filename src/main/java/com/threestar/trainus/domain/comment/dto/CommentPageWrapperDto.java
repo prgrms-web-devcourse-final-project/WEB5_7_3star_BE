@@ -7,8 +7,6 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class CommentPageResponseDto {
-
+public class CommentPageWrapperDto {
 	private List<CommentResponseDto> comments;
-	private Integer count;
 }
