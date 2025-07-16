@@ -75,8 +75,7 @@ public class AdminCouponService {
 		userService.validateAdminRole(userId);
 
 		// 쿠폰 조회
-		Coupon coupon = couponRepository.findById(couponId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST_DATA));
+		Coupon coupon = findCouponById(couponId);
 
 		// 발급된 쿠폰 수 조회
 		Long issuedCountLong = userCouponRepository.countByCouponId(couponId);
@@ -93,8 +92,7 @@ public class AdminCouponService {
 		userService.validateAdminRole(userId);
 
 		// 쿠폰 조회
-		Coupon coupon = couponRepository.findById(couponId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST_DATA));
+		Coupon coupon = findCouponById(couponId);
 
 		// 발급된 쿠폰 수 조회
 		Long issuedCount = userCouponRepository.countByCouponId(couponId);
@@ -118,8 +116,7 @@ public class AdminCouponService {
 		userService.validateAdminRole(userId);
 
 		// 쿠폰 조회
-		Coupon coupon = couponRepository.findById(couponId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST_DATA));
+		Coupon coupon = findCouponById(couponId);
 
 		// 이미 삭제된 쿠폰인지 확인
 		if (coupon.isDeleted()) {
@@ -342,5 +339,11 @@ public class AdminCouponService {
 
 	private void validateCouponDeletion(Coupon coupon, Long issuedCount) {
 		//todo: 일단은 다 삭제가능하게 설정 해놨는데, 나중에 결제 붙으면여기에 여러 검증들을 추가할 예정
+	}
+
+	//쿠폰id로 쿠폰을 조회하는 공통 메서드
+	public Coupon findCouponById(Long couponId) {
+		return couponRepository.findById(couponId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST_DATA));
 	}
 }

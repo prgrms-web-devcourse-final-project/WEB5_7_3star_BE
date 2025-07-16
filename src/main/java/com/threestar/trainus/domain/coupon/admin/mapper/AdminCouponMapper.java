@@ -49,9 +49,9 @@ public class AdminCouponMapper {
 			coupon.getMinOrderPrice(),
 			coupon.getCreatedAt(),
 			coupon.getUpdatedAt(),
-			coupon.getStatus().name(),
+			coupon.getStatus(),
 			coupon.getQuantity(),
-			coupon.getCategory().name(),
+			coupon.getCategory(),
 			coupon.getOpenAt(),
 			coupon.getCloseAt()
 		);
@@ -73,9 +73,9 @@ public class AdminCouponMapper {
 			coupon.getExpirationDate(),
 			coupon.getDiscountPrice(),
 			coupon.getMinOrderPrice(),
-			coupon.getStatus().name(),
+			coupon.getStatus(),
 			coupon.getQuantity(),
-			coupon.getCategory().name(),
+			coupon.getCategory(),
 			coupon.getOpenAt(),
 			coupon.getCloseAt(),
 			coupon.getCreatedAt(),
@@ -87,9 +87,9 @@ public class AdminCouponMapper {
 	public static CouponUpdateResponseDto toCouponUpdateResponseDto(Coupon coupon) {
 		return new CouponUpdateResponseDto(
 			coupon.getName(),
-			coupon.getStatus().name(),
+			coupon.getStatus(),
 			coupon.getQuantity(),
-			coupon.getCategory().name(),
+			coupon.getCategory(),
 			coupon.getOpenAt(),
 			coupon.getCloseAt(),
 			coupon.getUpdatedAt()

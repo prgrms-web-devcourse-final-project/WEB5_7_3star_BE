@@ -2,14 +2,17 @@ package com.threestar.trainus.domain.coupon.admin.dto;
 
 import java.time.LocalDateTime;
 
+import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
+import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
+
 /**
  * 쿠폰 수정 응답 DTO
  */
 public record CouponUpdateResponseDto(
 	String couponName,
-	String status,
+	CouponStatus status,
 	Integer quantity,
-	String category,
+	CouponCategory category,
 	LocalDateTime couponOpenAt,
 	LocalDateTime couponDeadlineAt,
 	LocalDateTime updatedAt
