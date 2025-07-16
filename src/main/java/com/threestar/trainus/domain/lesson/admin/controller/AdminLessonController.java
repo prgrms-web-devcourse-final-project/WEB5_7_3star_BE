@@ -14,16 +14,23 @@ import org.springframework.web.bind.annotation.RestController;
 import com.threestar.trainus.domain.lesson.admin.dto.ApplicationActionRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.ApplicationProcessResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.CreatedLessonListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.CreatedLessonListWrapperDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListWrapperDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonResponseDto;
 import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.ParticipantListWrapperDto;
 import com.threestar.trainus.domain.lesson.admin.entity.ApplicationAction;
+import com.threestar.trainus.domain.lesson.admin.mapper.CreatedLessonMapper;
+import com.threestar.trainus.domain.lesson.admin.mapper.LessonApplicationMapper;
+import com.threestar.trainus.domain.lesson.admin.mapper.LessonParticipantMapper;
 import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
+import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -69,7 +76,7 @@ public class AdminLessonController {
 	//레슨 신청자 목록 조회
 	@GetMapping("/lessons/{lessonId}/applications")
 	@Operation(summary = "레슨 신청자 목록 조회 api", description = "레슨 신청자의 목록을 조회 가능함.")
-	public ResponseEntity<BaseResponse<LessonApplicationListResponseDto>> getLessonApplications(
+	public ResponseEntity<PagedResponse<LessonApplicationListWrapperDto>> getLessonApplications(
 		@PathVariable Long lessonId,
 		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
 		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
@@ -82,7 +89,10 @@ public class AdminLessonController {
 		LessonApplicationListResponseDto responseDto = adminLessonService
 			.getLessonApplications(lessonId, page, limit, status, loginUserId);
 
-		return BaseResponse.ok("레슨 신청자 목록 조회 완료.", responseDto, HttpStatus.OK);
+		LessonApplicationListWrapperDto wrapperDto = LessonApplicationMapper
+			.toLessonApplicationListWrapperDto(responseDto);
+
+		return PagedResponse.ok("레슨 신청자 목록 조회 완료.", wrapperDto, responseDto.count(), HttpStatus.OK);
 	}
 
 	//레슨 신청 승인/거절
@@ -104,7 +114,7 @@ public class AdminLessonController {
 	//레슨 참가자 목록 조회
 	@GetMapping("/lessons/{lessonId}/participants")
 	@Operation(summary = "레슨 참가자 목록 조회 api", description = "")
-	public ResponseEntity<BaseResponse<ParticipantListResponseDto>> getLessonParticipants(
+	public ResponseEntity<PagedResponse<ParticipantListWrapperDto>> getLessonParticipants(
 		@PathVariable Long lessonId,
 		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
 		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
@@ -116,13 +126,16 @@ public class AdminLessonController {
 		ParticipantListResponseDto responseDto = adminLessonService
 			.getLessonParticipants(lessonId, page, limit, loginUserId);
 
-		return BaseResponse.ok("레슨 참가자 목록 조회 완료.", responseDto, HttpStatus.OK);
+		ParticipantListWrapperDto wrapperDto = LessonParticipantMapper
+			.toParticipantListWrapperDto(responseDto);
+
+		return PagedResponse.ok("레슨 참가자 목록 조회 완료.", wrapperDto, responseDto.count(), HttpStatus.OK);
 	}
 
 	//강사가 개설한 레슨 목록 조회
 	@GetMapping("/lessons/{userId}/created-lessons")
 	@Operation(summary = "강사가 개설한 레슨 목록 조회 api", description = "")
-	public ResponseEntity<BaseResponse<CreatedLessonListResponseDto>> getCreatedLessons(
+	public ResponseEntity<PagedResponse<CreatedLessonListWrapperDto>> getCreatedLessons(
 		@PathVariable Long userId,
 		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
 		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
@@ -140,7 +153,10 @@ public class AdminLessonController {
 		CreatedLessonListResponseDto responseDto = adminLessonService
 			.getCreatedLessons(userId, page, limit, status);
 
-		return BaseResponse.ok("개설한 레슨 목록 조회 완료.", responseDto, HttpStatus.OK);
+		CreatedLessonListWrapperDto wrapperDto = CreatedLessonMapper
+			.toCreatedLessonListWrapperDto(responseDto);
+
+		return PagedResponse.ok("개설한 레슨 목록 조회 완료.", wrapperDto, responseDto.count(), HttpStatus.OK);
 	}
 
 }
