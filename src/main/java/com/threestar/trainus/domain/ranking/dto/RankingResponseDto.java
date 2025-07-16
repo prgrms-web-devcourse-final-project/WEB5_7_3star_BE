@@ -11,7 +11,7 @@ public class RankingResponseDto {
 
 	private Long userId;
 	private String userNickname;
-	private Float rating;
+	private Double rating;
 	private Integer reviewCount;
 	private Category category;
 	private Integer rank;

@@ -19,6 +19,7 @@ import com.threestar.trainus.domain.user.service.EmailVerificationService;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class UserController {
 	private final EmailVerificationService emailVerificationService;
 
 	@PostMapping("/signup")
+	@Operation(summary = "회원가입 api")
 	public ResponseEntity<BaseResponse<SignupResponseDto>> signup(
 		@Valid @RequestBody SignupRequestDto request
 	) {
@@ -43,6 +45,7 @@ public class UserController {
 	}
 
 	@PostMapping("/login")
+	@Operation(summary = "로그인 api")
 	public ResponseEntity<BaseResponse<LoginResponseDto>> login(
 		@Valid @RequestBody LoginRequestDto request,
 		HttpSession session
@@ -52,12 +55,14 @@ public class UserController {
 	}
 
 	@PostMapping("/logout")
+	@Operation(summary = "로그아웃 api")
 	public ResponseEntity<BaseResponse<Void>> logout(HttpSession session) {
 		userService.logout(session);
 		return BaseResponse.ok("로그아웃이 완료되었습니다.", null, HttpStatus.OK);
 	}
 
 	@PostMapping("/verify/check-nickname")
+	@Operation(summary = "닉네임 중복 체크 api")
 	public ResponseEntity<BaseResponse<Void>> checkNickname(
 		@Valid @RequestBody NicknameCheckRequestDto request
 	) {
@@ -66,6 +71,7 @@ public class UserController {
 	}
 
 	@PostMapping("/verify/email-send")
+	@Operation(summary = "이메일 인증코드 발송 api", description = "회원가입 중 이메일 인증 코드를 발송")
 	public ResponseEntity<BaseResponse<EmailSendResponseDto>> sendVerificationCode(
 		@Valid @RequestBody EmailSendRequestDto request
 	) {
@@ -74,6 +80,7 @@ public class UserController {
 	}
 
 	@PostMapping("/verify/email-check")
+	@Operation(summary = "이메일 인증코드 인증 api", description = "이메일 인증코드(6자리) 입력 시 인증 가능하고 나머지 회원가입 진행")
 	public ResponseEntity<BaseResponse<Void>> confirmVerificationCode(
 		@Valid @RequestBody EmailVerificationDto request
 	) {

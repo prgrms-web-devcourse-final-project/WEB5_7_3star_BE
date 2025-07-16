@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.threestar.trainus.domain.coupon.entity.UserCoupon;
+import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.global.entity.BaseDateEntity;
@@ -14,7 +14,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;

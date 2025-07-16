@@ -1,11 +1,11 @@
-package com.threestar.trainus.domain.coupon.mapper;
+package com.threestar.trainus.domain.coupon.user.mapper;
 
 import java.util.List;
 
-import com.threestar.trainus.domain.coupon.dto.CreateUserCouponResponseDto;
-import com.threestar.trainus.domain.coupon.dto.UserCouponResponseDto;
-import com.threestar.trainus.domain.coupon.entity.Coupon;
-import com.threestar.trainus.domain.coupon.entity.UserCoupon;
+import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
+import com.threestar.trainus.domain.coupon.user.dto.UserCouponResponseDto;
+import com.threestar.trainus.domain.coupon.user.entity.Coupon;
+import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
 
 public final class UserCouponMapper {
 
