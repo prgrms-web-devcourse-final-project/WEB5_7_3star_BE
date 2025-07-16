@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.threestar.trainus.domain.review.dto.ReviewCreateRequestDto;
 import com.threestar.trainus.domain.review.dto.ReviewCreateResponseDto;
 import com.threestar.trainus.domain.review.dto.ReviewPageResponseDto;
+import com.threestar.trainus.domain.review.dto.ReviewPageWrapperDto;
+import com.threestar.trainus.domain.review.mapper.ReviewMapper;
 import com.threestar.trainus.domain.review.service.ReviewService;
 import com.threestar.trainus.global.unit.BaseResponse;
+import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,14 +48,15 @@ public class ReviewController {
 
 	@GetMapping("/{userId}")
 	@Operation(summary = "리뷰 조회", description = "유저 ID에 해당되는 리뷰들을 조회합니다.")
-	public ResponseEntity<BaseResponse<ReviewPageResponseDto>> readAll(@PathVariable Long userId,
+	public ResponseEntity<PagedResponse<ReviewPageWrapperDto>> readAll(@PathVariable Long userId,
 		@RequestParam("page") int page,
 		@RequestParam("pageSize") int pageSize
 	) {
 		int correctPage = Math.max(page, 1);
 		int correctPageSize = Math.max(1, Math.max(pageSize, pageSizeLimit));
-		ReviewPageResponseDto reviews = reviewService.readAll(userId, correctPage, correctPageSize);
-		return BaseResponse.ok("조회가 완료됐습니다.", reviews, HttpStatus.OK);
+		ReviewPageResponseDto reviewsInfo = reviewService.readAll(userId, correctPage, correctPageSize);
+		ReviewPageWrapperDto reviews = ReviewMapper.toReviewPageWrapperDto(reviewsInfo);
+		return PagedResponse.ok("조회가 완료됐습니다.", reviews, reviewsInfo.getCount(), HttpStatus.OK);
 	}
 
 }

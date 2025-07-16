@@ -23,7 +23,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 	@Query(value = """
 		select count(*) from ( select comment_id from comments where lesson_id = :lessonId limit :limit) t
 		""", nativeQuery = true)
-	Long count(@Param("lessonId") Long lessonId, @Param("limit") int limit);
+	Integer count(@Param("lessonId") Long lessonId, @Param("limit") int limit);
 
 	@Query(value = """
 		select count(*) from (select comment_id from comments where lesson_id = :lessonId and parent_comment_id = :parentCommentId limit :limit) t
