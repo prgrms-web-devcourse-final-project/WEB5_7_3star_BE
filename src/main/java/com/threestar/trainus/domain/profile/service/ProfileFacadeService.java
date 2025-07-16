@@ -5,9 +5,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
+import com.threestar.trainus.domain.profile.dto.IntroUpdateRequestDto;
 import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
+import com.threestar.trainus.domain.profile.dto.ImageUpdateResponseDto;
+import com.threestar.trainus.domain.profile.dto.ImageUpdateRequestDto;
+import com.threestar.trainus.domain.profile.dto.IntroUpdateResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
-import com.threestar.trainus.domain.profile.dto.ProfileUpdateRequestDto;
 import com.threestar.trainus.domain.profile.mapper.ProfileDetailMapper;
 import com.threestar.trainus.domain.user.entity.User;
 
@@ -31,8 +34,13 @@ public class ProfileFacadeService {
 
 	//프로필 수정
 	@Transactional
-	public ProfileResponseDto updateProfile(Long userId, ProfileUpdateRequestDto requestDto) {
-		return profileService.updateProfile(userId, requestDto);
+	public ImageUpdateResponseDto updateProfileImage(Long userId, ImageUpdateRequestDto requestDto) {
+		return profileService.updateProfileImage(userId, requestDto);
+	}
+
+	@Transactional
+	public IntroUpdateResponseDto updateProfileIntro(Long userId, IntroUpdateRequestDto requestDto) {
+		return profileService.updateProfileIntro(userId, requestDto);
 	}
 
 	//회원가입 시 프로필,메타데이터 디폴트로 생성.
