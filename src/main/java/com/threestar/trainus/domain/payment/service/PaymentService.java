@@ -1,14 +1,16 @@
 package com.threestar.trainus.domain.payment.service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.threestar.trainus.domain.coupon.entity.CouponStatus;
-import com.threestar.trainus.domain.coupon.entity.UserCoupon;
-import com.threestar.trainus.domain.coupon.repository.UserCouponRepository;
+import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
+import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
+import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.domain.payment.dto.PaymentRequestDto;
@@ -44,7 +46,6 @@ public class PaymentService {
 
 		int originPrice = lesson.getPrice();
 
-		//쿠폰 적용, 쿠폰 없을수도(안 사용 하는 경우 -> 예외 터트리면 안됨(null인 경우 쿠폰 사용안한 경우) 쿠폰 사용했다면 그에 대해서도 처리 필요)
 		int discount = 0;
 		UserCoupon coupon = null;
 		if (request.getUserCouponId() != null) {
@@ -58,6 +59,7 @@ public class PaymentService {
 			} else {
 				discount = Integer.parseInt(discountPrice);
 			}
+			coupon.use();
 		}
 
 		int finalPrice = Math.max(0, originPrice - discount);
@@ -94,11 +96,15 @@ public class PaymentService {
 			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
 
 		payment.setPayPrice(tossResponseDto.getTotalAmount());
-		payment.setPayDate(LocalDateTime.parse(tossResponseDto.getApprovedAt()));
-		payment.setStatus(PaymentStatus.DONE);
-		payment.setPaymentMethod(PaymentMethod.valueOf(tossResponseDto.getMethod().toUpperCase()));
 
-		// paymentRepository.save(payment);
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		LocalDateTime paidAt = OffsetDateTime.parse(tossResponseDto.getApprovedAt(), formatter).toLocalDateTime();
+
+		LocalDateTime requestAt = OffsetDateTime.parse(tossResponseDto.getRequestedAt(), formatter).toLocalDateTime();
+
+		payment.setPayDate(paidAt);
+		payment.setStatus(PaymentStatus.DONE);
+		payment.setPaymentMethod(PaymentMethod.fromTossMethod(tossResponseDto.getMethod()));
 
 		TossPayment tossPayment = TossPayment.builder()
 			.payment(payment)
@@ -107,9 +113,9 @@ public class PaymentService {
 			.amount(tossResponseDto.getTotalAmount())
 			.orderName(tossResponseDto.getOrderName())
 			.paymentStatus(PaymentStatus.DONE)
-			.paymentMethod(PaymentMethod.valueOf(tossResponseDto.getMethod().toUpperCase()))
-			.requestedAt(LocalDateTime.parse(tossResponseDto.getRequestedAt()))
-			.approvedAt(LocalDateTime.parse(tossResponseDto.getApprovedAt()))
+			.paymentMethod(PaymentMethod.fromTossMethod(tossResponseDto.getMethod()))
+			.requestedAt(requestAt)
+			.approvedAt(paidAt)
 			.build();
 
 		tossPaymentRepository.save(tossPayment);
@@ -127,6 +133,14 @@ public class PaymentService {
 		Payment payment = tossPayment.getPayment();
 		payment.setStatus(PaymentStatus.CANCELED);
 		payment.setCancelledAt(LocalDateTime.now());
-		// paymentRepository.save(payment);
+
+		//쿠폰 복원
+		if (payment.getUserCoupon() != null) {
+			UserCoupon coupon = payment.getUserCoupon();
+			if (coupon.getStatus() == CouponStatus.INACTIVE) {
+				coupon.restore();
+				userCouponRepository.save(coupon);
+			}
+		}
 	}
 }

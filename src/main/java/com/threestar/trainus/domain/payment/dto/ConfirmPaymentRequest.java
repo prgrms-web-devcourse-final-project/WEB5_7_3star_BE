@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class ConfirmPaymentRequest {
-	private Integer amount;
+	private int amount;
 	private String orderId;
 	private String paymentKey;
 }

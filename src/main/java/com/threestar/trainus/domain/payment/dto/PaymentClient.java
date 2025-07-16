@@ -68,46 +68,4 @@ public class PaymentClient {
 			.body(TossPaymentResponseDto.class);
 	}
 
-	// private ClientHttpRequestFactory createPaymentRequestFactory() {
-	// 	HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-	// 	factory.setConnectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS));
-	// 	factory.setReadTimeout(Duration.ofSeconds(READ_TIMEOUT_SECONDS));
-	// 	return factory;
-	// }
-
-	// public HttpResponse requestConfirm(ConfirmPaymentRequest confirmPaymentRequest) throws
-	// 	IOException,
-	// 	InterruptedException {
-	// 	String tossOrderId = confirmPaymentRequest.getOrderId();
-	// 	String amount = confirmPaymentRequest.getAmount();
-	// 	String tossPaymentKey = confirmPaymentRequest.getPaymentKey();
-	//
-	// 	JsonNode requestObj = objectMapper.createObjectNode()
-	// 		.put("orderId", tossOrderId)
-	// 		.put("amount", amount)
-	// 		.put("paymentKey", tossPaymentKey);
-	//
-	// 	String requestBody = objectMapper.writeValueAsString(requestObj);
-	//
-	// 	HttpRequest request = HttpRequest.newBuilder()
-	// 		.uri(URI.create("<https://api.tosspayments.com/v1/payments/confirm>"))
-	// 		.header("Authorization", getAuthorizations())
-	// 		.header("Content-Type", "application/json")
-	// 		.method("POST", HttpRequest.BodyPublishers.ofString(requestBody))
-	// 		.build();
-	// 	return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-	// }
-
-	// public HttpResponse requestPaymentCancel(String paymentKey, String cancelReason) throws
-	// 	IOException,
-	// 	InterruptedException {
-	// 	HttpRequest request = HttpRequest.newBuilder()
-	// 		.uri(URI.create("<https://api.tosspayments.com/v1/payments/>" + paymentKey + "/cancel"))
-	// 		.header("Authorization", getAuthorizations())
-	// 		.header("Content-Type", "application/json")
-	// 		.method("POST", HttpRequest.BodyPublishers.ofString("{\\cancelReason\\:\\" + cancelReason + "\\}"))
-	// 		.build();
-	// 	return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-	// }
-
 }
