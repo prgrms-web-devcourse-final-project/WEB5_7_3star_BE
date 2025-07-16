@@ -107,6 +107,30 @@ public class MockDataInitializer implements CommandLineRunner {
 			instructors.add(savedInstructor);
 		}
 
+		// 관리자 계정 추가
+		User admin = User.builder()
+			.email("admin@test.com")
+			.password(passwordEncoder.encode("admin123"))
+			.nickname("관리자")
+			.role(UserRole.ADMIN)  //관리자
+			.build();
+
+		User savedAdmin = userRepository.save(admin);
+
+		// 관리자 Profile 생성
+		Profile adminProfile = ProfileMapper.toDefaultEntity(savedAdmin);
+		adminProfile.updateProfile(
+			"https://example.com/admin.jpg",
+			"시스템 관리자입니다."
+		);
+		profileRepository.save(adminProfile);
+
+		// 관리자 ProfileMetadata 생성
+		ProfileMetadata adminMetadata = ProfileMetadataMapper.toDefaultEntity(savedAdmin);
+		profileMetadataRepository.save(adminMetadata);
+
+		instructors.add(savedAdmin);
+
 		return instructors;
 	}
 
