@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.threestar.trainus.domain.lesson.admin.dto.CreatedLessonDto;
 import com.threestar.trainus.domain.lesson.admin.dto.CreatedLessonListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.CreatedLessonListWrapperDto;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 
 public class CreatedLessonMapper {
@@ -36,7 +37,12 @@ public class CreatedLessonMapper {
 		// 응답 DTO 생성
 		return CreatedLessonListResponseDto.builder()
 			.lessons(lessonDtos)
-			.count(totalCount)
+			.count(totalCount.intValue())
 			.build();
+	}
+
+	public static CreatedLessonListWrapperDto toCreatedLessonListWrapperDto(
+		CreatedLessonListResponseDto responseDto) {
+		return new CreatedLessonListWrapperDto(responseDto.lessons());
 	}
 }
