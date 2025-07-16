@@ -29,6 +29,7 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
 		FROM Coupon c
 		LEFT JOIN UserCoupon uc ON c.id = uc.coupon.id AND uc.user.id = :userId
 		WHERE c.closeAt > :now
+		AND c.deletedAt IS NULL
 		ORDER BY c.openAt ASC
 		""")
 	List<CouponResponseDto> findAvailableCouponsWithOwnership(@Param("userId") Long userId,
@@ -43,6 +44,7 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
 		SELECT c FROM Coupon c
 		WHERE (:status IS NULL OR c.status = :status)
 		AND (:category IS NULL OR c.category = :category)
+		AND c.deletedAt IS NULL
 		ORDER BY c.createdAt DESC
 		""")
 	Page<Coupon> findCouponsWithFilters(

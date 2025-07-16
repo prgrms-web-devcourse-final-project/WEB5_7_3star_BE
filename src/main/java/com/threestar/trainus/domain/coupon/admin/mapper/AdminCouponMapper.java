@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponDeleteResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponDetailResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListItemDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
@@ -91,6 +92,14 @@ public class AdminCouponMapper {
 			coupon.getOpenAt(),
 			coupon.getCloseAt(),
 			coupon.getUpdatedAt()
+		);
+	}
+
+	public static CouponDeleteResponseDto toCouponDeleteResponseDto(Coupon coupon) {
+		return new CouponDeleteResponseDto(
+			coupon.getId(),
+			coupon.getName(),
+			coupon.getDeletedAt()
 		);
 	}
 }

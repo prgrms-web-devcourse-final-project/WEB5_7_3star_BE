@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponDeleteResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponDetailResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateRequestDto;
@@ -108,6 +109,35 @@ public class AdminCouponService {
 
 		// 응답 DTO 변환
 		return AdminCouponMapper.toCouponUpdateResponseDto(updatedCoupon);
+	}
+
+	//쿠폰 삭제
+	@Transactional
+	public CouponDeleteResponseDto deleteCoupon(Long couponId, Long userId) {
+		// 관리자 권한 검증
+		userService.validateAdminRole(userId);
+
+		// 쿠폰 조회
+		Coupon coupon = couponRepository.findById(couponId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST_DATA));
+
+		// 이미 삭제된 쿠폰인지 확인
+		if (coupon.isDeleted()) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
+		}
+
+		// todo : 발급된 쿠폰 수 조회
+		Long issuedCount = userCouponRepository.countByCouponId(couponId);
+
+		// todo : 삭제 가능 여부 검증 -> 지금은 필요없는데 일단은 만들어둠!
+		validateCouponDeletion(coupon, issuedCount);
+
+		// 쿠폰 삭제 처리
+		coupon.markAsDeleted();
+		Coupon deletedCoupon = couponRepository.save(coupon);
+
+		// 응답 DTO 변환
+		return AdminCouponMapper.toCouponDeleteResponseDto(deletedCoupon);
 	}
 
 	private void validateCouponRequest(CouponCreateRequestDto request) {
@@ -310,4 +340,7 @@ public class AdminCouponService {
 		}
 	}
 
+	private void validateCouponDeletion(Coupon coupon, Long issuedCount) {
+		//todo: 일단은 다 삭제가능하게 설정 해놨는데, 나중에 결제 붙으면여기에 여러 검증들을 추가할 예정
+	}
 }

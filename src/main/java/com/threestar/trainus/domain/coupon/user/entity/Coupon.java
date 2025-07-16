@@ -65,6 +65,8 @@ public class Coupon extends BaseDateEntity {
 	@Column(nullable = false)
 	private LocalDateTime closeAt;
 
+	private LocalDateTime deletedAt;
+
 	public void decreaseQuantity() {
 		if (this.quantity <= 0) {
 			throw new BusinessException(ErrorCode.COUPON_BE_EXHAUSTED);
@@ -95,6 +97,20 @@ public class Coupon extends BaseDateEntity {
 
 	public void updateCloseAt(LocalDateTime closeAt) {
 		this.closeAt = closeAt;
+	}
+
+	//삭제관련 메서드 추가
+	public void markAsDeleted() {
+		this.deletedAt = LocalDateTime.now();
+	}
+
+	//쿠폰이 삭제된 상태인지 확인
+	public boolean isDeleted() {
+		return this.deletedAt != null;
+	}
+
+	public LocalDateTime getDeletedAt() {
+		return this.deletedAt;
 	}
 
 }

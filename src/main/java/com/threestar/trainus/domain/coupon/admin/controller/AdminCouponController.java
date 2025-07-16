@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.coupon.admin.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateResponseDto;
+import com.threestar.trainus.domain.coupon.admin.dto.CouponDeleteResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponDetailResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponListResponseDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateRequestDto;
@@ -82,6 +84,16 @@ public class AdminCouponController {
 	) {
 		CouponUpdateResponseDto response = adminCouponService.updateCoupon(couponId, request, loginUserId);
 		return BaseResponse.ok("쿠폰 수정이 완료되었습니다.", response, HttpStatus.OK);
+	}
+
+	@DeleteMapping("/{couponId}")
+	@Operation(summary = "쿠폰 삭제", description = "관리자가 쿠폰을 삭제")
+	public ResponseEntity<BaseResponse<CouponDeleteResponseDto>> deleteCoupon(
+		@PathVariable Long couponId,
+		@LoginUser Long loginUserId
+	) {
+		CouponDeleteResponseDto response = adminCouponService.deleteCoupon(couponId, loginUserId);
+		return BaseResponse.ok("쿠폰 삭제가 완료되었습니다.", response, HttpStatus.OK);
 	}
 
 }
