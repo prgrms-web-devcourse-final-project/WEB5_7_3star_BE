@@ -7,7 +7,7 @@ import lombok.Builder;
 @Builder
 // 내 신청 현황 List 전체 응답
 public record MyLessonApplicationListResponseDto(
-	List<MyLessonApplicationResponseDto> lessonApplications,
+	List<MyLessonApplicationResponseDto> data,
 	int count
 ) {
 }
