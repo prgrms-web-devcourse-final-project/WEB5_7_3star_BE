@@ -31,33 +31,36 @@ jobs:
     if: github.ref == 'refs/heads/develop'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      #      - name: Checkout code
+      #        uses: actions/checkout@v4
+      #
+      #      - name: Set up JDK
+      #        uses: actions/setup-java@v3
+      #        with:
+      #          java-version: '21'
+      #          distribution: 'temurin'
+      #      - name: Grant execute permission for gradlew
+      #        run: chmod +x ./gradlew
+      #      - name: Build application
+      #        run: ./gradlew build -x test
 
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Build application
-        run: ./gradlew build -x test
-
-      - name: Build Docker image
-        run: |
-          sudo docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:latest .
-          sudo docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }} .
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Push Docker image
-        run: |
-          sudo docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest
-          sudo docker push ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }}
+      #      - name: Build Docker image
+      #        run: |
+      #          sudo docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:latest .
+      #          sudo docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }} .
+      #
+      #      - name: Login to Docker Hub
+      #        uses: docker/login-action@v2
+      #        with:
+      #          username: ${{ secrets.DOCKER_USERNAME }}
+      #          password: ${{ secrets.DOCKER_PASSWORD }}
+      #      - name: Verify login
+      #        run: docker info
+      #
+      #      - name: Push Docker image
+      #        run: |
+      #          sudo docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest
+      #          sudo docker push ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }}
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.7
@@ -67,19 +70,14 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           port: 22
           script: |
-            # 기존 컨테이너 중지 및 삭제
-            sudo docker stop my-app || true
-            sudo docker rm my-app || true
-
-            # 새 이미지 pull
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/my-app:latest
-
-            # 새 컨테이너 실행
-            sudo docker run -d --name my-app -p 8080:8080 \
-              -e SPRING_PROFILES_ACTIVE=prod \
-              ${{ secrets.DOCKER_USERNAME }}/my-app:latest
-
-            # 이미지 정리
-            sudo docker image prune -f
+            cd ~/WEB5_7_3star_BE
             
-            sudo docker ps
+            git fetch origin
+            git reset --hard origin/develop
+            
+            sudo docker-compose down || true
+            
+            sudo docker-compose up -d --build
+            
+            sudo docker image prune -f
+            sudo docker-compose ps
