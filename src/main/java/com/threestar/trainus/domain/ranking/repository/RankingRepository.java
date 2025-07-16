@@ -34,7 +34,7 @@ public interface RankingRepository extends JpaRepository<ProfileMetadata, Long> 
 		SELECT r.reviewee.id as userId,
 			r.reviewee.nickname as userNickname,
 			CAST(COUNT(r.reviewId) AS INTEGER) as reviewCount,
-			AST(AVG(r.rating) AS FLOAT) as rating,
+			CAST(AVG(r.rating) AS DOUBLE) as rating,
 			p.profileImage as profileImage
 		FROM Review r
 		JOIN r.lesson l
