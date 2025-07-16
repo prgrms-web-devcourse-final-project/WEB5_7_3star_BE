@@ -11,7 +11,10 @@ public class CorsConfig implements WebMvcConfigurer {
 		registry.addMapping("/**")
 			.allowedOrigins("http://localhost:3000",
 				"http://localhost:8080",
-				"http://localhost:8031")
+				"http://localhost:8031",
+				"http://43.202.206.47:8080",
+				"http://43.202.206.47:3000",
+				"http://43.202.206.47:8031")
 			.allowCredentials(true) // 쿠키 허용
 			.allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 			.allowedHeaders("*");

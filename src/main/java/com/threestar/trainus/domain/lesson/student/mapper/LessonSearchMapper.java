@@ -8,6 +8,10 @@ import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.user.entity.User;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LessonSearchMapper {
 
 	public static LessonSearchResponseDto toLessonSearchResponseDto(
