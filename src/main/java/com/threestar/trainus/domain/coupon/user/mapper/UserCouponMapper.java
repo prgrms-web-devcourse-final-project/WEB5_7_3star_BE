@@ -18,7 +18,7 @@ public final class UserCouponMapper {
 			.userId(userCoupon.getUser().getId())
 			.createdAt(userCoupon.getCreatedAt())
 			.expirationDate(userCoupon.getExpirationDate())
-			.status(userCoupon.getStatus().name())
+			.status(userCoupon.getStatus())
 			.build();
 	}
 
@@ -30,7 +30,7 @@ public final class UserCouponMapper {
 			.discountPrice(coupon.getDiscountPrice())
 			.minOrderPrice(coupon.getMinOrderPrice())
 			.expirationDate(coupon.getExpirationDate())
-			.status(coupon.getStatus().name())
+			.status(coupon.getStatus())
 			.useDate(userCoupon.getUseDate())
 			.build();
 	}

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.threestar.trainus.domain.lesson.admin.entity.Category;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
 
 public record LessonSearchResponseDto(
 	long id,
@@ -16,7 +17,7 @@ public record LessonSearchResponseDto(
 	int price,
 	int maxParticipants,
 	int currentParticipants,
-	String status,
+	LessonStatus status,
 	LocalDateTime startAt,
 	LocalDateTime endAt,
 	LocalDateTime openTime,

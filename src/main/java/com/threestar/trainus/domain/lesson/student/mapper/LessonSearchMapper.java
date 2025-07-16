@@ -32,7 +32,7 @@ public class LessonSearchMapper {
 			lesson.getPrice(),
 			lesson.getMaxParticipants(),
 			lesson.getParticipantCount(),
-			lesson.getStatus().name(),
+			lesson.getStatus(),
 			lesson.getStartAt(),
 			lesson.getEndAt(),
 			lesson.getOpenTime(),

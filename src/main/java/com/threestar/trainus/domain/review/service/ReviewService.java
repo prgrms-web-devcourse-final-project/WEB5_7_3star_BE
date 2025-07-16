@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.review.dto.ReviewCreateRequestDto;
 import com.threestar.trainus.domain.review.dto.ReviewCreateResponseDto;
@@ -17,6 +17,7 @@ import com.threestar.trainus.domain.review.mapper.ReviewMapper;
 import com.threestar.trainus.domain.review.repository.ReviewRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.utils.PageLimitCalculator;
@@ -29,16 +30,16 @@ public class ReviewService {
 
 	private final ProfileMetadataService profileMetadataService;
 	private final ReviewRepository reviewRepository;
-	private final LessonRepository lessonRepository;
+	private final AdminLessonService adminLessonService;
 	private final UserRepository userRepository;
 	private final LessonParticipantRepository lessonParticipantRepository;
+	private final UserService userService;
 
 	//참여자 테이블에 있는지도 검증 필요 횟수도 한번으로 제한
 
 	@Transactional
 	public ReviewCreateResponseDto createReview(ReviewCreateRequestDto reviewRequestDto, Long lessonId, Long userId) {
-		Lesson findLesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+		Lesson findLesson = adminLessonService.findLessonById(lessonId);
 
 		LocalDateTime reviewEndDate = findLesson.getEndAt().plusDays(7);
 
@@ -46,10 +47,8 @@ public class ReviewService {
 			throw new BusinessException(ErrorCode.INVALID_REVIEW_DATE);
 		}
 
-		User findUser = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-		User lessonLeader = userRepository.findById(findLesson.getLessonLeader())
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User findUser = userService.getUserById(userId);
+		User lessonLeader = userService.getUserById(findLesson.getLessonLeader());
 
 		//참여자 테이블 검증 추후 추가 -> lessonId 와 userId 다 갖고 있는지
 		if (!lessonParticipantRepository.existsByLessonIdAndUserId(findLesson.getId(),

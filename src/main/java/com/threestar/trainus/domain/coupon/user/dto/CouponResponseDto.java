@@ -20,21 +20,7 @@ public class CouponResponseDto {
 	private LocalDateTime expirationDate;
 	private OwnedStatus ownedStatus;
 	private Integer quantity;
-	private String category;
+	private CouponCategory category;
 	private LocalDateTime openTime;
 
-	public CouponResponseDto(Long couponId, String couponName, String discountPrice,
-		Integer minOrderPrice, LocalDateTime expirationDate,
-		String ownedStatus, Integer quantity, CouponCategory category,
-		LocalDateTime openTime) {
-		this.couponId = couponId;
-		this.couponName = couponName;
-		this.discountPrice = discountPrice;
-		this.minOrderPrice = minOrderPrice;
-		this.expirationDate = expirationDate;
-		this.ownedStatus = OwnedStatus.valueOf(ownedStatus);
-		this.quantity = quantity;
-		this.category = category.name();
-		this.openTime = openTime;
-	}
 }

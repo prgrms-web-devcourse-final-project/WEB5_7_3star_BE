@@ -53,9 +53,7 @@ public class AdminLessonService {
 	// 새로운 레슨을 생성하는 메서드
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
 		// User 조회
-		//TODO: 공통메소드
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		User user = userService.getUserById(userId);
 
 		validateLessonTimes(requestDto.startAt(), requestDto.endAt());
 
@@ -119,10 +117,7 @@ public class AdminLessonService {
 	@Transactional
 	public void deleteLesson(Long lessonId, Long userId) {
 		// User 존재 확인
-		//TODO: 공통메소드
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
+		User user = userService.getUserById(userId);
 		//레슨 조회
 		Lesson lesson = findLessonById(lessonId);
 

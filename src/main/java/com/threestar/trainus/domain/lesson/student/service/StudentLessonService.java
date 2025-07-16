@@ -58,15 +58,15 @@ public class StudentLessonService {
 	@Transactional
 	public LessonSearchListResponseDto searchLessons(
 		int page, int limit,
-		String category, String search,
+		Category category, String search,
 		String city, String district, String dong
 	) {
 		Pageable pageable = PageRequest.of(page - 1, limit);
 
 		Category categoryEnum = null;
-		if (!category.equalsIgnoreCase("ALL")) {
+		if (!category.name().equalsIgnoreCase("ALL")) {
 			try {
-				categoryEnum = Category.valueOf(category.toUpperCase());
+				categoryEnum = category;
 			} catch (IllegalArgumentException e) {
 				throw new BusinessException(ErrorCode.INVALID_CATEGORY);
 			}
@@ -85,7 +85,9 @@ public class StudentLessonService {
 				// 프로필 이미지
 				Profile profile = profileRepository.findByUserId(leader.getId())
 					.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
-
+				/*
+				 * TODO: 프로필 공통예외처리 분리
+				 *  */
 				// 리뷰 개수, 평점 등 메타데이터
 				ProfileMetadataResponseDto metadata = profileMetadataService.getMetadata(leader.getId());
 
@@ -113,7 +115,9 @@ public class StudentLessonService {
 		// 유저 프로필 조회
 		Profile profile = profileRepository.findByUserId(leader.getId())
 			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
-
+		/*
+		 * TODO: 프로필 공통 예외처리 분리
+		 *  */
 		// 프로필 메타데이터 조회
 		ProfileMetadataResponseDto metadata = profileMetadataService.getMetadata(leader.getId());
 

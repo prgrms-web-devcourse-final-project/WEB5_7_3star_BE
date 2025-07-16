@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.lesson.admin.entity.Category;
 import com.threestar.trainus.domain.ranking.dto.RankingResponseDto;
 import com.threestar.trainus.domain.ranking.service.RankingService;
 import com.threestar.trainus.global.unit.BaseResponse;
@@ -35,9 +36,9 @@ public class RankingController {
 	@GetMapping("/{category}")
 	@Operation(summary = "특정 카테고리 랭킹 조회 api", description = "지정된 카테고리의 랭킹을 조회")
 	public ResponseEntity<BaseResponse<List<RankingResponseDto>>> getRankingsByCategory(
-		@PathVariable String category
+		@PathVariable Category category
 	) {
-		List<RankingResponseDto> rankings = rankingService.getTopRankings(category);
+		List<RankingResponseDto> rankings = rankingService.getTopRankings(category.name());
 		return BaseResponse.ok(category + "카테고리별 랭킹 조회 성공", rankings, HttpStatus.OK);
 	}
 
