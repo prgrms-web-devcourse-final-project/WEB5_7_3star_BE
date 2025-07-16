@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.threestar.trainus.domain.review.dto.ReviewCreateResponseDto;
 import com.threestar.trainus.domain.review.dto.ReviewPageResponseDto;
+import com.threestar.trainus.domain.review.dto.ReviewPageWrapperDto;
 import com.threestar.trainus.domain.review.dto.ReviewViewResponseDto;
 import com.threestar.trainus.domain.review.entity.Review;
 
@@ -36,11 +37,17 @@ public class ReviewMapper {
 	}
 
 	public static ReviewPageResponseDto toReviewPageResponseDto(Long userId, List<ReviewViewResponseDto> reviews,
-		Long count) {
+		Integer count) {
 		return ReviewPageResponseDto.builder()
 			.reviews(reviews)
 			.userId(userId)
 			.count(count)
+			.build();
+	}
+
+	public static ReviewPageWrapperDto toReviewPageWrapperDto(ReviewPageResponseDto reviewPageResponseDto) {
+		return ReviewPageWrapperDto.builder()
+			.reviews(reviewPageResponseDto.getReviews())
 			.build();
 	}
 }

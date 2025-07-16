@@ -17,7 +17,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	@Query(value = """
 		select count(*) from (select review_id from reviews where reviewee_id = :userId limit :limit ) t
 		""", nativeQuery = true)
-	Long count(
+	Integer count(
 		@Param("userId") Long userId,
 		@Param("limit") int limit
 	);

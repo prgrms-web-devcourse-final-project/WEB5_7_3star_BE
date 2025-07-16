@@ -7,8 +7,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class ReviewPageResponseDto {
+public class ReviewPageWrapperDto {
 	private Long userId;
-	private Integer count;
 	private List<ReviewViewResponseDto> reviews;
 }
