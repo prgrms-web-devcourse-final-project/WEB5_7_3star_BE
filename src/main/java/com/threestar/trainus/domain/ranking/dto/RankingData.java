@@ -7,7 +7,7 @@ public interface RankingData {
 
 	Integer getReviewCount();
 
-	Float getRating();
+	Double getRating();
 
 	String getProfileImage();
 }

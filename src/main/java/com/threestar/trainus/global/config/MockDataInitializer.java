@@ -200,7 +200,7 @@ public class MockDataInitializer implements CommandLineRunner {
 				// 평점은 metadata의 rating 주변으로 생성
 				double baseRating = metadata.getRating();
 				double reviewRating = Math.max(1.0d, Math.min(5.0d,
-					baseRating + (random.nextFloat() - 0.5d) * 2)); // ±1점 범위
+					baseRating + (random.nextDouble() - 0.5d) * 2)); // ±1점 범위
 
 				Review review = Review.builder()
 					.reviewer(randomStudent)
@@ -228,7 +228,7 @@ public class MockDataInitializer implements CommandLineRunner {
 
 	private double generateRating() {
 		// 3.0 ~ 5.0 사이의 평점 생성 (소수점 1자리)
-		double rating = 3.0d + random.nextFloat() * 2.0d;
+		double rating = 3.0d + random.nextDouble() * 2.0d;
 		return Math.round(rating * 10) / 10.0d;
 	}
 }
