@@ -13,11 +13,11 @@ import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileUpdateRequestDto;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
+import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -42,9 +42,8 @@ public class ProfileController {
 	@Operation(summary = "유저 프로필 수정 api")
 	public ResponseEntity<BaseResponse<ProfileResponseDto>> updateProfile(
 		@Valid @RequestBody ProfileUpdateRequestDto requestDto,
-		HttpSession session
+		@LoginUser Long userId
 	) {
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		ProfileResponseDto response = facadeService.updateProfile(userId, requestDto);
 		return BaseResponse.ok("프로필 수정이 완료되었습니다.", response, HttpStatus.OK);
 	}

@@ -18,12 +18,12 @@ import com.threestar.trainus.domain.comment.dto.CommentPageWrapperDto;
 import com.threestar.trainus.domain.comment.dto.CommentResponseDto;
 import com.threestar.trainus.domain.comment.mapper.CommentMapper;
 import com.threestar.trainus.domain.comment.service.CommentService;
+import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -40,8 +40,7 @@ public class CommentController {
 	@PostMapping("/{lessonId}")
 	@Operation(summary = "댓글 작성", description = "레슨 ID에 해당되는 댓글을 작성합니다.")
 	public ResponseEntity<BaseResponse<CommentResponseDto>> createComment(@PathVariable Long lessonId,
-		@Valid @RequestBody CommentCreateRequestDto request, HttpSession session) {
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
+		@Valid @RequestBody CommentCreateRequestDto request, @LoginUser Long userId) {
 		CommentResponseDto comment = commentService.createComment(request, lessonId, userId);
 		return BaseResponse.ok("댓글 등록 완료되었습니다", comment, HttpStatus.CREATED);
 	}
@@ -60,9 +59,8 @@ public class CommentController {
 
 	@DeleteMapping("/{commentId}")
 	@Operation(summary = "댓글 삭제", description = "댓글 ID에 해당되는 댓글을 삭제합니다.")
-	public ResponseEntity<Void> deleteComment(@PathVariable Long commentId, HttpSession session) {
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
+	public ResponseEntity<BaseResponse<Void>> deleteComment(@PathVariable Long commentId, @LoginUser Long userId) {
 		commentService.delete(commentId, userId);
-		return ResponseEntity.noContent().build();
+		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}
 }

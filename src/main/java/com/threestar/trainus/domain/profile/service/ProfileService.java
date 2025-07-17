@@ -10,7 +10,6 @@ import com.threestar.trainus.domain.profile.mapper.ProfileMapper;
 import com.threestar.trainus.domain.profile.repository.ProfileRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.repository.UserRepository;
-import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -34,8 +33,7 @@ public class ProfileService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-		Profile profile = profileRepository.findByUserId(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
+		Profile profile = findByUserId(userId);
 
 		return ProfileMapper.toResponseDto(profile, user);
 	}
@@ -45,12 +43,16 @@ public class ProfileService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-		Profile profile = profileRepository.findByUserId(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
+		Profile profile = findByUserId(userId);
 
 		profile.updateProfile(requestDto.profileImage(), requestDto.intro());
 
 		return ProfileMapper.toResponseDto(profile, user);
+	}
+
+	public Profile findByUserId(Long userId) {
+		return profileRepository.findByUserId(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
 	}
 }
 

@@ -112,7 +112,8 @@ public class RankingService {
 			//카테고리별 랭킹 업데이트
 			for (Category category : Category.values()) {
 				List<RankingResponseDto> categoryRankings = calculateRankings(category);
-				String cacheKey = CATEGORY_RANKING_KEY_PREFIX + category.name().toLowerCase() + CATEGORY_RANKING_KEY_SUFFIX;
+				String cacheKey =
+					CATEGORY_RANKING_KEY_PREFIX + category.name().toLowerCase() + CATEGORY_RANKING_KEY_SUFFIX;
 				saveToRedis(categoryRankings, cacheKey);
 				categoryCounts.put(category.name(), categoryRankings.size());
 			}

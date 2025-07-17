@@ -4,5 +4,5 @@ import java.util.List;
 
 public record MyLessonApplicationListWrapperDto(
 	List<MyLessonApplicationResponseDto> lessonApplications
-){
+) {
 }

@@ -17,7 +17,7 @@ public class CouponMapper {
 			.expirationDate(coupon.getExpirationDate())
 			.ownedStatus(owned ? OwnedStatus.OWNED : OwnedStatus.NOT_OWNED)
 			.quantity(coupon.getQuantity())
-			.category(coupon.getCategory().name())
+			.category(coupon.getCategory())
 			.openTime(coupon.getOpenAt())
 			.build();
 	}

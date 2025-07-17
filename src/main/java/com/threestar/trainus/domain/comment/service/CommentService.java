@@ -12,11 +12,9 @@ import com.threestar.trainus.domain.comment.entity.Comment;
 import com.threestar.trainus.domain.comment.mapper.CommentMapper;
 import com.threestar.trainus.domain.comment.repository.CommentRepository;
 import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.domain.user.entity.User;
-import com.threestar.trainus.domain.user.repository.UserRepository;
-import com.threestar.trainus.global.exception.domain.ErrorCode;
-import com.threestar.trainus.global.exception.handler.BusinessException;
+import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.utils.PageLimitCalculator;
 
 import lombok.RequiredArgsConstructor;
@@ -25,16 +23,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CommentService {
 
-	private final UserRepository userRepository;
-	private final LessonRepository lessonRepository;
+	private final AdminLessonService adminLessonService;
 	private final CommentRepository commentRepository;
+	private final UserService userService;
 
 	@Transactional
 	public CommentResponseDto createComment(CommentCreateRequestDto request, Long lessonId, Long userId) {
-		Lesson findLesson = lessonRepository.findById(lessonId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
-		User findUser = userRepository.findById(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+		Lesson findLesson = adminLessonService.findLessonById(lessonId);
+		User findUser = userService.getUserById(userId);
 		Comment parent = findParent(request);
 
 		Comment newComment = Comment.builder()

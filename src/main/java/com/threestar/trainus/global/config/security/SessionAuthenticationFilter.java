@@ -1,4 +1,4 @@
-package com.threestar.trainus.global.security;
+package com.threestar.trainus.global.config.security;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -24,7 +24,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
 		HttpSession session = request.getSession(false);
 
 		if (session != null) {
-			Long userId = (Long) session.getAttribute("LOGIN_USER");
+			Long userId = (Long)session.getAttribute("LOGIN_USER");
 
 			if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 				UsernamePasswordAuthenticationToken authToken =

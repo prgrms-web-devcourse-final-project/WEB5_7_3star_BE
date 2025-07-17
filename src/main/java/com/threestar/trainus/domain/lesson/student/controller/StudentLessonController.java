@@ -4,12 +4,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.lesson.admin.entity.Category;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
@@ -18,6 +20,8 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListWrapperDto;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
+import com.threestar.trainus.global.annotation.LoginUser;
+import com.threestar.trainus.global.dto.PageRequestDto;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
@@ -26,6 +30,7 @@ import com.threestar.trainus.global.unit.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -40,11 +45,8 @@ public class StudentLessonController {
 	@GetMapping
 	@Operation(summary = "레슨 검색 api", description = "category(필수, Default: \"ALL\") / search(선택) / 그외 법정동 선택 필수")
 	public ResponseEntity<PagedResponse<LessonSearchListWrapperDto>> searchLessons(
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
-		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
-		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
-		@RequestParam String category,
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
+		@RequestParam Category category,
 		@RequestParam(required = false) String search,
 		@RequestParam String city,
 		@RequestParam String district,
@@ -52,7 +54,7 @@ public class StudentLessonController {
 	) {
 
 		LessonSearchListResponseDto serviceResponse = studentLessonService.searchLessons(
-			page, limit, category, search, city, district, dong
+			pageRequestDto.getPage(), pageRequestDto.getLimit(), category, search, city, district, dong
 		);
 		LessonSearchListWrapperDto response = new LessonSearchListWrapperDto(serviceResponse.lessons());
 
@@ -72,12 +74,8 @@ public class StudentLessonController {
 	@Operation(summary = "레슨 신청", description = "레슨 ID에 해당되는 레슨을 신청합니다.")
 	public ResponseEntity<BaseResponse<LessonApplicationResponseDto>> createLessonApplication(
 		@PathVariable Long lessonId,
-		HttpSession session
+		@LoginUser Long userId
 	) {
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
 		LessonApplicationResponseDto response = studentLessonService.applyToLesson(lessonId, userId);
 		return BaseResponse.ok("레슨 신청 완료", response, HttpStatus.OK);
 	}
@@ -86,12 +84,8 @@ public class StudentLessonController {
 	@Operation(summary = "레슨 신청 취소", description = "레슨 ID에 해당되는 레슨 신청을 취소합니다.")
 	public ResponseEntity<BaseResponse<Void>> deleteLessonApplication(
 		@PathVariable Long lessonId,
-		HttpSession session
+		@LoginUser Long userId
 	) {
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
 		studentLessonService.cancelLessonApplication(lessonId, userId);
 		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}

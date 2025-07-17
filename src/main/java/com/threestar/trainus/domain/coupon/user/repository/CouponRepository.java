@@ -23,7 +23,8 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
 	@Query("""
 		SELECT new com.threestar.trainus.domain.coupon.user.dto.CouponResponseDto(
 			c.id, c.name, c.discountPrice, c.minOrderPrice, c.expirationDate,
-			CASE WHEN uc.id IS NOT NULL THEN "OWNED" ELSE "NOT_OWNED" END,
+			CASE WHEN uc.id IS NOT NULL THEN com.threestar.trainus.domain.coupon.user.entity.OwnedStatus.OWNED
+			ELSE com.threestar.trainus.domain.coupon.user.entity.OwnedStatus.NOT_OWNED END,
 			c.quantity, c.category, c.openAt
 		)
 		FROM Coupon c

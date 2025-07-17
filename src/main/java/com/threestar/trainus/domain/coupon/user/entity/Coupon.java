@@ -35,6 +35,7 @@ public class Coupon extends BaseDateEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Builder.Default
 	@OneToMany(mappedBy = "coupon")
 	private List<UserCoupon> userCoupons = new ArrayList<>();
 

@@ -10,6 +10,7 @@ import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
 public interface LessonImageRepository extends JpaRepository<LessonImage, Long> {
 
 	List<LessonImage> findByLesson(Lesson lesson);
+
 	List<LessonImage> findAllByLessonId(Long id);
 }
 

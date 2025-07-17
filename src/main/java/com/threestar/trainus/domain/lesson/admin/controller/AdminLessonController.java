@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +28,7 @@ import com.threestar.trainus.domain.lesson.admin.mapper.LessonApplicationMapper;
 import com.threestar.trainus.domain.lesson.admin.mapper.LessonParticipantMapper;
 import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.global.annotation.LoginUser;
+import com.threestar.trainus.global.dto.PageRequestDto;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
@@ -35,8 +37,6 @@ import com.threestar.trainus.global.unit.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -78,16 +78,13 @@ public class AdminLessonController {
 	@Operation(summary = "레슨 신청자 목록 조회 api", description = "레슨 신청자의 목록을 조회 가능함.")
 	public ResponseEntity<PagedResponse<LessonApplicationListWrapperDto>> getLessonApplications(
 		@PathVariable Long lessonId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
-		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
-		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
 		@RequestParam(defaultValue = "ALL") String status,
 		@LoginUser Long loginUserId) {
 
 		// 신청자 목록 조회
 		LessonApplicationListResponseDto responseDto = adminLessonService
-			.getLessonApplications(lessonId, page, limit, status, loginUserId);
+			.getLessonApplications(lessonId, pageRequestDto.getPage(), pageRequestDto.getLimit(), status, loginUserId);
 
 		LessonApplicationListWrapperDto wrapperDto = LessonApplicationMapper
 			.toLessonApplicationListWrapperDto(responseDto);
@@ -116,15 +113,12 @@ public class AdminLessonController {
 	@Operation(summary = "레슨 참가자 목록 조회 api", description = "")
 	public ResponseEntity<PagedResponse<ParticipantListWrapperDto>> getLessonParticipants(
 		@PathVariable Long lessonId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
-		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
-		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
 		@LoginUser Long loginUserId) {
 
 		// 참가자 목록 조회
 		ParticipantListResponseDto responseDto = adminLessonService
-			.getLessonParticipants(lessonId, page, limit, loginUserId);
+			.getLessonParticipants(lessonId, pageRequestDto.getPage(), pageRequestDto.getLimit(), loginUserId);
 
 		ParticipantListWrapperDto wrapperDto = LessonParticipantMapper
 			.toParticipantListWrapperDto(responseDto);
@@ -137,10 +131,7 @@ public class AdminLessonController {
 	@Operation(summary = "강사가 개설한 레슨 목록 조회 api", description = "")
 	public ResponseEntity<PagedResponse<CreatedLessonListWrapperDto>> getCreatedLessons(
 		@PathVariable Long userId,
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
-		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
-		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
 		@RequestParam(required = false) String status,
 		@LoginUser Long loginUserId) {
 
@@ -151,7 +142,7 @@ public class AdminLessonController {
 
 		// 개설한 레슨 목록 조회
 		CreatedLessonListResponseDto responseDto = adminLessonService
-			.getCreatedLessons(userId, page, limit, status);
+			.getCreatedLessons(userId, pageRequestDto.getPage(), pageRequestDto.getLimit(), status);
 
 		CreatedLessonListWrapperDto wrapperDto = CreatedLessonMapper
 			.toCreatedLessonListWrapperDto(responseDto);

@@ -17,7 +17,7 @@ public class CreatedLessonMapper {
 			.maxParticipants(lesson.getMaxParticipants())
 			.currentParticipants(lesson.getParticipantCount())
 			.price(lesson.getPrice())
-			.status(lesson.getStatus().name())
+			.status(lesson.getStatus())
 			.startAt(lesson.getStartAt())
 			.endAt(lesson.getEndAt())
 			.openRun(lesson.getOpenRun())
