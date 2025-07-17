@@ -62,4 +62,7 @@ public class User extends BaseDateEntity {
 	@OneToMany(mappedBy = "user")
 	private List<UserCoupon> userCoupons = new ArrayList<>();
 
+	public void updatePassword(String newPassword) {
+		this.password = newPassword;
+	}
 }
