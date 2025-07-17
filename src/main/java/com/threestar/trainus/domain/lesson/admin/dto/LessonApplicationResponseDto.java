@@ -3,7 +3,6 @@ package com.threestar.trainus.domain.lesson.admin.dto;
 import java.time.LocalDateTime;
 
 import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
-import com.threestar.trainus.domain.profile.dto.ImageUpdateResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 
 import lombok.Builder;
