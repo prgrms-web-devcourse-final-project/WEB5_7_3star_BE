@@ -211,7 +211,6 @@ public class MockDataInitializer implements CommandLineRunner {
 
 	private void createReviews(List<User> instructors, List<User> students, List<Lesson> lessons) {
 		for (User instructor : instructors) {
-			
 			ProfileMetadata metadata = profileMetadataRepository.findByUserId(instructor.getId())
 				.orElseThrow();
 

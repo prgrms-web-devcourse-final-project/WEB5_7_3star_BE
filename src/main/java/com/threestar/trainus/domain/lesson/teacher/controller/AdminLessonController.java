@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,8 @@ import com.threestar.trainus.domain.lesson.teacher.dto.LessonApplicationListResp
 import com.threestar.trainus.domain.lesson.teacher.dto.LessonApplicationListWrapperDto;
 import com.threestar.trainus.domain.lesson.teacher.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.teacher.dto.LessonResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.LessonUpdateRequestDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.LessonUpdateResponseDto;
 import com.threestar.trainus.domain.lesson.teacher.dto.ParticipantListResponseDto;
 import com.threestar.trainus.domain.lesson.teacher.dto.ParticipantListWrapperDto;
 import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationAction;
@@ -148,6 +151,17 @@ public class AdminLessonController {
 			.toCreatedLessonListWrapperDto(responseDto);
 
 		return PagedResponse.ok("개설한 레슨 목록 조회 완료.", wrapperDto, responseDto.count(), HttpStatus.OK);
+	}
+
+	@PatchMapping("/lessons/{lessonId}")
+	@Operation(summary = "레슨 수정 api", description = "레슨 정보를 수정")
+	public ResponseEntity<BaseResponse<LessonUpdateResponseDto>> updateLesson(
+		@PathVariable Long lessonId,
+		@Valid @RequestBody LessonUpdateRequestDto requestDto,
+		@LoginUser Long loginUserId) {
+
+		LessonUpdateResponseDto responseDto = adminLessonService.updateLesson(lessonId, requestDto, loginUserId);
+		return BaseResponse.ok("레슨이 수정되었습니다.", responseDto, HttpStatus.OK);
 	}
 
 }

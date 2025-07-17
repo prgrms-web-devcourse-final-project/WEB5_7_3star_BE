@@ -37,7 +37,6 @@ public class ProfileLessonMapper {
 		List<ProfileCreatedLessonDto> lessonDtos = lessons.stream()
 			.map(ProfileLessonMapper::toProfileCreatedLessonDto)
 			.toList();
-		
 		return ProfileCreatedLessonListResponseDto.builder()
 			.lessons(lessonDtos)
 			.count(totalCount.intValue())
