@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
 import com.threestar.trainus.domain.profile.dto.ImageUpdateRequestDto;
 import com.threestar.trainus.domain.profile.dto.ImageUpdateResponseDto;
 import com.threestar.trainus.domain.profile.dto.IntroUpdateRequestDto;

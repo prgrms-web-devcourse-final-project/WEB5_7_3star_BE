@@ -18,11 +18,11 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
-import com.threestar.trainus.domain.lesson.admin.entity.LessonParticipant;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.domain.lesson.teacher.entity.Category;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.metadata.repository.ProfileMetadataRepository;
 import com.threestar.trainus.domain.review.dto.ReviewCreateRequestDto;

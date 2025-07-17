@@ -7,9 +7,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
-import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
 import com.threestar.trainus.domain.profile.dto.ProfileCreatedLessonListResponseDto;
 import com.threestar.trainus.domain.profile.mapper.ProfileLessonMapper;
 import com.threestar.trainus.domain.user.entity.User;

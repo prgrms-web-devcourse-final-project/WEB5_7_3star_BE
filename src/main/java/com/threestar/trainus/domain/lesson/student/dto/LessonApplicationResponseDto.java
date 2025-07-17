@@ -2,7 +2,7 @@ package com.threestar.trainus.domain.lesson.student.dto;
 
 import java.time.LocalDateTime;
 
-import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
+import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationStatus;
 
 import lombok.Builder;
 
