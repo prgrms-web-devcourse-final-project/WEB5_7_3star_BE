@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,7 @@ import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
 import com.threestar.trainus.domain.user.dto.PasswordUpdateDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
+import com.threestar.trainus.domain.user.dto.UserInfoResponseDto;
 import com.threestar.trainus.domain.user.service.EmailVerificationService;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.annotation.LoginUser;
@@ -99,5 +101,14 @@ public class UserController {
 	) {
 		userService.updatePassword(request, loginUserId);
 		return BaseResponse.ok("비밀번호 변경이 완료되었습니다.", null, HttpStatus.OK);
+	}
+
+	@GetMapping("/me")
+	@Operation(summary = "현재 로그인한 사용자 정보 조회 api")
+	public ResponseEntity<BaseResponse<UserInfoResponseDto>> getCurrentUser(
+		@LoginUser Long loginUserId
+	) {
+		UserInfoResponseDto response = userService.getCurrentUserInfo(loginUserId);
+		return BaseResponse.ok("사용자 정보 조회가 완료되었습니다.", response, HttpStatus.OK);
 	}
 }
