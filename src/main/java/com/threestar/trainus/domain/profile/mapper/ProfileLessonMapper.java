@@ -2,7 +2,7 @@ package com.threestar.trainus.domain.profile.mapper;
 
 import java.util.List;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.profile.dto.ProfileCreatedLessonDto;
 import com.threestar.trainus.domain.profile.dto.ProfileCreatedLessonListResponseDto;
 import com.threestar.trainus.domain.profile.dto.ProfileCreatedLessonListWrapperDto;

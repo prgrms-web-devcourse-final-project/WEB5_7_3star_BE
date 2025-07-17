@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
+import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.ranking.dto.RankingData;
 

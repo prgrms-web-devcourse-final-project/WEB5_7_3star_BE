@@ -1,7 +1,7 @@
 package com.threestar.trainus.domain.lesson.student.mapper;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

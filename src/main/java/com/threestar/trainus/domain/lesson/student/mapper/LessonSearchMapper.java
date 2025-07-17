@@ -2,8 +2,8 @@ package com.threestar.trainus.domain.lesson.student.mapper;
 
 import java.util.List;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.user.entity.User;

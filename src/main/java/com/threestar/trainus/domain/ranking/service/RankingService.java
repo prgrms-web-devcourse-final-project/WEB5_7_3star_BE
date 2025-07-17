@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
+import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.ranking.dto.RankingData;
 import com.threestar.trainus.domain.ranking.dto.RankingResponseDto;
 import com.threestar.trainus.domain.ranking.repository.RankingRepository;

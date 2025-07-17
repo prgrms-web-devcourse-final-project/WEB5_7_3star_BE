@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
-import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
+import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.review.dto.ReviewCreateRequestDto;
 import com.threestar.trainus.domain.review.dto.ReviewCreateResponseDto;

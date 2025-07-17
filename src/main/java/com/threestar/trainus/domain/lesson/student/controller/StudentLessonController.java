@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
@@ -20,6 +19,7 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListWrapperDto;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
+import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.dto.PageRequestDto;
 import com.threestar.trainus.global.exception.domain.ErrorCode;

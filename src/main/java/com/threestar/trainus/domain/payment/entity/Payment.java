@@ -3,7 +3,7 @@ package com.threestar.trainus.domain.payment.entity;
 import java.time.LocalDateTime;
 
 import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.global.entity.BaseDateEntity;
 

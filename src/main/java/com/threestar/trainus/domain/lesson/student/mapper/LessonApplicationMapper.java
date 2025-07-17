@@ -2,10 +2,10 @@ package com.threestar.trainus.domain.lesson.student.mapper;
 
 import java.util.List;
 
-import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSummaryResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonApplication;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
