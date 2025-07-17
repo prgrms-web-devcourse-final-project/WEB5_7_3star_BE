@@ -17,12 +17,12 @@ import com.threestar.trainus.domain.review.dto.ReviewPageResponseDto;
 import com.threestar.trainus.domain.review.dto.ReviewPageWrapperDto;
 import com.threestar.trainus.domain.review.mapper.ReviewMapper;
 import com.threestar.trainus.domain.review.service.ReviewService;
+import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -40,8 +40,7 @@ public class ReviewController {
 	@Operation(summary = "리뷰 작성", description = "레슨 ID에 해당되는 리뷰를 작성합니다.")
 	public ResponseEntity<BaseResponse<ReviewCreateResponseDto>> createReview(@PathVariable Long lessonId,
 		@Valid @RequestBody ReviewCreateRequestDto request,
-		HttpSession session) {
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
+		@LoginUser Long userId) {
 		ReviewCreateResponseDto review = reviewService.createReview(request, lessonId, userId);
 		return BaseResponse.ok("작성이 완료됐습니다.", review, HttpStatus.CREATED);
 	}
@@ -58,5 +57,7 @@ public class ReviewController {
 		ReviewPageWrapperDto reviews = ReviewMapper.toReviewPageWrapperDto(reviewsInfo);
 		return PagedResponse.ok("조회가 완료됐습니다.", reviews, reviewsInfo.getCount(), HttpStatus.OK);
 	}
-
+	/*
+	 * TODO:구조 통일
+	 * */
 }

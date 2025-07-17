@@ -3,6 +3,9 @@ package com.threestar.trainus.domain.lesson.student.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.threestar.trainus.domain.lesson.admin.entity.Category;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
+
 import lombok.Builder;
 
 @Builder
@@ -17,11 +20,11 @@ public record LessonDetailResponseDto(
 	int likeCount,
 	int reviewCount,
 	double rating,
-	String category,
+	Category category,
 	int price,
 	int maxParticipants,
 	int currentParticipants,
-	String status,
+	LessonStatus status,
 	LocalDateTime startAt,
 	LocalDateTime endAt,
 	LocalDateTime openTime,
@@ -33,4 +36,5 @@ public record LessonDetailResponseDto(
 	LocalDateTime createdAt,
 	LocalDateTime updatedAt,
 	List<String> lessonImages
-) {}
+) {
+}

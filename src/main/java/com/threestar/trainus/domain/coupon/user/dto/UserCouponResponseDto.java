@@ -2,6 +2,8 @@ package com.threestar.trainus.domain.coupon.user.dto;
 
 import java.time.LocalDateTime;
 
+import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,6 +15,6 @@ public class UserCouponResponseDto {
 	private String discountPrice;
 	private Integer minOrderPrice;
 	private LocalDateTime expirationDate;
-	private String status;
+	private CouponStatus status;
 	private LocalDateTime useDate;
 }

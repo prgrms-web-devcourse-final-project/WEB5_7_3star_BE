@@ -2,6 +2,8 @@ package com.threestar.trainus.domain.lesson.admin.dto;
 
 import java.time.LocalDateTime;
 
+import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
+
 import lombok.Builder;
 
 /**
@@ -14,7 +16,7 @@ public record CreatedLessonDto(
 	Integer maxParticipants,
 	Integer currentParticipants,
 	Integer price,
-	String status,
+	LessonStatus status,
 	LocalDateTime startAt,
 	LocalDateTime endAt,
 	Boolean openRun,

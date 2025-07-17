@@ -3,6 +3,7 @@ package com.threestar.trainus.domain.lesson.admin.mapper;
 import java.util.List;
 
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListResponseDto;
+import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationListWrapperDto;
 import com.threestar.trainus.domain.lesson.admin.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
@@ -39,7 +40,12 @@ public class LessonApplicationMapper {
 		// 리스트 응답 DTO 생성
 		return LessonApplicationListResponseDto.builder()
 			.lessonApplications(applicationDtos)
-			.count(totalCount)
+			.count(totalCount.intValue())
 			.build();
+	}
+
+	public static LessonApplicationListWrapperDto toLessonApplicationListWrapperDto(
+		LessonApplicationListResponseDto responseDto) {
+		return new LessonApplicationListWrapperDto(responseDto.lessonApplications());
 	}
 }

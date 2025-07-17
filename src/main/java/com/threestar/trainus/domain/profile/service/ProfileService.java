@@ -36,8 +36,7 @@ public class ProfileService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-		Profile profile = profileRepository.findByUserId(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
+		Profile profile = findByUserId(userId);
 
 		return ProfileMapper.toResponseDto(profile, user);
 	}
@@ -47,8 +46,7 @@ public class ProfileService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-		Profile profile = profileRepository.findByUserId(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
+		Profile profile = findByUserId(userId);
 
 		profile.updateProfileImage(requestDto.profileImage());
 
@@ -66,6 +64,11 @@ public class ProfileService {
 		profile.updateProfileIntro(requestDto.intro());
 
 		return ProfileMapper.toIntroResponseDto(profile, user);
+	}
+
+	public Profile findByUserId(Long userId) {
+		return profileRepository.findByUserId(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
 	}
 }
 

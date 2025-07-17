@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.global.entity.BaseDateEntity;
+import com.threestar.trainus.global.exception.domain.ErrorCode;
+import com.threestar.trainus.global.exception.handler.BusinessException;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,9 +17,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,7 +31,6 @@ import lombok.NoArgsConstructor;
 	}
 )
 @Getter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserCoupon extends BaseDateEntity {
@@ -53,10 +54,29 @@ public class UserCoupon extends BaseDateEntity {
 
 	private LocalDateTime expirationDate;
 
+	@Version
+	private Long version;
+
 	public UserCoupon(User user, Coupon coupon, LocalDateTime expirationDate) {
 		this.user = user;
 		this.coupon = coupon;
 		this.expirationDate = expirationDate;
 		this.status = CouponStatus.ACTIVE;
+	}
+
+	public void use() {
+		if (this.status != CouponStatus.ACTIVE) {
+			throw new BusinessException(ErrorCode.INVALID_COUPON);
+		}
+		this.status = CouponStatus.INACTIVE;
+		this.useDate = LocalDateTime.now();
+	}
+
+	public void restore() {
+		if (this.status == CouponStatus.ACTIVE) {
+			throw new BusinessException(ErrorCode.INVALID_COUPON_RESTORE);
+		}
+		this.status = CouponStatus.ACTIVE;
+		this.useDate = null;
 	}
 }

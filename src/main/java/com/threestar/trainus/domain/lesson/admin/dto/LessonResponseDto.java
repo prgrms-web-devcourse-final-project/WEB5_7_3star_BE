@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.threestar.trainus.domain.lesson.admin.entity.Category;
+import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
 
 import lombok.Builder;
 
@@ -24,7 +25,7 @@ public record LessonResponseDto(
 	String district,
 	String dong,
 	String addressDetail,
-	String status,
+	LessonStatus status,
 	LocalDateTime createdAt,
 	List<String> lessonImages
 ) {

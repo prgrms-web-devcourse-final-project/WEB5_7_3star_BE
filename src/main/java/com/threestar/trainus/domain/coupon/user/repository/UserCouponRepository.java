@@ -19,4 +19,9 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
 	List<UserCoupon> findAllByUserIdAndStatusWithCoupon(@Param("userId") Long userId,
 		@Param("status") CouponStatus status);
 
+	// 특정 쿠폰의 발급 수 조회
+	Long countByCouponId(Long couponId);
+
+	// 특정 사용자가 특정 쿠폰을 발급받은 수 조회
+	Long countByUserIdAndCouponId(Long userId, Long couponId);
 }

@@ -26,7 +26,7 @@ public record CouponCreateRequestDto(
 	Integer minOrderPrice,
 
 	@NotNull(message = "쿠폰 상태는 필수입니다")
-	CouponStatus status,
+	CouponStatus status, //TODO : 일단은 내가 상태설정하게 두고, 리팩토링때 스케줄러로 처리하도록 변경
 
 	@Min(value = 1, message = "수량은 1개 이상이어야 합니다")
 	Integer quantity,

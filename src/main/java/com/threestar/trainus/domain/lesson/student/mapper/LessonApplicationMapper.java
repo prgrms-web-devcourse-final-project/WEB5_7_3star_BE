@@ -1,7 +1,6 @@
 package com.threestar.trainus.domain.lesson.student.mapper;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSummaryResponseDto;
@@ -40,7 +39,8 @@ public class LessonApplicationMapper {
 			.toList();
 	}
 
-	public static MyLessonApplicationListResponseDto toDtoListWithCount(List<LessonApplication> applications, int count) {
+	public static MyLessonApplicationListResponseDto toDtoListWithCount(List<LessonApplication> applications,
+		int count) {
 		return new MyLessonApplicationListResponseDto(
 			toDtoList(applications),
 			count

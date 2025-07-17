@@ -35,6 +35,7 @@ public class Coupon extends BaseDateEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Builder.Default
 	@OneToMany(mappedBy = "coupon")
 	private List<UserCoupon> userCoupons = new ArrayList<>();
 
@@ -65,10 +66,52 @@ public class Coupon extends BaseDateEntity {
 	@Column(nullable = false)
 	private LocalDateTime closeAt;
 
+	private LocalDateTime deletedAt;
+
 	public void decreaseQuantity() {
 		if (this.quantity <= 0) {
 			throw new BusinessException(ErrorCode.COUPON_BE_EXHAUSTED);
 		}
 		this.quantity--;
 	}
+
+	//쿠폰 수정 관련 메서드 추가
+	public void updateName(String name) {
+		this.name = name;
+	}
+
+	public void updateStatus(CouponStatus status) {
+		this.status = status;
+	}
+
+	public void updateQuantity(Integer quantity) {
+		this.quantity = quantity;
+	}
+
+	public void updateCategory(CouponCategory category) {
+		this.category = category;
+	}
+
+	public void updateOpenAt(LocalDateTime openAt) {
+		this.openAt = openAt;
+	}
+
+	public void updateCloseAt(LocalDateTime closeAt) {
+		this.closeAt = closeAt;
+	}
+
+	//삭제관련 메서드 추가
+	public void markAsDeleted() {
+		this.deletedAt = LocalDateTime.now();
+	}
+
+	//쿠폰이 삭제된 상태인지 확인
+	public boolean isDeleted() {
+		return this.deletedAt != null;
+	}
+
+	public LocalDateTime getDeletedAt() {
+		return this.deletedAt;
+	}
+
 }

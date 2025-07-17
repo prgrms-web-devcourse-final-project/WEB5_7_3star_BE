@@ -10,6 +10,6 @@ import lombok.Builder;
 @Builder
 public record CreatedLessonListResponseDto(
 	List<CreatedLessonDto> lessons,
-	Long count
+	Integer count
 ) {
 }

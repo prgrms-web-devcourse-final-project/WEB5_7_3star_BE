@@ -55,7 +55,7 @@ public class LessonMapper {
 			.district(lesson.getDistrict())
 			.dong(lesson.getDong())
 			.addressDetail(lesson.getAddressDetail())
-			.status(lesson.getStatus().name()) // enum이름 반환
+			.status(lesson.getStatus())
 			.createdAt(lesson.getCreatedAt())
 			.lessonImages(imageUrls) // 이미지 URL 목록
 			.build();
@@ -80,11 +80,11 @@ public class LessonMapper {
 			.profileImage(profile.getProfileImage())
 			.reviewCount(reviewCount)
 			.rating(rating)
-			.category(lesson.getCategory().name())
+			.category(lesson.getCategory())
 			.price(lesson.getPrice())
 			.maxParticipants(lesson.getMaxParticipants())
 			.currentParticipants(lesson.getParticipantCount())
-			.status(lesson.getStatus().name())
+			.status(lesson.getStatus())
 			.startAt(lesson.getStartAt())
 			.endAt(lesson.getEndAt())
 			.openTime(lesson.getOpenTime())
