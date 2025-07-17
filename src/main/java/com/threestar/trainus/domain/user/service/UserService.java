@@ -138,4 +138,11 @@ public class UserService {
 
 		userRepository.save(user);
 	}
+
+	@Transactional
+	public void withdraw(Long userId) {
+		User user = getUserById(userId);
+
+		user.withdraw();
+	}
 }

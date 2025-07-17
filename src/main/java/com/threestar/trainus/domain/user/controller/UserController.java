@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -99,5 +100,14 @@ public class UserController {
 	) {
 		userService.updatePassword(request, loginUserId);
 		return BaseResponse.ok("비밀번호 변경이 완료되었습니다.", null, HttpStatus.OK);
+	}
+
+	@DeleteMapping("/withdraw")
+	@Operation(summary = "회원탈퇴 api")
+	public ResponseEntity<BaseResponse<Void>> withdraw(
+		@LoginUser Long loginUserId
+	) {
+		userService.withdraw(loginUserId);
+		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}
 }
