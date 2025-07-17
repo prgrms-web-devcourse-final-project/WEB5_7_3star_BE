@@ -41,9 +41,9 @@ public class PaymentClient {
 		return AUTH_HEADER_PREFIX + new String(encodedBytes);
 	}
 
-	public TossPaymentResponseDto confirmPayment(ConfirmPaymentRequest request) {
+	public TossPaymentResponseDto confirmPayment(ConfirmPaymentRequestDto request) {
 		log.info("Sending Toss confirm request: orderId={}, amount={}, paymentKey={}",
-			request.getOrderId(), request.getAmount(), request.getPaymentKey());
+			request.orderId(), request.amount(), request.paymentKey());
 
 		return restClient.post()
 			.uri(paymentProperties.getConfirmEndPoint())
@@ -56,9 +56,9 @@ public class PaymentClient {
 			.body(TossPaymentResponseDto.class);
 	}
 
-	public TossPaymentResponseDto cancelPayment(CancelPaymentRequest request) {
+	public TossPaymentResponseDto cancelPayment(CancelPaymentRequestDto request) {
 		return restClient.post()
-			.uri(String.format(paymentProperties.getCancelEndPoint(), request.getPaymentKey()))
+			.uri(String.format(paymentProperties.getCancelEndPoint(), request.paymentKey()))
 			.contentType(MediaType.APPLICATION_JSON)
 			.body(request)
 			.retrieve()

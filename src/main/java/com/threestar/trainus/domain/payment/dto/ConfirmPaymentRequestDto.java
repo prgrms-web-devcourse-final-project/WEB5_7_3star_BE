@@ -2,9 +2,12 @@ package com.threestar.trainus.domain.payment.dto;
 
 import jakarta.validation.constraints.NotNull;
 
-public record PaymentRequestDto(
+public record ConfirmPaymentRequestDto(
+	int amount,
 	@NotNull(message = "필수 값입니다.")
-	Long lessonId,
-	Long userCouponId
+	String orderId,
+	@NotNull(message = "필수 값입니다.")
+	String paymentKey
 ) {
+
 }
