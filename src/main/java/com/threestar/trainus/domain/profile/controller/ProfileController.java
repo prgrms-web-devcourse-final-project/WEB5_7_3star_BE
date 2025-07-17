@@ -9,18 +9,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.profile.dto.IntroUpdateRequestDto;
-import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
-import com.threestar.trainus.domain.profile.dto.ImageUpdateResponseDto;
 import com.threestar.trainus.domain.profile.dto.ImageUpdateRequestDto;
+import com.threestar.trainus.domain.profile.dto.ImageUpdateResponseDto;
+import com.threestar.trainus.domain.profile.dto.IntroUpdateRequestDto;
 import com.threestar.trainus.domain.profile.dto.IntroUpdateResponseDto;
+import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
