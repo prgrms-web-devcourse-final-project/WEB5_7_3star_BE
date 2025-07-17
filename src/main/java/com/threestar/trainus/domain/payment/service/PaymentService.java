@@ -126,7 +126,11 @@ public class PaymentService {
 		TossPayment tossPayment = tossPaymentRepository.findByPaymentKey(tossResponseDto.getPaymentKey())
 			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
 
-		tossPayment.changeStatus(LocalDateTime.parse(tossResponseDto.getRequestedAt()), null, PaymentStatus.CANCELED);
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		LocalDateTime requestAt = OffsetDateTime.parse(tossResponseDto.getRequestedAt(), formatter).toLocalDateTime();
+
+
+		tossPayment.changeStatus(requestAt, null, PaymentStatus.CANCELED);
 
 		tossPaymentRepository.save(tossPayment);
 
