@@ -113,7 +113,15 @@ public enum ErrorCode {
 	 * Profile : 프로필 관련 예외처리
 	 */
 	PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 프로필을 찾을 수 없습니다"),
-	METADATA_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 메타데이터를 찾을 수 없습니다");
+	METADATA_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 메타데이터를 찾을 수 없습니다"),
+	/*
+	 * 결제 관련 예외처리
+	 */
+	INVALID_COUPON(HttpStatus.BAD_REQUEST, "이미 사용되거나 사용할 수 없는 쿠폰입니다."),
+	INVALID_COUPON_RESTORE(HttpStatus.BAD_REQUEST, "쿠폰을 복원할 수 없는 상태입니다"),
+	INVALID_PAYMENT(HttpStatus.BAD_REQUEST, "결제 정보가 존재하지 않습니다."),
+	CANCEL_PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "결제 취소가 실패되었습니다."),
+	CONFIRM_PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "결제 승인이 실패했습니다.");
 
 	//마지막 세미콜론 명시 ;
 
