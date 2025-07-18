@@ -3,6 +3,7 @@ package com.threestar.trainus.domain.payment.service;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,11 +15,15 @@ import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
-import com.threestar.trainus.domain.payment.dto.FailurePaymentResponseDto;
 import com.threestar.trainus.domain.payment.dto.PaymentRequestDto;
 import com.threestar.trainus.domain.payment.dto.PaymentResponseDto;
-import com.threestar.trainus.domain.payment.dto.SuccessfulPaymentResponseDto;
 import com.threestar.trainus.domain.payment.dto.TossPaymentResponseDto;
+import com.threestar.trainus.domain.payment.dto.failure.FailurePaymentResponseDto;
+import com.threestar.trainus.domain.payment.dto.failure.PaymentFailureHistoryPageDto;
+import com.threestar.trainus.domain.payment.dto.failure.PaymentFailureHistoryResponseDto;
+import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessHistoryPageDto;
+import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessHistoryResponseDto;
+import com.threestar.trainus.domain.payment.dto.success.SuccessfulPaymentResponseDto;
 import com.threestar.trainus.domain.payment.entity.Payment;
 import com.threestar.trainus.domain.payment.entity.PaymentMethod;
 import com.threestar.trainus.domain.payment.entity.PaymentStatus;
@@ -30,6 +35,7 @@ import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
+import com.threestar.trainus.global.utils.PageLimitCalculator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -152,7 +158,7 @@ public class PaymentService {
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 		LocalDateTime requestAt = OffsetDateTime.parse(tossResponseDto.requestedAt(), formatter).toLocalDateTime();
 
-		tossPayment.changeStatus(requestAt, null, PaymentStatus.CANCELED);
+		tossPayment.changeStatus(requestAt, null, PaymentStatus.CANCELED, cancelReason);
 
 		tossPaymentRepository.save(tossPayment);
 
@@ -172,8 +178,40 @@ public class PaymentService {
 		return PaymentMapper.toFailurePaymentResponseDto(payment, cancelReason);
 	}
 
-	// @Transactional
-	// public List<> viewAllTransaction(){
-	//    tossPaymentRepository.
-	// }
+	@Transactional(readOnly = true)
+	public PaymentSuccessHistoryPageDto viewAllSuccessTransaction(Long userId, int page, int pageSize) {
+		List<Payment> allSuccessPayments = paymentRepository.findAllByUserAndStatus(userId, PaymentStatus.DONE.name(),
+			(page - 1) * pageSize, pageSize);
+		List<PaymentSuccessHistoryResponseDto> dtoList = allSuccessPayments.stream()
+			.map(payment -> {
+				TossPayment tossPayment = tossPaymentRepository.findByOrderId(payment.getOrderId())
+					.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
+				return PaymentMapper.toPaymentSuccessHistoryResponseDto(payment, tossPayment);
+			})
+			.toList();
+
+		return PaymentMapper.toPaymentSuccessHistoryPageDto(
+			dtoList, paymentRepository.count(userId, PaymentStatus.DONE.name(),
+				PageLimitCalculator.calculatePageLimit(page, pageSize, 5))
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public PaymentFailureHistoryPageDto viewAllFailureTransaction(Long userId, int page, int pageSize) {
+		List<Payment> allFailurePayments = paymentRepository.findAllByUserAndStatus(userId,
+			PaymentStatus.CANCELED.name(),
+			(page - 1) * pageSize, pageSize);
+		List<PaymentFailureHistoryResponseDto> dtoList = allFailurePayments.stream()
+			.map(payment -> {
+				TossPayment tossPayment = tossPaymentRepository.findByOrderId(payment.getOrderId())
+					.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
+				return PaymentMapper.toPaymentFailureHistoryResponseDto(payment, tossPayment);
+			})
+			.toList();
+
+		return PaymentMapper.toPaymentFailureHistoryPageDto(
+			dtoList, paymentRepository.count(userId, PaymentStatus.CANCELED.name(),
+				PageLimitCalculator.calculatePageLimit(page, pageSize, 5))
+		);
+	}
 }
