@@ -27,7 +27,7 @@ public class TossPayment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private Long tossPaymentId;
 
 	@Column(nullable = false, unique = true)
 	private String paymentKey;
@@ -57,18 +57,13 @@ public class TossPayment {
 
 	private LocalDateTime approvedAt;
 
-	public void changeStatus(LocalDateTime requestedAt, LocalDateTime approvedAt, PaymentStatus paymentStatus) {
+	private String cancelReason;
+
+	public void changeStatus(LocalDateTime requestedAt, LocalDateTime approvedAt, PaymentStatus paymentStatus,
+		String cancelReason) {
 		this.requestedAt = requestedAt;
 		this.approvedAt = approvedAt;
 		this.paymentStatus = paymentStatus;
+		this.cancelReason = cancelReason;
 	}
-
-	public boolean isCancelStatus() {
-		return this.paymentStatus == PaymentStatus.CANCELED;
-	}
-
-	public boolean isDoneStatus() {
-		return this.paymentStatus == PaymentStatus.DONE;
-	}
-
 }
