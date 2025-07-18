@@ -18,19 +18,42 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 	Optional<Lesson> findByIdAndDeletedAtIsNull(Long lessonId);
 
 	// 중복 레슨 검증(같은 강사가 같은 이름과 시작시간으로 레슨 생성했는지 체크)
-	@Query("SELECT COUNT(l) > 0 FROM Lesson l WHERE " + "l.lessonLeader = :lessonLeader AND "
-		+ "l.lessonName = :lessonName AND " + "l.startAt = :startAt AND " + "l.deletedAt IS NULL")
+	@Query("""
+		SELECT COUNT(l) > 0 FROM Lesson l
+		WHERE l.lessonLeader = :lessonLeader
+		AND l.lessonName = :lessonName
+		AND l.startAt = :startAt
+		AND l.deletedAt IS NULL
+		""")
 	boolean existsDuplicateLesson(@Param("lessonLeader") Long lessonLeader,
 		@Param("lessonName") String lessonName,
 		@Param("startAt") LocalDateTime startAt);
 
-	// 시간 겹침 검증(같은 강사가 동일 시간대에 다른 레슨이 있는지 체크)
-	@Query(
-		"SELECT COUNT(l) > 0 FROM Lesson l WHERE " + "l.lessonLeader = :lessonLeader AND " + "l.deletedAt IS NULL AND "
-			+ "(l.startAt < :endAt AND l.endAt > :startAt)")
+	// 시간 겹침 검증(같은 강사가 동일 시간대에 다른 레슨이 있는지 체크) ->레슨생성시에 사용
+	@Query("""
+		SELECT COUNT(l) > 0 FROM Lesson l
+		WHERE l.lessonLeader = :lessonLeader
+		AND l.deletedAt IS NULL
+		AND (l.startAt < :endAt AND l.endAt > :startAt)
+		""")
 	boolean hasTimeConflictLesson(@Param("lessonLeader") Long lessonLeader,
 		@Param("startAt") LocalDateTime startAt,
 		@Param("endAt") LocalDateTime endAt);
+
+	//시간 겹침 검증 ->레슨 수정시 사용 (현재 수정중인 레슨 제외)
+	@Query("""
+		SELECT COUNT(l) > 0 FROM Lesson l
+		WHERE l.lessonLeader = :lessonLeader
+		AND l.deletedAt IS NULL
+		AND l.id != :excludeLessonId
+		AND (l.startAt < :endAt AND l.endAt > :startAt)
+		""")
+	boolean hasTimeConflictForUpdate(
+		@Param("lessonLeader") Long lessonLeader,
+		@Param("startAt") LocalDateTime startAt,
+		@Param("endAt") LocalDateTime endAt,
+		@Param("excludeLessonId") Long excludeLessonId
+	);
 
 	// 강사가 개설한 레슨 목록 조회 (페이징)
 	Page<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader, Pageable pageable);
@@ -51,8 +74,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 				:search IS NULL OR
 				LOWER(l.lessonName) LIKE LOWER(CONCAT('%', :search, '%'))
 			)
-		"""
-	)
+		""")
 	Page<Lesson> findBySearchConditions(
 		@Param("category") Category category,
 		@Param("city") String city,
