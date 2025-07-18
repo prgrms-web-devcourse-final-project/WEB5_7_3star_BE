@@ -51,7 +51,7 @@ public class CommentController {
 		@RequestParam("page") int page,
 		@RequestParam("pageSize") int pageSize) {
 		int correctPage = Math.max(page, 1);
-		int correctPageSize = Math.max(1, Math.max(pageSize, pageSizeLimit));
+		int correctPageSize = Math.max(1, Math.min(pageSize, pageSizeLimit));
 		CommentPageResponseDto commentsInfo = commentService.readAll(lessonId, correctPage, correctPageSize);
 		CommentPageWrapperDto comments = CommentMapper.toCommentPageWrapperDto(commentsInfo);
 		return PagedResponse.ok("댓글 조회 성공", comments, commentsInfo.getCount(), HttpStatus.OK);
