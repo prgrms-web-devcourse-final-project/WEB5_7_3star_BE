@@ -5,6 +5,7 @@ import java.util.List;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.teacher.dto.LessonCreateRequestDto;
 import com.threestar.trainus.domain.lesson.teacher.dto.LessonResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.LessonUpdateResponseDto;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonImage;
 import com.threestar.trainus.domain.profile.entity.Profile;
@@ -96,6 +97,36 @@ public class LessonMapper {
 			.createdAt(lesson.getCreatedAt())
 			.updatedAt(lesson.getUpdatedAt())
 			.lessonImages(lessonImages)
+			.build();
+	}
+
+	//레슨 수정
+	public static LessonUpdateResponseDto toUpdateResponseDto(Lesson lesson, List<LessonImage> lessonImages) {
+		// 이미지 엔티티 목록에서 URL만 추출
+		List<String> imageUrls = lessonImages.stream()
+			.map(LessonImage::getImageUrl)
+			.toList();
+
+		return LessonUpdateResponseDto.builder()
+			.id(lesson.getId())
+			.lessonName(lesson.getLessonName())
+			.description(lesson.getDescription())
+			.lessonLeader(lesson.getLessonLeader())
+			.category(lesson.getCategory())
+			.price(lesson.getPrice())
+			.maxParticipants(lesson.getMaxParticipants())
+			.startAt(lesson.getStartAt())
+			.endAt(lesson.getEndAt())
+			.openTime(lesson.getOpenTime())
+			.openRun(lesson.getOpenRun())
+			.city(lesson.getCity())
+			.district(lesson.getDistrict())
+			.dong(lesson.getDong())
+			.addressDetail(lesson.getAddressDetail())
+			.status(lesson.getStatus())
+			.createdAt(lesson.getCreatedAt())
+			.updatedAt(lesson.getUpdatedAt())
+			.lessonImages(imageUrls)
 			.build();
 	}
 }

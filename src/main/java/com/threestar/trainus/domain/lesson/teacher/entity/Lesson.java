@@ -3,6 +3,8 @@ package com.threestar.trainus.domain.lesson.teacher.entity;
 import java.time.LocalDateTime;
 
 import com.threestar.trainus.global.entity.BaseDateEntity;
+import com.threestar.trainus.global.exception.domain.ErrorCode;
+import com.threestar.trainus.global.exception.handler.BusinessException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -130,4 +132,83 @@ public class Lesson extends BaseDateEntity {
 		}
 	}
 
+	//레슨 이름 수정
+	public void updateLessonName(String lessonName) {
+		if (lessonName != null && !lessonName.trim().isEmpty()) {
+			this.lessonName = lessonName;
+		}
+	}
+
+	//레슨 설명 수정
+	public void updateDescription(String description) {
+		if (description != null && !description.trim().isEmpty()) {
+			this.description = description;
+		}
+	}
+
+	//카테고리 수정
+	public void updateCategory(Category category) {
+		if (category != null) {
+			this.category = category;
+		}
+	}
+
+	//가격 수정
+	public void updatePrice(Integer price) {
+		if (price != null) {
+			this.price = price;
+		}
+	}
+
+	//최대 참가자수 수정(참가자가 이미 있는 경우는 참가자수 증가만 가능)
+	public void updateMaxParticipants(Integer newMaxParticipants, boolean hasParticipants) {
+		if (newMaxParticipants != null) {
+			if (hasParticipants && newMaxParticipants < this.maxParticipants) {
+				throw new BusinessException(ErrorCode.LESSON_MAX_PARTICIPANTS_CANNOT_DECREASE);
+			}
+			this.maxParticipants = newMaxParticipants;
+		}
+	}
+
+	//레슨 시간 수정
+	public void updateLessonTime(LocalDateTime startAt, LocalDateTime endAt) {
+		if (startAt != null) {
+			this.startAt = startAt;
+		}
+		if (endAt != null) {
+			this.endAt = endAt;
+		}
+	}
+
+	//오픈시각 수정
+	public void updateOpenTime(LocalDateTime openTime) {
+		this.openTime = openTime;
+	}
+
+	//참여방식 수정
+	public void updateOpenRun(Boolean openRun) {
+		if (openRun != null) {
+			this.openRun = openRun;
+		}
+	}
+
+	//지역정보 수정
+	public void updateLocation(String city, String district, String dong) {
+		if (city != null && !city.trim().isEmpty()) {
+			this.city = city;
+		}
+		if (district != null && !district.trim().isEmpty()) {
+			this.district = district;
+		}
+		if (dong != null && !dong.trim().isEmpty()) {
+			this.dong = dong;
+		}
+	}
+
+	//상세주소 수정
+	public void updateAddressDetail(String addressDetail) {
+		if (addressDetail != null && !addressDetail.trim().isEmpty()) {
+			this.addressDetail = addressDetail;
+		}
+	}
 }
