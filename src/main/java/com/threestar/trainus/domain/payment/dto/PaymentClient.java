@@ -32,18 +32,12 @@ public class PaymentClient {
 	}
 
 	private String createPaymentAuthHeader(PaymentProperties paymentProperties) {
-		log.info("secret-key : {}, url ={} baseUrl = {}, baseUrl2 = {}", paymentProperties.getSecretKey(),
-			paymentProperties.getBaseUrl(), paymentProperties.getConfirmEndPoint(),
-			paymentProperties.getCancelEndPoint());
 		byte[] encodedBytes = Base64.getEncoder()
 			.encode((paymentProperties.getSecretKey() + BASIC_DELIMITER).getBytes(StandardCharsets.UTF_8));
-		log.info("new Header = {}", AUTH_HEADER_PREFIX + new String(encodedBytes));
 		return AUTH_HEADER_PREFIX + new String(encodedBytes);
 	}
 
-	public TossPaymentResponseDto confirmPayment(ConfirmPaymentRequest request) {
-		log.info("Sending Toss confirm request: orderId={}, amount={}, paymentKey={}",
-			request.getOrderId(), request.getAmount(), request.getPaymentKey());
+	public TossPaymentResponseDto confirmPayment(ConfirmPaymentRequestDto request) {
 
 		return restClient.post()
 			.uri(paymentProperties.getConfirmEndPoint())
@@ -56,14 +50,24 @@ public class PaymentClient {
 			.body(TossPaymentResponseDto.class);
 	}
 
-	public TossPaymentResponseDto cancelPayment(CancelPaymentRequest request) {
+	public TossPaymentResponseDto cancelPayment(CancelPaymentRequestDto request) {
 		return restClient.post()
-			.uri(String.format(paymentProperties.getCancelEndPoint(), request.getPaymentKey()))
+			.uri(String.format(paymentProperties.getCancelEndPoint(), request.paymentKey()))
 			.contentType(MediaType.APPLICATION_JSON)
 			.body(request)
 			.retrieve()
 			.onStatus(HttpStatusCode::isError, (req, res) -> {
 				throw new BusinessException(ErrorCode.CANCEL_PAYMENT_FAILED);
+			})
+			.body(TossPaymentResponseDto.class);
+	}
+
+	public TossPaymentResponseDto viewDetailPayment(String paymentKey) {
+		return restClient.get()
+			.uri(paymentProperties.getViewEndPoint() + "/" + paymentKey)
+			.retrieve()
+			.onStatus(HttpStatusCode::isError, (req, res) -> {
+				throw new BusinessException(ErrorCode.INVALID_PAYMENT);
 			})
 			.body(TossPaymentResponseDto.class);
 	}

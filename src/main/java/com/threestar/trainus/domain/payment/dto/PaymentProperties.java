@@ -16,4 +16,5 @@ public class PaymentProperties {
 	private String baseUrl;
 	private String confirmEndPoint;
 	private String cancelEndPoint;
+	private String viewEndPoint;
 }
