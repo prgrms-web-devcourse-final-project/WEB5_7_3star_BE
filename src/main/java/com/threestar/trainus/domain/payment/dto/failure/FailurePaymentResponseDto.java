@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.payment.dto;
+package com.threestar.trainus.domain.payment.dto.failure;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +10,7 @@ public record FailurePaymentResponseDto(
 	String cancelReason,
 	LocalDateTime startAt,
 	LocalDateTime endAt,
+	LocalDateTime paymentCancelledAt,
 	int payPrice
 ) {
 }

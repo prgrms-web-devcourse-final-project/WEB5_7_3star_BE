@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.payment.dto;
+package com.threestar.trainus.domain.payment.dto.success;
 
 import java.time.LocalDateTime;
 
