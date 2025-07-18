@@ -27,6 +27,8 @@ public interface LessonApplicationRepository extends JpaRepository<LessonApplica
 	Page<LessonApplication> findByUserId(Long userId, Pageable pageable);
 
 	Page<LessonApplication> findByUserIdAndStatus(Long userId, ApplicationStatus status, Pageable pageable);
+
+	int countByLessonAndStatus(Lesson lesson, ApplicationStatus status);
 }
 
 

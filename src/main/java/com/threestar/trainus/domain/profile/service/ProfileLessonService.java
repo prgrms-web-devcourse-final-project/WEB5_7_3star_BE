@@ -43,7 +43,7 @@ public class ProfileLessonService {
 			// 상태에 따라 조회 가능
 			lessonPage = lessonRepository.findByLessonLeaderAndStatusAndDeletedAtIsNull(userId, status, pageable);
 		} else {
-			// 삭제되지 않은 레슨만 조회
+			// 모든 상태 조회
 			lessonPage = lessonRepository.findByLessonLeaderAndDeletedAtIsNull(userId, pageable);
 		}
 

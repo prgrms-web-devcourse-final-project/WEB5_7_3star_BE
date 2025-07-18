@@ -107,7 +107,7 @@ public class UserService {
 	public void validateAdminRole(Long userId) {
 		User user = getUserById(userId);
 		if (user.getRole() != UserRole.ADMIN) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+			throw new BusinessException(ErrorCode.ACCESS_FORBIDDEN);
 		}
 	}
 
@@ -116,7 +116,7 @@ public class UserService {
 	public User getAdminUser(Long userId) {
 		User user = getUserById(userId);
 		if (user.getRole() != UserRole.ADMIN) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+			throw new BusinessException(ErrorCode.ACCESS_FORBIDDEN);
 		}
 		return user;
 	}

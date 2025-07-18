@@ -55,10 +55,10 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("excludeLessonId") Long excludeLessonId
 	);
 
-	// 강사가 개설한 레슨 목록 조회 (페이징)
+	// 강사가 개설한 레슨 전체 목록 상태에 따라 필터링해서 조회(모집중인것만...이런식으로)
 	Page<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader, Pageable pageable);
 
-	// 강사가 개설한 레슨 목록 조회 (페이징+필터링)
+	// 강사가 개설한 레슨 전체 목록 조회
 	Page<Lesson> findByLessonLeaderAndStatusAndDeletedAtIsNull(Long lessonLeader, LessonStatus status,
 		Pageable pageable);
 

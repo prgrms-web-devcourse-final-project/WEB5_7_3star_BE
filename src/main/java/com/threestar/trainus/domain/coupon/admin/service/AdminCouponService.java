@@ -338,7 +338,7 @@ public class AdminCouponService {
 	}
 
 	private void validateCouponDeletion(Coupon coupon, Long issuedCount) {
-		//todo: 일단은 다 삭제가능하게 설정 해놨는데, 나중에 결제 붙으면여기에 여러 검증들을 추가할 예정
+		//todo: 결제가 이뤄지면 삭제는 안되지만, 비활성화는 되도록 해야함. -> 결제 일어나면 삭제가 안되도록만 처리하면 됨
 	}
 
 	//쿠폰id로 쿠폰을 조회하는 공통 메서드

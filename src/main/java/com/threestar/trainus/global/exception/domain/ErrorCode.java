@@ -18,6 +18,9 @@ public enum ErrorCode {
 	// 401
 	AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "인증이 필요한 요청입니다. 로그인 해주세요."),
 
+	//403
+	ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다."),
+
 	// 404
 	LESSON_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 레슨을 찾을 수 없습니다."),
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다."),
@@ -70,6 +73,9 @@ public enum ErrorCode {
 	LESSON_NOT_EDITABLE(HttpStatus.BAD_REQUEST, "수정할 수 없는 상태의 레슨입니다. 모집중 상태의 레슨만 수정 가능합니다."),
 	LESSON_MAX_PARTICIPANTS_CANNOT_DECREASE(HttpStatus.BAD_REQUEST, "참가자가 있는 레슨은 최대 참가 인원을 줄일 수 없습니다."),
 	LESSON_PARTICIPANTS_EXIST_RESTRICTION(HttpStatus.BAD_REQUEST, "참가자가 있어 해당 필드는 수정할 수 없습니다."),
+	LESSON_DELETE_STATUS_INVALID(HttpStatus.BAD_REQUEST, "모집중인 레슨만 삭제할 수 있습니다."),
+	LESSON_DELETE_HAS_PARTICIPANTS(HttpStatus.BAD_REQUEST, "참가자가 있는 레슨은 삭제할 수 없습니다."),
+	LESSON_TIME_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "레슨 시작 12시간 전이므로 수정/삭제할 수 없습니다."),
 
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),
