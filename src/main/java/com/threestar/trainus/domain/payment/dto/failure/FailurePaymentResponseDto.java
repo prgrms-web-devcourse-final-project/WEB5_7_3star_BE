@@ -11,6 +11,7 @@ public record FailurePaymentResponseDto(
 	LocalDateTime startAt,
 	LocalDateTime endAt,
 	LocalDateTime paymentCancelledAt,
-	int payPrice
+	int payPrice,
+	int refundableAmount
 ) {
 }
