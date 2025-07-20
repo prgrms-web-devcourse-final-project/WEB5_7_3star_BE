@@ -41,7 +41,6 @@ public class TossPayment {
 	private Payment payment;
 
 	private Integer amount;
-
 	private String orderName;
 
 	@Enumerated(value = EnumType.STRING)
@@ -56,13 +55,12 @@ public class TossPayment {
 	private LocalDateTime requestedAt;
 
 	private LocalDateTime approvedAt;
+	private LocalDateTime canceledAt;
 
 	private String cancelReason;
 
-	public void changeStatus(LocalDateTime requestedAt, LocalDateTime approvedAt, PaymentStatus paymentStatus,
-		String cancelReason) {
-		this.requestedAt = requestedAt;
-		this.approvedAt = approvedAt;
+	public void changeStatus(LocalDateTime canceledAt, PaymentStatus paymentStatus, String cancelReason) {
+		this.canceledAt = canceledAt;
 		this.paymentStatus = paymentStatus;
 		this.cancelReason = cancelReason;
 	}
