@@ -1,12 +1,12 @@
-package com.threestar.trainus.domain.payment.dto.failure;
+package com.threestar.trainus.domain.payment.dto.cancel;
 
 import java.util.List;
 
 import lombok.Builder;
 
 @Builder
-public record PaymentFailureHistoryPageDto(
+public record PaymentCancelHistoryPageDto(
 	Integer count,
-	List<PaymentFailureHistoryResponseDto> failureHistory
+	List<PaymentCancelHistoryResponseDto> failureHistory
 ) {
 }

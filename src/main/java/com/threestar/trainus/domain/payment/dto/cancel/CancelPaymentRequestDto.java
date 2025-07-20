@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.payment.dto.failure;
+package com.threestar.trainus.domain.payment.dto.cancel;
 
 import jakarta.validation.constraints.NotNull;
 

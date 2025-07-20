@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.payment.dto.failure;
+package com.threestar.trainus.domain.payment.dto.cancel;
 
 public record TossCancelRequestDto(
 	String paymentKey,
