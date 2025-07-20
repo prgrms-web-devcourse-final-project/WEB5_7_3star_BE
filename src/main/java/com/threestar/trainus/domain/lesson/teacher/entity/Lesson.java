@@ -132,6 +132,16 @@ public class Lesson extends BaseDateEntity {
 		}
 	}
 
+	// 참가자 수 감소
+	public void decrementParticipantCount() {
+		this.participantCount--;
+
+		// 정원 달성 시 -> 모집완료로 상태 변경
+		if (this.participantCount < this.maxParticipants) {
+			this.status = LessonStatus.RECRUITING;
+		}
+	}
+
 	//레슨 이름 수정
 	public void updateLessonName(String lessonName) {
 		if (lessonName != null && !lessonName.trim().isEmpty()) {
