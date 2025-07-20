@@ -20,7 +20,6 @@ public record PaymentFailureHistoryResponseDto(
 	Integer payPrice,
 	Integer refundPrice,
 	PaymentStatus paymentStatus,
-	String paymentKey,
 	String orderId,
 	String detailAddress,
 	String cancelReason

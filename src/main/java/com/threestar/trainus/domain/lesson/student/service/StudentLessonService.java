@@ -266,6 +266,13 @@ public class StudentLessonService {
 			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT));
 
 		lessonParticipantRepository.delete(lessonParticipant);
+	}
 
+	@Transactional
+	public void checkValidLessonParticipant(Lesson lesson, User user) {
+		boolean ifExists = lessonParticipantRepository.existsByLessonIdAndUserId(lesson.getId(), user.getId());
+		if (!ifExists) {
+			throw new BusinessException(ErrorCode.ALREADY_PAID_LESSON);
+		}
 	}
 }
