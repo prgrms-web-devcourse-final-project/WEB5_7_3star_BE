@@ -120,9 +120,11 @@ public enum ErrorCode {
 	/*
 	 * 결제 관련 예외처리
 	 */
+	ALREADY_PAID_LESSON(HttpStatus.BAD_REQUEST, "이미 결제된 레슨입니다."),
 	INVALID_COUPON(HttpStatus.BAD_REQUEST, "이미 사용되거나 사용할 수 없는 쿠폰입니다."),
 	INVALID_COUPON_RESTORE(HttpStatus.BAD_REQUEST, "쿠폰을 복원할 수 없는 상태입니다"),
 	INVALID_PAYMENT(HttpStatus.BAD_REQUEST, "결제 정보가 존재하지 않습니다."),
+	INVALID_CANCEL_DATE(HttpStatus.BAD_REQUEST, "결제 취소 날짜가 하루 미만입니다."),
 	CANCEL_PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "결제 취소가 실패되었습니다."),
 	CONFIRM_PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "결제 승인이 실패했습니다.");
 
