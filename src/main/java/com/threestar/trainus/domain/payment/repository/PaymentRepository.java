@@ -8,8 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.payment.entity.Payment;
 import com.threestar.trainus.domain.payment.entity.PaymentStatus;
+import com.threestar.trainus.domain.user.entity.User;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	Optional<Payment> findByOrderId(String orderId);
@@ -40,4 +42,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 		@Param("status") String status,
 		@Param("limit") int limit
 	);
+
+	boolean existsByLessonAndUserAndStatusIn(Lesson lesson, User user, List<PaymentStatus> statuses);
 }

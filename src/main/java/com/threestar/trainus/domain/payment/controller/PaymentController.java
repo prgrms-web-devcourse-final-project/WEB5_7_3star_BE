@@ -4,23 +4,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.payment.dto.CancelPaymentRequestDto;
 import com.threestar.trainus.domain.payment.dto.ConfirmPaymentRequestDto;
-import com.threestar.trainus.domain.payment.dto.PaymentClient;
 import com.threestar.trainus.domain.payment.dto.PaymentRequestDto;
 import com.threestar.trainus.domain.payment.dto.PaymentResponseDto;
 import com.threestar.trainus.domain.payment.dto.SaveAmountRequestDto;
-import com.threestar.trainus.domain.payment.dto.TossPaymentResponseDto;
-import com.threestar.trainus.domain.payment.dto.failure.FailurePaymentResponseDto;
-import com.threestar.trainus.domain.payment.dto.failure.PaymentFailureHistoryPageDto;
-import com.threestar.trainus.domain.payment.dto.failure.PaymentFailurePageWrapperDto;
+import com.threestar.trainus.domain.payment.dto.cancel.CancelPaymentRequestDto;
+import com.threestar.trainus.domain.payment.dto.cancel.CancelPaymentResponseDto;
+import com.threestar.trainus.domain.payment.dto.cancel.PaymentCancelHistoryPageDto;
+import com.threestar.trainus.domain.payment.dto.cancel.PaymentCancelPageWrapperDto;
 import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessHistoryPageDto;
 import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessPageWrapperDto;
 import com.threestar.trainus.domain.payment.dto.success.SuccessfulPaymentResponseDto;
@@ -42,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class PaymentController {
 
-	private final PaymentClient tossPaymentClient;
 	private final PaymentService paymentService;
 
 	@Value("${spring.page.size.limit}")
@@ -84,18 +80,14 @@ public class PaymentController {
 	@Operation(summary = "결제 진행", description = "결제 진행")
 	public ResponseEntity<BaseResponse<SuccessfulPaymentResponseDto>> confirm(
 		@RequestBody ConfirmPaymentRequestDto request) {
-		TossPaymentResponseDto tossResponse = tossPaymentClient.confirmPayment(request);
-		SuccessfulPaymentResponseDto payResult = paymentService.processConfirm(tossResponse);
-		return BaseResponse.ok("결제 성공", payResult, HttpStatus.OK);
+		return BaseResponse.ok("결제 성공", paymentService.processConfirm(request), HttpStatus.OK);
 	}
 
 	@PostMapping("/cancel")
 	@Operation(summary = "결제 취소", description = "결제 취소")
-	public ResponseEntity<BaseResponse<FailurePaymentResponseDto>> cancel(
+	public ResponseEntity<BaseResponse<CancelPaymentResponseDto>> cancel(
 		@RequestBody CancelPaymentRequestDto request) {
-		TossPaymentResponseDto tossResponse = tossPaymentClient.cancelPayment(request);
-		FailurePaymentResponseDto payResult = paymentService.processCancel(tossResponse, request.cancelReason());
-		return BaseResponse.ok("결제 취소 성공", payResult, HttpStatus.OK);
+		return BaseResponse.ok("결제 취소 성공", paymentService.processCancel(request), HttpStatus.OK);
 	}
 
 	@GetMapping("/view/success")
@@ -115,24 +107,16 @@ public class PaymentController {
 
 	@GetMapping("/view/cancel")
 	@Operation(summary = "취소 결제 조회", description = "취소된 결제 내역 조회")
-	public ResponseEntity<PagedResponse<PaymentFailurePageWrapperDto>> readAllFailure(HttpSession session,
+	public ResponseEntity<PagedResponse<PaymentCancelPageWrapperDto>> readAllFailure(HttpSession session,
 		@RequestParam("page") int page,
 		@RequestParam("pageSize") int pageSize) {
 		Long userId = (Long)session.getAttribute("LOGIN_USER");
 		int correctPage = Math.max(page, 1);
 		int correctPageSize = Math.max(1, Math.min(pageSize, pageSizeLimit));
-		PaymentFailureHistoryPageDto paymentFailureHistoryPageDto = paymentService.viewAllFailureTransaction(userId,
+		PaymentCancelHistoryPageDto paymentCancelHistoryPageDto = paymentService.viewAllFailureTransaction(userId,
 			correctPage, correctPageSize);
-		PaymentFailurePageWrapperDto payments = PaymentMapper.toPaymentFailurePageWrapperDto(
-			paymentFailureHistoryPageDto);
-		return PagedResponse.ok("취소 결제 조회 성공", payments, paymentFailureHistoryPageDto.count(), HttpStatus.OK);
+		PaymentCancelPageWrapperDto payments = PaymentMapper.toPaymentFailurePageWrapperDto(
+			paymentCancelHistoryPageDto);
+		return PagedResponse.ok("취소 결제 조회 성공", payments, paymentCancelHistoryPageDto.count(), HttpStatus.OK);
 	}
-
-	@GetMapping("/{paymentKey}")
-	@Operation(summary = "상세 결제 조회", description = "상세 결제 내역 조회")
-	public ResponseEntity<BaseResponse<TossPaymentResponseDto>> readDetailPayment(
-		@PathVariable("paymentKey") String paymentKey) {
-		return BaseResponse.ok("상세 결제 조회 완료", tossPaymentClient.viewDetailPayment(paymentKey), HttpStatus.OK);
-	}
-
 }

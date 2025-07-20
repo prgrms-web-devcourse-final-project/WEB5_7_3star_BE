@@ -13,14 +13,19 @@ import org.springframework.transaction.annotation.Transactional;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
+import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
+import com.threestar.trainus.domain.payment.dto.ConfirmPaymentRequestDto;
+import com.threestar.trainus.domain.payment.dto.PaymentClient;
 import com.threestar.trainus.domain.payment.dto.PaymentRequestDto;
 import com.threestar.trainus.domain.payment.dto.PaymentResponseDto;
 import com.threestar.trainus.domain.payment.dto.TossPaymentResponseDto;
-import com.threestar.trainus.domain.payment.dto.failure.FailurePaymentResponseDto;
-import com.threestar.trainus.domain.payment.dto.failure.PaymentFailureHistoryPageDto;
-import com.threestar.trainus.domain.payment.dto.failure.PaymentFailureHistoryResponseDto;
+import com.threestar.trainus.domain.payment.dto.cancel.CancelPaymentRequestDto;
+import com.threestar.trainus.domain.payment.dto.cancel.CancelPaymentResponseDto;
+import com.threestar.trainus.domain.payment.dto.cancel.PaymentCancelHistoryPageDto;
+import com.threestar.trainus.domain.payment.dto.cancel.PaymentCancelHistoryResponseDto;
+import com.threestar.trainus.domain.payment.dto.cancel.TossCancelRequestDto;
 import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessHistoryPageDto;
 import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessHistoryResponseDto;
 import com.threestar.trainus.domain.payment.dto.success.SuccessfulPaymentResponseDto;
@@ -44,7 +49,9 @@ import lombok.RequiredArgsConstructor;
 public class PaymentService {
 
 	private final UserService userService;
+	private final PaymentClient paymentClient;
 	private final AdminLessonService lessonService;
+	private final StudentLessonService studentLessonService;
 	private final PaymentRepository paymentRepository;
 	private final TossPaymentRepository tossPaymentRepository;
 	private final UserCouponRepository userCouponRepository;
@@ -53,6 +60,12 @@ public class PaymentService {
 	public PaymentResponseDto preparePayment(PaymentRequestDto request, Long userId) {
 		Lesson lesson = lessonService.findLessonById(request.lessonId());
 		User user = userService.getUserById(userId);
+
+		//올바른 결제자인지 체크
+		studentLessonService.checkValidLessonParticipant(lesson, user);
+
+		// 여기서 중복 결제 방지
+		validateDuplicatedPayment(lesson, user);
 
 		int originPrice = lesson.getPrice();
 		int discount = 0;
@@ -111,7 +124,10 @@ public class PaymentService {
 	}
 
 	@Transactional
-	public SuccessfulPaymentResponseDto processConfirm(TossPaymentResponseDto tossResponseDto) {
+	public SuccessfulPaymentResponseDto processConfirm(ConfirmPaymentRequestDto request) {
+
+		TossPaymentResponseDto tossResponseDto = paymentClient.confirmPayment(request);
+
 		Payment payment = paymentRepository.findByOrderId(tossResponseDto.orderId())
 			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
 
@@ -151,31 +167,60 @@ public class PaymentService {
 	}
 
 	@Transactional
-	public FailurePaymentResponseDto processCancel(TossPaymentResponseDto tossResponseDto, String cancelReason) {
-		TossPayment tossPayment = tossPaymentRepository.findByPaymentKey(tossResponseDto.paymentKey())
+	public CancelPaymentResponseDto processCancel(CancelPaymentRequestDto request) {
+		TossPayment tossPayment = tossPaymentRepository.findByOrderId(request.orderId())
 			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
 
+		Payment payment = tossPayment.getPayment();
+		LocalDateTime cancelTime = LocalDateTime.now();
+
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-		LocalDateTime requestAt = OffsetDateTime.parse(tossResponseDto.requestedAt(), formatter).toLocalDateTime();
 
-		tossPayment.changeStatus(requestAt, null, PaymentStatus.CANCELED, cancelReason);
+		//날짜 검증(취소 가능은 24시간 전까지)
+		if (cancelTime.isAfter(payment.getLesson().getStartAt().minusDays(1))) {
+			throw new BusinessException(ErrorCode.INVALID_CANCEL_DATE);
+		}
 
+		int refundPrice = 0;
+		if (cancelTime.isBefore(payment.getLesson().getStartAt().minusMonths(1))) {
+			refundPrice = payment.getPayPrice();
+		} else if (cancelTime.isBefore(payment.getLesson().getStartAt().minusWeeks(1))) {
+			refundPrice = (payment.getPayPrice() * 50 / 100);
+		} else if (cancelTime.isBefore(payment.getLesson().getStartAt().minusDays(3))) {
+			refundPrice = (payment.getPayPrice() * 30 / 100);
+		} else {
+			refundPrice = (payment.getPayPrice() * 30 / 100);
+		}
+
+		//여기서 client 호출
+		TossPaymentResponseDto tossResponse = paymentClient.cancelPayment(
+			new TossCancelRequestDto(tossPayment.getPaymentKey(), request.cancelReason(), refundPrice));
+
+		LocalDateTime cancelAt = OffsetDateTime.parse(tossResponse.cancels().getFirst().canceledAt(), formatter)
+			.toLocalDateTime();
+
+		tossPayment.changeStatus(cancelAt, PaymentStatus.CANCELED, request.cancelReason());
 		tossPaymentRepository.save(tossPayment);
 
-		Payment payment = tossPayment.getPayment();
 		payment.setStatus(PaymentStatus.CANCELED);
-		payment.setCancelledAt(LocalDateTime.now());
+		payment.setCancelledAt(cancelAt);
+		payment.setRefundPrice(refundPrice);
+
+		// lesson 관련 데이터 업데이트(lessonRepository 삭제 및 lesson 데이터 변경)
+		studentLessonService.cancelPayment(payment.getLesson().getId(), payment.getUser().getId());
 
 		//쿠폰 복원
 		if (payment.getUserCoupon() != null) {
 			UserCoupon coupon = payment.getUserCoupon();
+			payment.setUserCoupon(null);   //payment에서도 쿠폰 제거
 			if (coupon.getStatus() == CouponStatus.INACTIVE) {
 				coupon.restore();
 				userCouponRepository.save(coupon);
 			}
 		}
+		paymentRepository.save(payment);
 
-		return PaymentMapper.toFailurePaymentResponseDto(payment, cancelReason);
+		return PaymentMapper.toFailurePaymentResponseDto(payment, tossPayment.getCancelReason());
 	}
 
 	@Transactional(readOnly = true)
@@ -197,11 +242,11 @@ public class PaymentService {
 	}
 
 	@Transactional(readOnly = true)
-	public PaymentFailureHistoryPageDto viewAllFailureTransaction(Long userId, int page, int pageSize) {
+	public PaymentCancelHistoryPageDto viewAllFailureTransaction(Long userId, int page, int pageSize) {
 		List<Payment> allFailurePayments = paymentRepository.findAllByUserAndStatus(userId,
 			PaymentStatus.CANCELED.name(),
 			(page - 1) * pageSize, pageSize);
-		List<PaymentFailureHistoryResponseDto> dtoList = allFailurePayments.stream()
+		List<PaymentCancelHistoryResponseDto> dtoList = allFailurePayments.stream()
 			.map(payment -> {
 				TossPayment tossPayment = tossPaymentRepository.findByOrderId(payment.getOrderId())
 					.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
@@ -214,4 +259,15 @@ public class PaymentService {
 				PageLimitCalculator.calculatePageLimit(page, pageSize, 5))
 		);
 	}
+
+	public void validateDuplicatedPayment(Lesson lesson, User user) {
+		boolean alreadyPaid = paymentRepository.existsByLessonAndUserAndStatusIn(
+			lesson, user, List.of(PaymentStatus.DONE, PaymentStatus.READY)
+		);
+
+		if (alreadyPaid) {
+			throw new BusinessException(ErrorCode.ALREADY_PAID_LESSON);
+		}
+	}
+
 }
