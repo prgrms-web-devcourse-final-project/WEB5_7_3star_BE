@@ -255,4 +255,17 @@ public class StudentLessonService {
 
 		return LessonSimpleMapper.toLessonSimpleDto(lesson);
 	}
+
+	@Transactional
+	public void cancelPayment(Long lessonId, Long userId) {
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
+		lesson.decrementParticipantCount();
+		lessonRepository.save(lesson);
+
+		LessonParticipant lessonParticipant = lessonParticipantRepository.findByLessonIdAndUserId(lessonId, userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT));
+
+		lessonParticipantRepository.delete(lessonParticipant);
+
+	}
 }
