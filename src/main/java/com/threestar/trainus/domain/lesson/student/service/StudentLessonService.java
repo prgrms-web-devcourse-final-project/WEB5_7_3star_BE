@@ -221,7 +221,7 @@ public class StudentLessonService {
 				.user(user)
 				.build();
 			lessonParticipantRepository.save(participant);
-			lesson.incrementParticipantCount(); // 비관적 락 덕분에 안전하게 증가
+			lesson.incrementParticipantCount();
 
 			return LessonApplyMapper.toLessonApplicationResponseDto(
 				lesson.getId(),
