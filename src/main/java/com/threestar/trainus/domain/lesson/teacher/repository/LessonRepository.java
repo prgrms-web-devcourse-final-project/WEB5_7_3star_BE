@@ -6,12 +6,15 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
+
+import jakarta.persistence.LockModeType;
 
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
 	//삭제되지 않은 레슨만 조회
@@ -83,4 +86,8 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("search") String search,
 		Pageable pageable
 	);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE) // 비관적 락 적용
+	@Query("SELECT l FROM Lesson l WHERE l.id = :lessonId")
+	Optional<Lesson> findByIdWithLock(@Param("lessonId") Long lessonId);
 }
