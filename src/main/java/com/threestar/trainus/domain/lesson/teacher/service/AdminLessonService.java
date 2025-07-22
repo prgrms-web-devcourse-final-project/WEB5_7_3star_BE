@@ -336,27 +336,32 @@ public class AdminLessonService {
 			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
 	}
 
+	public Lesson findLessonByIdWithLock(Long lessonId) {
+		return lessonRepository.findByIdWithLock(lessonId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+	}
 	//레슨 application조회 및 검증
+
 	public LessonApplication findApplicationById(Long applicationId) {
 		return lessonApplicationRepository.findById(applicationId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
 	}
-
 	//강사 권한 검증
+
 	public void validateIsYourLesson(Lesson lesson, Long userId) {
 		if (!lesson.getLessonLeader().equals(userId)) {
 			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
 		}
 	}
-
 	//레슨 삭제 여부 검증
+
 	public void validateLessonNotDeleted(Lesson lesson) {
 		if (lesson.isDeleted()) {
 			throw new BusinessException(ErrorCode.LESSON_NOT_FOUND);
 		}
 	}
-
 	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크
+
 	private Lesson validateLessonAccess(Long lessonId, Long userId) {
 		// User 존재 확인
 		User user = userService.getUserById(userId);
@@ -372,8 +377,8 @@ public class AdminLessonService {
 
 		return lesson;
 	}
-
 	//레슨 상태 검증
+
 	private ApplicationStatus validateStatus(String status) {
 		if ("ALL".equals(status)) {
 			return null; // ALL인 경우 null 반환해서 필터링 안함
@@ -385,8 +390,8 @@ public class AdminLessonService {
 			throw new BusinessException(ErrorCode.INVALID_APPLICATION_STATUS);
 		}
 	}
-
 	//레슨 신청 상태 검증
+
 	private LessonStatus validateLessonStatus(String status) {
 		try {
 			return LessonStatus.valueOf(status);
@@ -394,8 +399,8 @@ public class AdminLessonService {
 			throw new BusinessException(ErrorCode.INVALID_LESSON_STATUS);
 		}
 	}
-
 	//참가자가 있을때 수정 검증
+
 	private void validatePeopleInLessonUpdate(Lesson lesson, LessonUpdateRequestDto requestDto) {
 		// 카테고리 변경 불가
 		if (!lesson.getCategory().equals(requestDto.category())) {
@@ -428,8 +433,8 @@ public class AdminLessonService {
 			throw new BusinessException(ErrorCode.LESSON_PARTICIPANTS_EXIST_RESTRICTION);
 		}
 	}
-
 	//레슨 이미지 업데이트
+
 	private List<LessonImage> updateLessonImages(Lesson lesson, List<String> imageUrls) {
 		// 기존 이미지 삭제
 		List<LessonImage> existingImages = lessonImageRepository.findByLesson(lesson);
@@ -449,14 +454,14 @@ public class AdminLessonService {
 
 		return lessonImageRepository.saveAll(newImages);
 	}
-
 	//기본 정보 수정
+
 	private void updateBasicInfo(Lesson lesson, LessonUpdateRequestDto requestDto) {
 		lesson.updateLessonName(requestDto.lessonName());
 		lesson.updateDescription(requestDto.description());
 	}
-
 	//제한되어 있는 필드 수정
+
 	private void updateRestrictedFields(Lesson lesson, LessonUpdateRequestDto requestDto, Long userId, Long lessonId) {
 		// 시간 관련 검증
 		if (requestDto.hasTimeChanges()) {
@@ -483,8 +488,8 @@ public class AdminLessonService {
 		lesson.updateLocation(requestDto.city(), requestDto.district(), requestDto.dong());
 		lesson.updateAddressDetail(requestDto.addressDetail());
 	}
-
 	//레슨 이미지 수정
+
 	private List<LessonImage> updateLessonImagesIfNeeded(Lesson lesson, List<String> newImageUrls) {
 		if (newImageUrls != null) {
 			// 기존 이미지 삭제
