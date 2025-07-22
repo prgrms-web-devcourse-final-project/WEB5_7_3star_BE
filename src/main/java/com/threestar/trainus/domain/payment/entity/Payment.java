@@ -55,8 +55,8 @@ public class Payment extends BaseDateEntity {
 	private String orderId;
 	private Integer originPrice;
 	private Integer payPrice;
+	private Integer refundPrice;
 	private LocalDateTime payDate;
-	private LocalDateTime refundDate;
 	private LocalDateTime cancelledAt;
 
 	@Enumerated(EnumType.STRING)

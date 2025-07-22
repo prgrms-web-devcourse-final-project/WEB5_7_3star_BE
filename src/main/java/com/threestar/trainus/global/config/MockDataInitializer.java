@@ -20,6 +20,8 @@ import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.metadata.mapper.ProfileMetadataMapper;
@@ -50,6 +52,7 @@ public class MockDataInitializer implements CommandLineRunner {
 	private final PasswordEncoder passwordEncoder;
 	private final CouponRepository couponRepository;
 	private final UserCouponRepository userCouponRepository;
+	private final LessonParticipantRepository lessonParticipantRepository;
 
 	private final Random random = new Random();
 
@@ -80,6 +83,9 @@ public class MockDataInitializer implements CommandLineRunner {
 
 		// 6. 유저쿠폰 생성 (사용자들이 쿠폰 발급받은 데이터)
 		createUserCoupons(students, coupons);
+
+		// 7. 레슨 참여자 생성
+		createLessonParticipants(students, lessons);
 
 		log.info("Mock 데이터 생성 완료!");
 		log.info("생성된 데이터: 강사 {}명, 수강생 {}명, 레슨 {}개",
@@ -362,6 +368,37 @@ public class MockDataInitializer implements CommandLineRunner {
 
 		userCouponRepository.saveAll(userCoupons);
 		log.info("유저쿠폰 {}개 생성 완료", userCoupons.size());
+	}
+
+	// lessonParticipant 테이블에 데이터 삽입
+	private void createLessonParticipants(List<User> students, List<Lesson> lessons) {
+		List<LessonParticipant> participants = new ArrayList<>();
+		Random rand = new Random();
+		for (User student : students) {
+			// 각 학생당 1~4개의 레슨 참여
+			int joinCount = rand.nextInt(4) + 1;
+
+			Set<Long> joinedLessonIds = new HashSet<>();
+
+			for (int i = 0; i < joinCount; i++) {
+				Lesson lesson = lessons.get(rand.nextInt(lessons.size()));
+
+				// 중복 참여 방지
+				if (joinedLessonIds.contains(lesson.getId()))
+					continue;
+				joinedLessonIds.add(lesson.getId());
+
+				LessonParticipant participant = LessonParticipant.builder()
+					.lesson(lesson)
+					.user(student)
+					.build();
+
+				participants.add(participant);
+			}
+		}
+
+		lessonParticipantRepository.saveAll(participants);
+		log.info("레슨 참여자 {}명 생성 완료", participants.size());
 	}
 
 	// 최소 주문 금액 생성 (10000-50000원, 5000원 단위)
