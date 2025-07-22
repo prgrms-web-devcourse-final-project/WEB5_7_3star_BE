@@ -16,7 +16,9 @@ import com.threestar.trainus.domain.user.entity.User;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	Optional<Payment> findByOrderId(String orderId);
 
-	Optional<Payment> findByUserCouponAndStatus(UserCoupon coupon, PaymentStatus status);
+	Optional<Payment> findByUserAndLessonAndUserCouponAndStatus(User user, Lesson lesson, UserCoupon coupon, PaymentStatus status);
+
+	Optional<Payment> findByUserAndLessonAndUserCouponIsNullAndStatus(User user, Lesson lesson, PaymentStatus status);
 
 	@Query(value = """
 			select * from payments

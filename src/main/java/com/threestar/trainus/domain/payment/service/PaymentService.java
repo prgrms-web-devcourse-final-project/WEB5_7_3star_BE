@@ -10,9 +10,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
-import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
+import com.threestar.trainus.domain.coupon.user.service.CouponService;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
@@ -51,10 +50,24 @@ public class PaymentService {
 	private final UserService userService;
 	private final PaymentClient paymentClient;
 	private final AdminLessonService lessonService;
+	private final CouponService couponService;
 	private final StudentLessonService studentLessonService;
 	private final PaymentRepository paymentRepository;
 	private final TossPaymentRepository tossPaymentRepository;
-	private final UserCouponRepository userCouponRepository;
+
+	private static int getRefundPrice(LocalDateTime cancelTime, Payment payment) {
+		int refundPrice = 0;
+		if (cancelTime.isBefore(payment.getLesson().getStartAt().minusMonths(1))) {
+			refundPrice = payment.getPayPrice();
+		} else if (cancelTime.isBefore(payment.getLesson().getStartAt().minusWeeks(1))) {
+			refundPrice = (payment.getPayPrice() * 50 / 100);
+		} else if (cancelTime.isBefore(payment.getLesson().getStartAt().minusDays(3))) {
+			refundPrice = (payment.getPayPrice() * 30 / 100);
+		} else {
+			refundPrice = (payment.getPayPrice() * 30 / 100);
+		}
+		return refundPrice;
+	}
 
 	@Transactional
 	public PaymentResponseDto preparePayment(PaymentRequestDto request, Long userId) {
@@ -64,39 +77,44 @@ public class PaymentService {
 		//올바른 결제자인지 체크
 		studentLessonService.checkValidLessonParticipant(lesson, user);
 
-		// 여기서 중복 결제 방지
+		// 중복 결제 방지
 		validateDuplicatedPayment(lesson, user);
 
-		int originPrice = lesson.getPrice();
 		int discount = 0;
 
 		UserCoupon coupon = null;
-		if (request.userCouponId() != null) {
-			coupon = userCouponRepository.findById(request.userCouponId())
-				.filter(c -> c.getStatus() == CouponStatus.ACTIVE)
-				.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+		if (request.userCouponId() != null) {  //쿠폰이 있는 주문 내역(실제 결제 진행 전) 불러오기
+			coupon = couponService.getValidUserCoupon(request.userCouponId(), userId);
 
-			Optional<Payment> existing = paymentRepository.findByUserCouponAndStatus(coupon, PaymentStatus.READY);
-			if (existing.isPresent()) {
+			Optional<Payment> existingCoupon = paymentRepository.findByUserAndLessonAndUserCouponAndStatus(user, lesson,
+				coupon, PaymentStatus.READY);
+			if (existingCoupon.isPresent()) {
 				return PaymentResponseDto.builder()
-					.originPrice(existing.get().getOriginPrice())
+					.originPrice(existingCoupon.get().getOriginPrice())
 					.lessonTitle(lesson.getLessonName())
-					.paymentMethod(existing.get().getPaymentMethod())
-					.payPrice(existing.get().getPayPrice())
-					.orderId(existing.get().getOrderId())
+					.paymentMethod(existingCoupon.get().getPaymentMethod())
+					.payPrice(existingCoupon.get().getPayPrice())
+					.orderId(existingCoupon.get().getOrderId())
 					.build();
 			}
 
-			String discountPrice = coupon.getCoupon().getDiscountPrice();
-			if (discountPrice.contains("%")) {
-				int discountPercentage = Integer.parseInt(discountPrice.substring(0, discountPrice.indexOf("%")));
-				discount = (originPrice * discountPercentage) / 100;
-			} else {
-				discount = Integer.parseInt(discountPrice.substring(0, discountPrice.indexOf("원")));
+			discount = couponService.calculateDiscountedPrice(lesson.getPrice(), coupon);
+		} else {
+			Optional<Payment> existingNoneCoupon = paymentRepository.findByUserAndLessonAndUserCouponIsNullAndStatus(
+				user, lesson,
+				PaymentStatus.READY);
+			if (existingNoneCoupon.isPresent()) {
+				return PaymentResponseDto.builder()
+					.originPrice(existingNoneCoupon.get().getOriginPrice())
+					.lessonTitle(lesson.getLessonName())
+					.paymentMethod(existingNoneCoupon.get().getPaymentMethod())
+					.payPrice(existingNoneCoupon.get().getPayPrice())
+					.orderId(existingNoneCoupon.get().getOrderId())
+					.build();
 			}
 		}
 
-		int finalPrice = Math.max(0, originPrice - discount);
+		int finalPrice = Math.max(0, lesson.getPrice() - discount);
 
 		String orderId = UUID.randomUUID().toString();
 
@@ -105,7 +123,7 @@ public class PaymentService {
 			.lesson(lesson)
 			.orderId(orderId)
 			.payPrice(finalPrice)
-			.originPrice(originPrice)
+			.originPrice(lesson.getPrice())
 			.payDate(LocalDateTime.now())
 			.userCoupon(coupon)
 			.status(PaymentStatus.READY)
@@ -115,7 +133,7 @@ public class PaymentService {
 		paymentRepository.save(payment);
 
 		return PaymentResponseDto.builder()
-			.originPrice(originPrice)
+			.originPrice(lesson.getPrice())
 			.lessonTitle(lesson.getLessonName())
 			.paymentMethod(PaymentMethod.CREDIT_CARD)
 			.payPrice(finalPrice)
@@ -156,10 +174,8 @@ public class PaymentService {
 			.approvedAt(paidAt)
 			.build();
 
-		if (payment.getUserCoupon() != null && payment.getUserCoupon().getStatus() == CouponStatus.ACTIVE) {
-			UserCoupon coupon = payment.getUserCoupon();
-			coupon.use();
-			userCouponRepository.save(coupon);
+		if (payment.getUserCoupon() != null) {
+			couponService.useCoupon(payment.getUserCoupon());
 		}
 		tossPaymentRepository.save(tossPayment);
 
@@ -181,16 +197,7 @@ public class PaymentService {
 			throw new BusinessException(ErrorCode.INVALID_CANCEL_DATE);
 		}
 
-		int refundPrice = 0;
-		if (cancelTime.isBefore(payment.getLesson().getStartAt().minusMonths(1))) {
-			refundPrice = payment.getPayPrice();
-		} else if (cancelTime.isBefore(payment.getLesson().getStartAt().minusWeeks(1))) {
-			refundPrice = (payment.getPayPrice() * 50 / 100);
-		} else if (cancelTime.isBefore(payment.getLesson().getStartAt().minusDays(3))) {
-			refundPrice = (payment.getPayPrice() * 30 / 100);
-		} else {
-			refundPrice = (payment.getPayPrice() * 30 / 100);
-		}
+		int refundPrice = getRefundPrice(cancelTime, payment);
 
 		//여기서 client 호출
 		TossPaymentResponseDto tossResponse = paymentClient.cancelPayment(
@@ -213,10 +220,7 @@ public class PaymentService {
 		if (payment.getUserCoupon() != null) {
 			UserCoupon coupon = payment.getUserCoupon();
 			payment.setUserCoupon(null);   //payment에서도 쿠폰 제거
-			if (coupon.getStatus() == CouponStatus.INACTIVE) {
-				coupon.restore();
-				userCouponRepository.save(coupon);
-			}
+			couponService.restoreCoupon(coupon);
 		}
 		paymentRepository.save(payment);
 
@@ -262,7 +266,7 @@ public class PaymentService {
 
 	public void validateDuplicatedPayment(Lesson lesson, User user) {
 		boolean alreadyPaid = paymentRepository.existsByLessonAndUserAndStatusIn(
-			lesson, user, List.of(PaymentStatus.DONE, PaymentStatus.READY)
+			lesson, user, List.of(PaymentStatus.DONE)
 		);
 
 		if (alreadyPaid) {
