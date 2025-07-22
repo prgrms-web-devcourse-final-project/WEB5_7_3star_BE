@@ -323,7 +323,7 @@ public class StudentLessonService {
 	public void checkValidLessonParticipant(Lesson lesson, User user) {
 		boolean ifExists = lessonParticipantRepository.existsByLessonIdAndUserId(lesson.getId(), user.getId());
 		if (!ifExists) {
-			throw new BusinessException(ErrorCode.ALREADY_PAID_LESSON);
+			throw new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT);
 		}
 	}
 }
