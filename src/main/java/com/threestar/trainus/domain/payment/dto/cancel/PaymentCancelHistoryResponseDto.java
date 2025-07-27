@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.payment.dto.failure;
+package com.threestar.trainus.domain.payment.dto.cancel;
 
 import java.time.LocalDateTime;
 
@@ -8,7 +8,7 @@ import com.threestar.trainus.domain.payment.entity.PaymentStatus;
 import lombok.Builder;
 
 @Builder
-public record PaymentFailureHistoryResponseDto(
+public record PaymentCancelHistoryResponseDto(
 	String lessonTitle,
 	LocalDateTime paymentCancelledAt,
 	LocalDateTime lessonStartAt,
@@ -17,9 +17,9 @@ public record PaymentFailureHistoryResponseDto(
 	String city,
 	String district,
 	String dong,
-	Integer originalPrice,
+	Integer payPrice,
+	Integer refundPrice,
 	PaymentStatus paymentStatus,
-	String paymentKey,
 	String orderId,
 	String detailAddress,
 	String cancelReason

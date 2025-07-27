@@ -1,12 +1,11 @@
 package com.threestar.trainus.domain.payment.mapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import com.threestar.trainus.domain.payment.dto.failure.FailurePaymentResponseDto;
-import com.threestar.trainus.domain.payment.dto.failure.PaymentFailureHistoryPageDto;
-import com.threestar.trainus.domain.payment.dto.failure.PaymentFailureHistoryResponseDto;
-import com.threestar.trainus.domain.payment.dto.failure.PaymentFailurePageWrapperDto;
+import com.threestar.trainus.domain.payment.dto.cancel.CancelPaymentResponseDto;
+import com.threestar.trainus.domain.payment.dto.cancel.PaymentCancelHistoryPageDto;
+import com.threestar.trainus.domain.payment.dto.cancel.PaymentCancelHistoryResponseDto;
+import com.threestar.trainus.domain.payment.dto.cancel.PaymentCancelPageWrapperDto;
 import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessHistoryPageDto;
 import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessHistoryResponseDto;
 import com.threestar.trainus.domain.payment.dto.success.PaymentSuccessPageWrapperDto;
@@ -33,11 +32,12 @@ public class PaymentMapper {
 			.build();
 	}
 
-	public static FailurePaymentResponseDto toFailurePaymentResponseDto(Payment payment, String cancelReason) {
-		return FailurePaymentResponseDto.builder()
+	public static CancelPaymentResponseDto toFailurePaymentResponseDto(Payment payment, String cancelReason) {
+		return CancelPaymentResponseDto.builder()
 			.lessonName(payment.getLesson().getLessonName())
 			.cancelReason(cancelReason)
 			.payPrice(payment.getPayPrice())
+			.refundableAmount(payment.getRefundPrice())
 			.startAt(payment.getLesson().getStartAt())
 			.endAt(payment.getLesson().getEndAt())
 			.paymentCancelledAt(payment.getCancelledAt())
@@ -47,11 +47,10 @@ public class PaymentMapper {
 	public static PaymentSuccessHistoryResponseDto toPaymentSuccessHistoryResponseDto(Payment payment,
 		TossPayment tossPayment) {
 		return PaymentSuccessHistoryResponseDto.builder()
-			.paymentKey(tossPayment.getPaymentKey())
 			.paymentStatus(tossPayment.getPaymentStatus())
 			.lessonTitle(payment.getLesson().getLessonName())
 			.paymentMethod(payment.getPaymentMethod())
-			.originalPrice(payment.getPayPrice())
+			.payPrice(tossPayment.getAmount())
 			.dong(payment.getLesson().getDong())
 			.district(payment.getLesson().getDistrict())
 			.city(payment.getLesson().getCity())
@@ -77,14 +76,14 @@ public class PaymentMapper {
 			.build();
 	}
 
-	public static PaymentFailureHistoryResponseDto toPaymentFailureHistoryResponseDto(Payment payment,
+	public static PaymentCancelHistoryResponseDto toPaymentFailureHistoryResponseDto(Payment payment,
 		TossPayment tossPayment) {
-		return PaymentFailureHistoryResponseDto.builder()
-			.paymentKey(tossPayment.getPaymentKey())
+		return PaymentCancelHistoryResponseDto.builder()
 			.paymentStatus(tossPayment.getPaymentStatus())
 			.lessonTitle(payment.getLesson().getLessonName())
 			.paymentMethod(payment.getPaymentMethod())
-			.originalPrice(payment.getPayPrice())
+			.payPrice(tossPayment.getAmount())
+			.refundPrice(payment.getRefundPrice())
 			.dong(payment.getLesson().getDong())
 			.district(payment.getLesson().getDistrict())
 			.city(payment.getLesson().getCity())
@@ -98,16 +97,16 @@ public class PaymentMapper {
 			.build();
 	}
 
-	public static PaymentFailureHistoryPageDto toPaymentFailureHistoryPageDto(
-		List<PaymentFailureHistoryResponseDto> paymentHistory, Integer count) {
-		return PaymentFailureHistoryPageDto.builder()
+	public static PaymentCancelHistoryPageDto toPaymentFailureHistoryPageDto(
+		List<PaymentCancelHistoryResponseDto> paymentHistory, Integer count) {
+		return PaymentCancelHistoryPageDto.builder()
 			.failureHistory(paymentHistory)
 			.count(count)
 			.build();
 	}
 
-	public static PaymentFailurePageWrapperDto toPaymentFailurePageWrapperDto(PaymentFailureHistoryPageDto paymentDto) {
-		return PaymentFailurePageWrapperDto.builder()
+	public static PaymentCancelPageWrapperDto toPaymentFailurePageWrapperDto(PaymentCancelHistoryPageDto paymentDto) {
+		return PaymentCancelPageWrapperDto.builder()
 			.failureHistory(paymentDto.failureHistory())
 			.build();
 	}

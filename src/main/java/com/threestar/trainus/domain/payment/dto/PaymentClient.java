@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import com.threestar.trainus.domain.payment.dto.cancel.TossCancelRequestDto;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -50,7 +51,7 @@ public class PaymentClient {
 			.body(TossPaymentResponseDto.class);
 	}
 
-	public TossPaymentResponseDto cancelPayment(CancelPaymentRequestDto request) {
+	public TossPaymentResponseDto cancelPayment(TossCancelRequestDto request) {
 		return restClient.post()
 			.uri(String.format(paymentProperties.getCancelEndPoint(), request.paymentKey()))
 			.contentType(MediaType.APPLICATION_JSON)
@@ -61,15 +62,4 @@ public class PaymentClient {
 			})
 			.body(TossPaymentResponseDto.class);
 	}
-
-	public TossPaymentResponseDto viewDetailPayment(String paymentKey) {
-		return restClient.get()
-			.uri(paymentProperties.getViewEndPoint() + "/" + paymentKey)
-			.retrieve()
-			.onStatus(HttpStatusCode::isError, (req, res) -> {
-				throw new BusinessException(ErrorCode.INVALID_PAYMENT);
-			})
-			.body(TossPaymentResponseDto.class);
-	}
-
 }

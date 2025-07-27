@@ -31,7 +31,7 @@ public class LocationCsvService {
 		List<Location> locations = new ArrayList<>();
 
 		try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
-			 CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build()) {
+			CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build()) {
 
 			String[] row;
 			while ((row = csvReader.readNext()) != null) {

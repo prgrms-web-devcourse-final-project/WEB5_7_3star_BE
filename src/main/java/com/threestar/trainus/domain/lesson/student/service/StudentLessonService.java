@@ -196,6 +196,57 @@ public class StudentLessonService {
 	}
 
 	@Transactional
+	public LessonApplicationResponseDto applyToLessonWithLock(Long lessonId, Long userId) {
+		Lesson lesson = adminLessonService.findLessonByIdWithLock(lessonId); // 락적용 find 메서드
+
+		User user = userService.getUserById(userId);
+
+		if (lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_CREATOR_CANNOT_APPLY);
+		}
+
+		boolean alreadyParticipated = lessonParticipantRepository.existsByLessonIdAndUserId(lessonId, userId);
+		boolean alreadyApplied = lessonApplicationRepository.existsByLessonIdAndUserId(lessonId, userId);
+		if (alreadyParticipated || alreadyApplied) {
+			throw new BusinessException(ErrorCode.ALREADY_APPLIED);
+		}
+
+		if (lesson.getStatus() != LessonStatus.RECRUITING) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+		}
+
+		if (lesson.getOpenRun()) {
+			LessonParticipant participant = LessonParticipant.builder()
+				.lesson(lesson)
+				.user(user)
+				.build();
+			lessonParticipantRepository.save(participant);
+			lesson.incrementParticipantCount();
+
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.APPROVED,
+				participant.getJoinAt()
+			);
+		} else {
+			LessonApplication application = LessonApplication.builder()
+				.lesson(lesson)
+				.user(user)
+				.build();
+			lessonApplicationRepository.save(application);
+
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.PENDING,
+				application.getCreatedAt()
+			);
+		}
+	}
+
+
+	@Transactional
 	public void cancelLessonApplication(Long lessonId, Long userId) {
 		// 레슨 조회
 		Lesson lesson = adminLessonService.findLessonById(lessonId);
@@ -254,5 +305,25 @@ public class StudentLessonService {
 		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		return LessonSimpleMapper.toLessonSimpleDto(lesson);
+	}
+
+	@Transactional
+	public void cancelPayment(Long lessonId, Long userId) {
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
+		lesson.decrementParticipantCount();
+		lessonRepository.save(lesson);
+
+		LessonParticipant lessonParticipant = lessonParticipantRepository.findByLessonIdAndUserId(lessonId, userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT));
+
+		lessonParticipantRepository.delete(lessonParticipant);
+	}
+
+	@Transactional
+	public void checkValidLessonParticipant(Lesson lesson, User user) {
+		boolean ifExists = lessonParticipantRepository.existsByLessonIdAndUserId(lesson.getId(), user.getId());
+		if (!ifExists) {
+			throw new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT);
+		}
 	}
 }

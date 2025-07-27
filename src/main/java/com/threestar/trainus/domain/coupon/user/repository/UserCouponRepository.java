@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.coupon.user.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,8 @@ import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
 
 public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
 	boolean existsByUserIdAndCouponId(Long userId, Long couponId);
+
+	Optional<UserCoupon> findByUserIdAndCouponId(Long userId, Long couponId);
 
 	@Query("SELECT uc FROM UserCoupon uc JOIN FETCH uc.coupon WHERE uc.user.id = :userId")
 	List<UserCoupon> findAllByUserIdWithCoupon(@Param("userId") Long userId);

@@ -1,5 +1,9 @@
 package com.threestar.trainus.domain.payment.dto;
 
+import java.util.List;
+
+import com.threestar.trainus.domain.payment.dto.cancel.CancelDetail;
+
 public record TossPaymentResponseDto(
 	String paymentKey,
 	String orderId,
@@ -8,6 +12,7 @@ public record TossPaymentResponseDto(
 	String requestedAt,
 	String approvedAt,
 	int totalAmount,
-	String method
+	String method,
+	List<CancelDetail> cancels
 ) {
 }

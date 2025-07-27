@@ -17,9 +17,8 @@ public record PaymentSuccessHistoryResponseDto(
 	String city,
 	String district,
 	String dong,
-	Integer originalPrice,
+	Integer payPrice,
 	PaymentStatus paymentStatus,
-	String paymentKey,
 	String orderId,
 	String detailAddress
 ) {

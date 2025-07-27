@@ -381,7 +381,7 @@ public class AdminLessonService {
 		}
 	}
 
-	//레슨 상태 파싱
+	//레슨 신청 상태 검증
 	private LessonStatus toLessonStatus(String status) {
 		try {
 			return LessonStatus.valueOf(status);
@@ -393,7 +393,7 @@ public class AdminLessonService {
 	//신청 페이지 조회
 	private Page<LessonApplication> getApplicationPage(Lesson lesson, String status,
 		ApplicationStatus applicationStatus, Pageable pageable) {
-
+	
 		if ("ALL".equals(status)) {
 			return lessonApplicationRepository.findByLesson(lesson, pageable);
 		} else {
@@ -410,8 +410,8 @@ public class AdminLessonService {
 			return lessonRepository.findByLessonLeaderAndDeletedAtIsNull(userId, pageable);
 		}
 	}
-
-	//레슨 이미지 저장
+  
+//레슨 이미지 저장
 	private List<LessonImage> saveLessonImages(Lesson lesson, List<String> imageUrls) {
 		if (imageUrls == null || imageUrls.isEmpty()) {
 			return List.of();
