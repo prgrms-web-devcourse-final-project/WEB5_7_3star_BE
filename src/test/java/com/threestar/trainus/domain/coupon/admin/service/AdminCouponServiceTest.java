@@ -184,4 +184,152 @@ class AdminCouponServiceTest {
 			.isInstanceOf(BusinessException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST_DATA);
 	}
+
+	@Test
+	@DisplayName("발급되지 않은 쿠폰 삭제 성공")
+	void deleteCoupon_Success_NoIssuedCoupons() {
+		Long couponId = 1L;
+		Long userId = 1L;
+
+		Coupon coupon = Coupon.builder()
+			.name("테스트 쿠폰")
+			.status(CouponStatus.ACTIVE)
+			.discountPrice("5000")
+			.minOrderPrice(10000)
+			.category(CouponCategory.NORMAL)
+			.build();
+
+		given(couponRepository.findById(couponId)).willReturn(Optional.of(coupon));
+		given(userCouponRepository.countByCouponId(couponId)).willReturn(0L); // 발급된 쿠폰 없음
+		given(couponRepository.save(any(Coupon.class))).willReturn(coupon);
+
+		var response = adminCouponService.deleteCoupon(couponId, userId);
+
+		assertThat(response).isNotNull();
+		assertThat(response.couponName()).isEqualTo("테스트 쿠폰");
+		verify(userService).validateAdminRole(userId);
+		verify(couponRepository).save(coupon);
+		assertThat(coupon.isDeleted()).isTrue(); // 삭제 상태 확인
+	}
+
+	@Test
+	@DisplayName("발급된 쿠폰이 있는 경우 삭제 실패")
+	void deleteCoupon_Fail_HasIssuedCoupons() {
+		Long couponId = 1L;
+		Long userId = 1L;
+
+		Coupon coupon = Coupon.builder()
+			.name("테스트 쿠폰")
+			.status(CouponStatus.ACTIVE)
+			.discountPrice("5000")
+			.minOrderPrice(10000)
+			.category(CouponCategory.NORMAL)
+			.build();
+
+		given(couponRepository.findById(couponId)).willReturn(Optional.of(coupon));
+		given(userCouponRepository.countByCouponId(couponId)).willReturn(5L); // 5명이 발급받음
+
+		assertThatThrownBy(() -> adminCouponService.deleteCoupon(couponId, userId))
+			.isInstanceOf(BusinessException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_CANNOT_DELETE_ISSUED);
+
+		verify(userService).validateAdminRole(userId);
+		verify(couponRepository, never()).save(any(Coupon.class)); // 저장되지 않음
+		assertThat(coupon.isDeleted()).isFalse(); // 삭제되지 않음
+	}
+
+	@Test
+	@DisplayName("이미 삭제된 쿠폰 삭제 시도 시 실패")
+	void deleteCoupon_Fail_AlreadyDeleted() {
+		Long couponId = 1L;
+		Long userId = 1L;
+
+		Coupon coupon = Coupon.builder()
+			.name("테스트 쿠폰")
+			.status(CouponStatus.ACTIVE)
+			.discountPrice("5000")
+			.minOrderPrice(10000)
+			.category(CouponCategory.NORMAL)
+			.build();
+
+		coupon.markAsDeleted(); // 미리 삭제 상태로 만듦
+
+		given(couponRepository.findById(couponId)).willReturn(Optional.of(coupon));
+
+		assertThatThrownBy(() -> adminCouponService.deleteCoupon(couponId, userId))
+			.isInstanceOf(BusinessException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST_DATA);
+
+		verify(userService).validateAdminRole(userId);
+		verify(userCouponRepository, never()).countByCouponId(anyLong()); // 발급 수량 조회하지 않음
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 쿠폰 삭제 시도 시 실패")
+	void deleteCoupon_Fail_CouponNotFound() {
+		Long couponId = 999L;
+		Long userId = 1L;
+
+		given(couponRepository.findById(couponId)).willReturn(Optional.empty());
+
+		assertThatThrownBy(() -> adminCouponService.deleteCoupon(couponId, userId))
+			.isInstanceOf(BusinessException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_REQUEST_DATA);
+
+		verify(userService).validateAdminRole(userId);
+		verify(userCouponRepository, never()).countByCouponId(anyLong());
+	}
+
+	@Test
+	@DisplayName("선착순 쿠폰 - 발급되지 않은 경우 삭제 성공")
+	void deleteCoupon_Success_OpenRunCoupon_NoIssued() {
+		Long couponId = 1L;
+		Long userId = 1L;
+
+		Coupon openRunCoupon = Coupon.builder()
+			.name("선착순 쿠폰")
+			.status(CouponStatus.ACTIVE)
+			.discountPrice("10%")
+			.minOrderPrice(50000)
+			.quantity(100)
+			.category(CouponCategory.OPEN_RUN)
+			.build();
+
+		given(couponRepository.findById(couponId)).willReturn(Optional.of(openRunCoupon));
+		given(userCouponRepository.countByCouponId(couponId)).willReturn(0L); // 아무도 발급받지 않음
+		given(couponRepository.save(any(Coupon.class))).willReturn(openRunCoupon);
+
+		var response = adminCouponService.deleteCoupon(couponId, userId);
+
+		assertThat(response).isNotNull();
+		assertThat(response.couponName()).isEqualTo("선착순 쿠폰");
+		verify(couponRepository).save(openRunCoupon);
+		assertThat(openRunCoupon.isDeleted()).isTrue();
+	}
+
+	@Test
+	@DisplayName("선착순 쿠폰 - 발급된 경우 삭제 실패")
+	void deleteCoupon_Fail_OpenRunCoupon_HasIssued() {
+		Long couponId = 1L;
+		Long userId = 1L;
+
+		Coupon openRunCoupon = Coupon.builder()
+			.name("선착순 쿠폰")
+			.status(CouponStatus.ACTIVE)
+			.discountPrice("10%")
+			.minOrderPrice(50000)
+			.quantity(100)
+			.category(CouponCategory.OPEN_RUN)
+			.build();
+
+		given(couponRepository.findById(couponId)).willReturn(Optional.of(openRunCoupon));
+		given(userCouponRepository.countByCouponId(couponId)).willReturn(50L); // 50명이 발급받음
+
+		assertThatThrownBy(() -> adminCouponService.deleteCoupon(couponId, userId))
+			.isInstanceOf(BusinessException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.COUPON_CANNOT_DELETE_ISSUED);
+
+		verify(couponRepository, never()).save(any(Coupon.class));
+		assertThat(openRunCoupon.isDeleted()).isFalse();
+	}
 }
