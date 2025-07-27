@@ -36,7 +36,8 @@ public enum ErrorCode {
 	COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "쿠폰 발급 기간이 종료되었습니다."),
 	COUPON_NOT_YET_OPEN(HttpStatus.BAD_REQUEST, "아직 발급이 시작되지 않은 쿠폰입니다."),
 	COUPON_BE_EXHAUSTED(HttpStatus.BAD_REQUEST, "수량이 소진된 쿠폰입니다."),
-
+	COUPON_CANNOT_DELETE_ISSUED(HttpStatus.BAD_REQUEST, "발급된 쿠폰이 있어 삭제할 수 없습니다. 상태를 비활성화로 변경해주세요."),
+	COUPON_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 쿠폰입니다."),
 	//404
 	COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 쿠폰을 찾을 수 없습니다."),
 

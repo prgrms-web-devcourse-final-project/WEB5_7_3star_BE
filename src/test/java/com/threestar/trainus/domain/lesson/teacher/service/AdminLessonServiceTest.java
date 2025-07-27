@@ -32,7 +32,7 @@ import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
 @ExtendWith(MockitoExtension.class)
-public class TeacherLessonServiceTest {
+public class AdminLessonServiceTest {
 	@Mock
 	private LessonRepository lessonRepository;
 
