@@ -10,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.threestar.trainus.domain.lesson.teacher.constants.LessonConstants.Participants;
+import com.threestar.trainus.domain.lesson.teacher.constants.LessonConstants.Time;
 import com.threestar.trainus.domain.lesson.teacher.dto.ApplicationProcessResponseDto;
 import com.threestar.trainus.domain.lesson.teacher.dto.CreatedLessonListResponseDto;
 import com.threestar.trainus.domain.lesson.teacher.dto.LessonApplicationListResponseDto;
@@ -205,7 +207,7 @@ public class AdminLessonService {
 
 	//수정/삭제는 12시 전만 가능하도록
 	private void validateLessonTimeLimit(Lesson lesson) {
-		LocalDateTime timeLimit = lesson.getStartAt().minusHours(12);
+		LocalDateTime timeLimit = lesson.getStartAt().minusHours(Time.EDIT_DELETE_LIMIT_HOURS);
 		if (LocalDateTime.now().isAfter(timeLimit)) {
 			throw new BusinessException(ErrorCode.LESSON_TIME_LIMIT_EXCEEDED);
 		}
@@ -246,7 +248,7 @@ public class AdminLessonService {
 
 	//참여방식에 따른 최대 인원 검증
 	private void validateMaxParticipantsByType(Integer maxParticipants, Boolean openRun) {
-		int maxLimit = openRun ? 10000 : 100;
+		int maxLimit = openRun ? Participants.MAX_OPEN_RUN_PARTICIPANTS : Participants.MAX_NORMAL_PARTICIPANTS;
 		if (maxParticipants > maxLimit) {
 			throw new BusinessException(ErrorCode.LESSON_MAX_PARTICIPANTS_EXCEEDED);
 		}
