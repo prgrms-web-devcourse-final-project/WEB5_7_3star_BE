@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.coupon.user.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,4 +25,14 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
 
 	// 특정 사용자가 특정 쿠폰을 발급받은 수 조회
 	Long countByUserIdAndCouponId(Long userId, Long couponId);
+
+	//만료시킬 유저쿠폰을 찾는 메서드
+	//현재 활성화 상태이지만, 사용 유효기간이 지난 유저쿠폰들임!
+	@Query("""
+		SELECT uc FROM UserCoupon uc
+		WHERE uc.status = com.threestar.trainus.domain.coupon.user.entity.CouponStatus.ACTIVE
+		AND uc.expirationDate <= :now
+		""")
+	List<UserCoupon> findActiveUserCouponsToExpire(@Param("now") LocalDateTime now);
+
 }
