@@ -458,6 +458,12 @@ public class AdminLessonService {
 			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
 	}
 
+	// develop 브랜치에서 추가된 메서드 - Lock 기능 추가
+	public Lesson findLessonByIdWithLock(Long lessonId) {
+		return lessonRepository.findByIdWithLock(lessonId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+	}
+
 	//레슨 신청 조회
 	public LessonApplication findApplicationById(Long applicationId) {
 		return lessonApplicationRepository.findById(applicationId)
