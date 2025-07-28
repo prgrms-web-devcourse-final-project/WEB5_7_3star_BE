@@ -9,17 +9,17 @@ import com.threestar.trainus.domain.coupon.user.entity.OwnedStatus;
 public class CouponMapper {
 
 	public static CouponResponseDto toDto(Coupon coupon, boolean owned) {
-		return CouponResponseDto.builder()
-			.couponId(coupon.getId())
-			.couponName(coupon.getName())
-			.discountPrice(coupon.getDiscountPrice())
-			.minOrderPrice(coupon.getMinOrderPrice())
-			.expirationDate(coupon.getExpirationDate())
-			.ownedStatus(owned ? OwnedStatus.OWNED : OwnedStatus.NOT_OWNED)
-			.quantity(coupon.getQuantity())
-			.category(coupon.getCategory())
-			.openTime(coupon.getOpenAt())
-			.build();
+		return new CouponResponseDto(
+			coupon.getId(),
+			coupon.getName(),
+			coupon.getDiscountPrice(),
+			coupon.getMinOrderPrice(),
+			coupon.getExpirationDate(),
+			owned ? OwnedStatus.OWNED : OwnedStatus.NOT_OWNED,
+			coupon.getQuantity(),
+			coupon.getCategory(),
+			coupon.getOpenAt()
+		);
 	}
 
 	public static List<CouponResponseDto> toDtoList(List<Coupon> coupons, List<Long> ownedCouponIds) {
