@@ -63,12 +63,12 @@ public class ReviewService {
 			.reviewer(findUser)
 			.reviewee(lessonLeader)
 			.lesson(findLesson)
-			.content(reviewRequestDto.getContent())
-			.rating(reviewRequestDto.getRating())
-			.image(reviewRequestDto.getReviewImage())
+			.content(reviewRequestDto.content())
+			.rating(reviewRequestDto.rating())
+			.image(reviewRequestDto.reviewImage())
 			.build());
 
-		profileMetadataService.increaseReviewCountAndRating(lessonLeader.getId(), reviewRequestDto.getRating());
+		profileMetadataService.increaseReviewCountAndRating(lessonLeader.getId(), reviewRequestDto.rating());
 		return ReviewMapper.toReviewResponseDto(newReview);
 	}
 
