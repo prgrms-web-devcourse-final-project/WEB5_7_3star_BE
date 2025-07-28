@@ -37,7 +37,7 @@ public class CommentService {
 			.lesson(findLesson)
 			.user(findUser)
 			.deleted(false)
-			.content(request.getContent())
+			.content(request.content())
 			.build();
 
 		commentRepository.saveAndFlush(newComment); //즉시 저장을 통해 commentId
@@ -51,7 +51,7 @@ public class CommentService {
 	}
 
 	private Comment findParent(CommentCreateRequestDto request) {
-		Long parentCommentId = request.getParentCommentId();
+		Long parentCommentId = request.parentCommentId();
 		if (parentCommentId == null) {
 			return null;
 		}
