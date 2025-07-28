@@ -1,6 +1,6 @@
 package com.threestar.trainus.domain.ranking.dto;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
+import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 
 import lombok.Builder;
 import lombok.Getter;

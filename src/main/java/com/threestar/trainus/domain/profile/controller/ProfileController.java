@@ -3,20 +3,29 @@ package com.threestar.trainus.domain.profile.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
 import com.threestar.trainus.domain.profile.dto.ImageUpdateRequestDto;
 import com.threestar.trainus.domain.profile.dto.ImageUpdateResponseDto;
 import com.threestar.trainus.domain.profile.dto.IntroUpdateRequestDto;
 import com.threestar.trainus.domain.profile.dto.IntroUpdateResponseDto;
+import com.threestar.trainus.domain.profile.dto.ProfileCreatedLessonListResponseDto;
+import com.threestar.trainus.domain.profile.dto.ProfileCreatedLessonListWrapperDto;
 import com.threestar.trainus.domain.profile.dto.ProfileDetailResponseDto;
+import com.threestar.trainus.domain.profile.mapper.ProfileLessonMapper;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
+import com.threestar.trainus.domain.profile.service.ProfileLessonService;
 import com.threestar.trainus.global.annotation.LoginUser;
+import com.threestar.trainus.global.dto.PageRequestDto;
 import com.threestar.trainus.global.unit.BaseResponse;
+import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class ProfileController {
 
 	private final ProfileFacadeService facadeService;
+	private final ProfileLessonService profileLessonService;
 
 	@GetMapping("{userId}")
 	@Operation(summary = "유저 프로필 상세 조회 api")
@@ -58,5 +68,23 @@ public class ProfileController {
 	) {
 		IntroUpdateResponseDto response = facadeService.updateProfileIntro(loginUserId, requestDto);
 		return BaseResponse.ok("프로필 자기소개 수정이 완료되었습니다.", response, HttpStatus.OK);
+	}
+
+	@GetMapping("/{userId}/created-lessons")
+	@Operation(summary = "프로필유저의 개설한 레슨 목록 조회 api",
+		description = "특정 유저가 개설한 레슨 목록을 조회 -> 누구나 조회가능")
+	public ResponseEntity<PagedResponse<ProfileCreatedLessonListWrapperDto>> getUserCreatedLessons(
+		@PathVariable Long userId,
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
+		@RequestParam(required = false) LessonStatus status
+	) {
+		// 개설한 레슨 목록 조회
+		ProfileCreatedLessonListResponseDto responseDto = profileLessonService
+			.getUserCreatedLessons(userId, pageRequestDto.getPage(), pageRequestDto.getLimit(), status);
+
+		ProfileCreatedLessonListWrapperDto wrapperDto = ProfileLessonMapper
+			.toProfileCreatedLessonListWrapperDto(responseDto);
+
+		return PagedResponse.ok("개설한 레슨 목록 조회 완료.", wrapperDto, responseDto.count(), HttpStatus.OK);
 	}
 }

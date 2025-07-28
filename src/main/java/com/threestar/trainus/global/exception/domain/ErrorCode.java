@@ -67,6 +67,9 @@ public enum ErrorCode {
 	LESSON_CREATOR_CANNOT_APPLY(HttpStatus.BAD_REQUEST, "레슨 개설자는 자신이 개설한 레슨에 참여 신청할 수 없습니다."),
 	CANNOT_CANCEL_APPROVED_APPLICATION(HttpStatus.BAD_REQUEST, "승인된 신청은 취소할 수 없습니다."),
 	INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "잘못된 카테고리입니다."),
+	LESSON_NOT_EDITABLE(HttpStatus.BAD_REQUEST, "수정할 수 없는 상태의 레슨입니다. 모집중 상태의 레슨만 수정 가능합니다."),
+	LESSON_MAX_PARTICIPANTS_CANNOT_DECREASE(HttpStatus.BAD_REQUEST, "참가자가 있는 레슨은 최대 참가 인원을 줄일 수 없습니다."),
+	LESSON_PARTICIPANTS_EXIST_RESTRICTION(HttpStatus.BAD_REQUEST, "참가자가 있어 해당 필드는 수정할 수 없습니다."),
 
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),
@@ -117,9 +120,11 @@ public enum ErrorCode {
 	/*
 	 * 결제 관련 예외처리
 	 */
+	ALREADY_PAID_LESSON(HttpStatus.BAD_REQUEST, "이미 결제된 레슨입니다."),
 	INVALID_COUPON(HttpStatus.BAD_REQUEST, "이미 사용되거나 사용할 수 없는 쿠폰입니다."),
 	INVALID_COUPON_RESTORE(HttpStatus.BAD_REQUEST, "쿠폰을 복원할 수 없는 상태입니다"),
 	INVALID_PAYMENT(HttpStatus.BAD_REQUEST, "결제 정보가 존재하지 않습니다."),
+	INVALID_CANCEL_DATE(HttpStatus.BAD_REQUEST, "결제 취소 날짜가 하루 미만입니다."),
 	CANCEL_PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "결제 취소가 실패되었습니다."),
 	CONFIRM_PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "결제 승인이 실패했습니다.");
 

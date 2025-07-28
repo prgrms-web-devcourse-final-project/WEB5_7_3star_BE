@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
+import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.ranking.dto.RankingResponseDto;
 import com.threestar.trainus.domain.ranking.service.RankingService;
 import com.threestar.trainus.global.unit.BaseResponse;

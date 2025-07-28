@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import com.threestar.trainus.domain.payment.dto.cancel.TossCancelRequestDto;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -32,18 +33,12 @@ public class PaymentClient {
 	}
 
 	private String createPaymentAuthHeader(PaymentProperties paymentProperties) {
-		log.info("secret-key : {}, url ={} baseUrl = {}, baseUrl2 = {}", paymentProperties.getSecretKey(),
-			paymentProperties.getBaseUrl(), paymentProperties.getConfirmEndPoint(),
-			paymentProperties.getCancelEndPoint());
 		byte[] encodedBytes = Base64.getEncoder()
 			.encode((paymentProperties.getSecretKey() + BASIC_DELIMITER).getBytes(StandardCharsets.UTF_8));
-		log.info("new Header = {}", AUTH_HEADER_PREFIX + new String(encodedBytes));
 		return AUTH_HEADER_PREFIX + new String(encodedBytes);
 	}
 
-	public TossPaymentResponseDto confirmPayment(ConfirmPaymentRequest request) {
-		log.info("Sending Toss confirm request: orderId={}, amount={}, paymentKey={}",
-			request.getOrderId(), request.getAmount(), request.getPaymentKey());
+	public TossPaymentResponseDto confirmPayment(ConfirmPaymentRequestDto request) {
 
 		return restClient.post()
 			.uri(paymentProperties.getConfirmEndPoint())
@@ -56,9 +51,9 @@ public class PaymentClient {
 			.body(TossPaymentResponseDto.class);
 	}
 
-	public TossPaymentResponseDto cancelPayment(CancelPaymentRequest request) {
+	public TossPaymentResponseDto cancelPayment(TossCancelRequestDto request) {
 		return restClient.post()
-			.uri(String.format(paymentProperties.getCancelEndPoint(), request.getPaymentKey()))
+			.uri(String.format(paymentProperties.getCancelEndPoint(), request.paymentKey()))
 			.contentType(MediaType.APPLICATION_JSON)
 			.body(request)
 			.retrieve()
@@ -67,5 +62,4 @@ public class PaymentClient {
 			})
 			.body(TossPaymentResponseDto.class);
 	}
-
 }

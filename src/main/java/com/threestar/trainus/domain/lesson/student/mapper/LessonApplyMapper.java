@@ -2,8 +2,8 @@ package com.threestar.trainus.domain.lesson.student.mapper;
 
 import java.time.LocalDateTime;
 
-import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationStatus;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

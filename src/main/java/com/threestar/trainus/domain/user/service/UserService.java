@@ -145,4 +145,10 @@ public class UserService {
 
 		user.withdraw();
 	}
+
+	@Transactional(readOnly = true)
+	public UserInfoResponseDto getCurrentUserInfo(Long userId) {
+		User user = getUserById(userId);
+		return UserMapper.toUserInfoResponseDto(user);
+	}
 }

@@ -1,12 +1,10 @@
 package com.threestar.trainus.domain.payment.dto;
 
-import com.threestar.trainus.domain.payment.entity.PaymentMethod;
+import jakarta.validation.constraints.NotNull;
 
-import lombok.Data;
-
-@Data
-public class PaymentRequestDto {
-	private Long lessonId;
-	private Long userCouponId;
-	private PaymentMethod paymentMethod;
+public record PaymentRequestDto(
+	@NotNull(message = "필수 값입니다.")
+	Long lessonId,
+	Long userCouponId
+) {
 }

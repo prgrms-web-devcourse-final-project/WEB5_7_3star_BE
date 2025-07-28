@@ -27,7 +27,7 @@ public class TossPayment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private Long tossPaymentId;
 
 	@Column(nullable = false, unique = true)
 	private String paymentKey;
@@ -41,7 +41,6 @@ public class TossPayment {
 	private Payment payment;
 
 	private Integer amount;
-
 	private String orderName;
 
 	@Enumerated(value = EnumType.STRING)
@@ -56,19 +55,13 @@ public class TossPayment {
 	private LocalDateTime requestedAt;
 
 	private LocalDateTime approvedAt;
+	private LocalDateTime canceledAt;
 
-	public void changeStatus(LocalDateTime requestedAt, LocalDateTime approvedAt, PaymentStatus paymentStatus) {
-		this.requestedAt = requestedAt;
-		this.approvedAt = approvedAt;
+	private String cancelReason;
+
+	public void changeStatus(LocalDateTime canceledAt, PaymentStatus paymentStatus, String cancelReason) {
+		this.canceledAt = canceledAt;
 		this.paymentStatus = paymentStatus;
+		this.cancelReason = cancelReason;
 	}
-
-	public boolean isCancelStatus() {
-		return this.paymentStatus == PaymentStatus.CANCELED;
-	}
-
-	public boolean isDoneStatus() {
-		return this.paymentStatus == PaymentStatus.DONE;
-	}
-
 }

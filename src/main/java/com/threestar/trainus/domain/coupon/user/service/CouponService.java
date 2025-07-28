@@ -94,4 +94,35 @@ public class CouponService {
 			.coupons(dtoList)
 			.build();
 	}
+
+	@Transactional
+	public UserCoupon getValidUserCoupon(Long userCouponId, Long userId) {
+		return userCouponRepository.findByUserIdAndCouponId(userId, userCouponId)
+			.filter(c -> c.getStatus() == CouponStatus.ACTIVE)
+			.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+	}
+
+	public int calculateDiscountedPrice(int originalPrice, UserCoupon coupon) {
+		String discountPrice = coupon.getCoupon().getDiscountPrice();
+		if (discountPrice.contains("%")) {
+			int discountPercentage = Integer.parseInt(discountPrice.substring(0, discountPrice.indexOf("%")));
+			return originalPrice * discountPercentage / 100;
+		} else {
+			return Integer.parseInt(discountPrice.replace("원", ""));
+		}
+	}
+
+	public void useCoupon(UserCoupon coupon) {
+		if (coupon.getStatus() == CouponStatus.ACTIVE) {
+			coupon.use();
+			userCouponRepository.save(coupon);
+		}
+	}
+
+	public void restoreCoupon(UserCoupon coupon) {
+		if (coupon.getStatus() == CouponStatus.INACTIVE) {
+			coupon.restore();
+			userCouponRepository.save(coupon);
+		}
+	}
 }

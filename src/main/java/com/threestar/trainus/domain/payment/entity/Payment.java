@@ -3,7 +3,7 @@ package com.threestar.trainus.domain.payment.entity;
 import java.time.LocalDateTime;
 
 import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.global.entity.BaseDateEntity;
 
@@ -37,7 +37,7 @@ public class Payment extends BaseDateEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private Long paymentId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
@@ -55,8 +55,8 @@ public class Payment extends BaseDateEntity {
 	private String orderId;
 	private Integer originPrice;
 	private Integer payPrice;
+	private Integer refundPrice;
 	private LocalDateTime payDate;
-	private LocalDateTime refundDate;
 	private LocalDateTime cancelledAt;
 
 	@Enumerated(EnumType.STRING)

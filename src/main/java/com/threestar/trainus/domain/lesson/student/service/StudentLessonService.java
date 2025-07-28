@@ -7,19 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.threestar.trainus.domain.lesson.admin.entity.ApplicationStatus;
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
-import com.threestar.trainus.domain.lesson.admin.entity.Lesson;
-import com.threestar.trainus.domain.lesson.admin.entity.LessonApplication;
-import com.threestar.trainus.domain.lesson.admin.entity.LessonImage;
-import com.threestar.trainus.domain.lesson.admin.entity.LessonParticipant;
-import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
-import com.threestar.trainus.domain.lesson.admin.mapper.LessonMapper;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonApplicationRepository;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonImageRepository;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonParticipantRepository;
-import com.threestar.trainus.domain.lesson.admin.repository.LessonRepository;
-import com.threestar.trainus.domain.lesson.admin.service.AdminLessonService;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
@@ -30,6 +17,19 @@ import com.threestar.trainus.domain.lesson.student.mapper.LessonApplicationMappe
 import com.threestar.trainus.domain.lesson.student.mapper.LessonApplyMapper;
 import com.threestar.trainus.domain.lesson.student.mapper.LessonSearchMapper;
 import com.threestar.trainus.domain.lesson.student.mapper.LessonSimpleMapper;
+import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationStatus;
+import com.threestar.trainus.domain.lesson.teacher.entity.Category;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonApplication;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonImage;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
+import com.threestar.trainus.domain.lesson.teacher.mapper.LessonMapper;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonApplicationRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonImageRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
+import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
 import com.threestar.trainus.domain.metadata.dto.ProfileMetadataResponseDto;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.profile.entity.Profile;
@@ -196,6 +196,57 @@ public class StudentLessonService {
 	}
 
 	@Transactional
+	public LessonApplicationResponseDto applyToLessonWithLock(Long lessonId, Long userId) {
+		Lesson lesson = adminLessonService.findLessonByIdWithLock(lessonId); // 락적용 find 메서드
+
+		User user = userService.getUserById(userId);
+
+		if (lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_CREATOR_CANNOT_APPLY);
+		}
+
+		boolean alreadyParticipated = lessonParticipantRepository.existsByLessonIdAndUserId(lessonId, userId);
+		boolean alreadyApplied = lessonApplicationRepository.existsByLessonIdAndUserId(lessonId, userId);
+		if (alreadyParticipated || alreadyApplied) {
+			throw new BusinessException(ErrorCode.ALREADY_APPLIED);
+		}
+
+		if (lesson.getStatus() != LessonStatus.RECRUITING) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+		}
+
+		if (lesson.getOpenRun()) {
+			LessonParticipant participant = LessonParticipant.builder()
+				.lesson(lesson)
+				.user(user)
+				.build();
+			lessonParticipantRepository.save(participant);
+			lesson.incrementParticipantCount();
+
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.APPROVED,
+				participant.getJoinAt()
+			);
+		} else {
+			LessonApplication application = LessonApplication.builder()
+				.lesson(lesson)
+				.user(user)
+				.build();
+			lessonApplicationRepository.save(application);
+
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.PENDING,
+				application.getCreatedAt()
+			);
+		}
+	}
+
+
+	@Transactional
 	public void cancelLessonApplication(Long lessonId, Long userId) {
 		// 레슨 조회
 		Lesson lesson = adminLessonService.findLessonById(lessonId);
@@ -254,5 +305,25 @@ public class StudentLessonService {
 		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		return LessonSimpleMapper.toLessonSimpleDto(lesson);
+	}
+
+	@Transactional
+	public void cancelPayment(Long lessonId, Long userId) {
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
+		lesson.decrementParticipantCount();
+		lessonRepository.save(lesson);
+
+		LessonParticipant lessonParticipant = lessonParticipantRepository.findByLessonIdAndUserId(lessonId, userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT));
+
+		lessonParticipantRepository.delete(lessonParticipant);
+	}
+
+	@Transactional
+	public void checkValidLessonParticipant(Lesson lesson, User user) {
+		boolean ifExists = lessonParticipantRepository.existsByLessonIdAndUserId(lesson.getId(), user.getId());
+		if (!ifExists) {
+			throw new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT);
+		}
 	}
 }

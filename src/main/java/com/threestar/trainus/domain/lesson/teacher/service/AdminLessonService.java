@@ -1,0 +1,515 @@
+package com.threestar.trainus.domain.lesson.teacher.service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.threestar.trainus.domain.lesson.teacher.dto.ApplicationProcessResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.CreatedLessonListResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.LessonApplicationListResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.LessonCreateRequestDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.LessonResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.LessonUpdateRequestDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.LessonUpdateResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.dto.ParticipantListResponseDto;
+import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationAction;
+import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationStatus;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonApplication;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonImage;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
+import com.threestar.trainus.domain.lesson.teacher.mapper.CreatedLessonMapper;
+import com.threestar.trainus.domain.lesson.teacher.mapper.LessonApplicationMapper;
+import com.threestar.trainus.domain.lesson.teacher.mapper.LessonMapper;
+import com.threestar.trainus.domain.lesson.teacher.mapper.LessonParticipantMapper;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonApplicationRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonImageRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
+import com.threestar.trainus.domain.user.entity.User;
+import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.domain.user.service.UserService;
+import com.threestar.trainus.global.exception.domain.ErrorCode;
+import com.threestar.trainus.global.exception.handler.BusinessException;
+
+import lombok.RequiredArgsConstructor;
+
+/**
+ * 강사용(레슨 생성한 사람)만 처리하는 서비스입니다.
+ */
+@Service
+@RequiredArgsConstructor
+public class AdminLessonService {
+
+	private final LessonRepository lessonRepository;           // 레슨 DB 접근
+	private final LessonImageRepository lessonImageRepository; // 레슨 이미지 DB 접근
+	private final UserRepository userRepository;
+	private final LessonApplicationRepository lessonApplicationRepository;
+	private final UserService userService;
+
+	// 새로운 레슨을 생성하는 메서드
+	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
+		// User 조회
+		User user = userService.getUserById(userId);
+
+		validateLessonTimes(requestDto.startAt(), requestDto.endAt());
+
+		// 최대 참가 인원 검증 -> 100명이하로 제한
+		if (requestDto.maxParticipants() > 100) {
+			throw new BusinessException(ErrorCode.LESSON_MAX_PARTICIPANTS_EXCEEDED);
+		}
+
+		// 동일 레슨 중복 검증(동일한 강사가 같은 이름+시간으로 레슨 생성 차단)
+		boolean isDuplicate = lessonRepository.existsDuplicateLesson(
+			userId,
+			requestDto.lessonName(),
+			requestDto.startAt()
+		);
+		if (isDuplicate) {
+			throw new BusinessException(ErrorCode.DUPLICATE_LESSON);
+		}
+
+		// 시간 겹침 검증(같은 강사가 동일 시간대에 여러 레슨 생성 차단)
+		boolean hasConflict = lessonRepository.hasTimeConflictLesson(
+			userId,
+			requestDto.startAt(),
+			requestDto.endAt()
+		);
+		if (hasConflict) {
+			throw new BusinessException(ErrorCode.LESSON_TIME_OVERLAP);
+		}
+
+		// User 엔티티로 레슨 생성
+		Lesson lesson = LessonMapper.toEntity(requestDto, user);
+
+		// 레슨 저장
+		Lesson savedLesson = lessonRepository.save(lesson);
+
+		// 레슨 이미지 저장
+		List<LessonImage> savedImages = saveLessonImages(savedLesson, requestDto.lessonImages());
+
+		// 응답 DTO 반환
+		return LessonMapper.toResponseDto(savedLesson, savedImages);
+	}
+
+	// 레슨 이미지들을 db에 저장하는 메서드
+	private List<LessonImage> saveLessonImages(Lesson lesson, List<String> imageUrls) {
+		// 이미지가 없는 경우 빈 리스트 반환
+		if (imageUrls == null || imageUrls.isEmpty()) {
+			return List.of();
+		}
+
+		List<LessonImage> lessonImages = imageUrls.stream()
+			.map(url -> LessonImage.builder()
+				.lesson(lesson)
+				.imageUrl(url)
+				.build())
+			.toList();
+
+		return lessonImageRepository.saveAll(lessonImages);
+
+	}
+
+	//레슨 삭제
+	@Transactional
+	public void deleteLesson(Long lessonId, Long userId) {
+		// User 존재 확인
+		User user = userService.getUserById(userId);
+		//레슨 조회
+		Lesson lesson = findLessonById(lessonId);
+
+		//권한 확인 -> 레슨을 올린사람만 삭제가 가능하도록
+		validateIsYourLesson(lesson, userId);
+
+		//이미 삭제된 레슨인지 확인
+		validateLessonNotDeleted(lesson);
+
+		lessonEditable(lesson);
+
+		lesson.lessonDelete();
+		lessonRepository.save(lesson);
+	}
+
+	//레슨 신청자 목록 조회
+	public LessonApplicationListResponseDto getLessonApplications(
+		Long lessonId, int page, int limit, String status, Long userId) {
+
+		// 레슨 존재 및 권한 확인
+		Lesson lesson = validateLessonAccess(lessonId, userId);
+
+		// 상태 파라미터 검증
+		ApplicationStatus applicationStatus = validateStatus(status);
+
+		// 페이징 설정
+		Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
+
+		// 신청자 목록 조회
+		Page<LessonApplication> applicationPage;
+		if ("ALL".equals(status)) {
+			applicationPage = lessonApplicationRepository.findByLesson(lesson, pageable);
+		} else {
+			applicationPage = lessonApplicationRepository.findByLessonAndStatus(lesson, applicationStatus, pageable);
+		}
+
+		//dto변환
+		return LessonApplicationMapper.toListResponseDto(
+			applicationPage.getContent(),
+			applicationPage.getTotalElements()
+		);
+	}
+
+	//레슨 신청 승인/거절 처리
+	@Transactional
+	public ApplicationProcessResponseDto processLessonApplication(
+		Long lessonApplicationId, ApplicationAction action, Long userId) {
+
+		// 신청이 있는지 확인
+		LessonApplication application = lessonApplicationRepository.findById(lessonApplicationId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
+
+		// 강사 권한 확인 -> 해당 레슨의 강사인지 확인
+		Lesson lesson = application.getLesson();
+		validateIsYourLesson(lesson, userId);
+
+		// 이미 처리된 신청인지 확인(대기중아니라면 -> 이미 승인이나 거절처리 된거니까)
+		if (!application.getStatus().equals(ApplicationStatus.PENDING)) {
+			throw new BusinessException(ErrorCode.LESSON_APPLICATION_ALREADY_PROCESSED);
+		}
+
+		//승인/거절 처리
+		if (action == ApplicationAction.APPROVED) {
+			validateCapacity(lesson);
+			application.approve();
+			// 승인 시 레슨 참가자수 증가
+			lesson.incrementParticipantCount();
+		} else if (action == ApplicationAction.DENIED) {
+			application.deny();
+		}
+
+		LessonApplication savedApplication = lessonApplicationRepository.save(application);
+
+		// 응답 DTO 생성
+		return ApplicationProcessResponseDto.builder()
+			.lessonApplicationId(savedApplication.getId())
+			.userId(savedApplication.getUser().getId())
+			.status(savedApplication.getStatus())
+			.processedAt(savedApplication.getUpdatedAt())
+			.build();
+	}
+
+	//레슨 수정
+	@Transactional
+	public LessonUpdateResponseDto updateLesson(Long lessonId, LessonUpdateRequestDto requestDto, Long userId) {
+		// 레슨 존재 및 권한 확인
+		Lesson lesson = validateLessonAccess(lessonId, userId);
+
+		// 레슨이 모집중 상태인지 확인
+		if (lesson.getStatus() != LessonStatus.RECRUITING) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_EDITABLE);
+		}
+
+		// 현재 참가자 수 확인
+		int currentParticipants = lesson.getParticipantCount();
+		boolean hasParticipants = currentParticipants > 0;
+
+		// 수정할 필드가 있는지 확인
+		if (!requestDto.hasBasicInfoChanges() && !requestDto.hasRestrictedChanges()
+			&& requestDto.maxParticipants() == null) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
+		}
+
+		// 기본 정보 수정
+		updateBasicInfo(lesson, requestDto);
+
+		// 최대 참가 인원 수정 -> 참가자 있을 때는 증가만 가능
+		if (requestDto.maxParticipants() != null) {
+			lesson.updateMaxParticipants(requestDto.maxParticipants(), hasParticipants);
+		}
+
+		// 제한된 필드 수정 -> 참가자 없을 때만 가능
+		if (requestDto.hasRestrictedChanges()) {
+			if (hasParticipants) {
+				throw new BusinessException(ErrorCode.LESSON_PARTICIPANTS_EXIST_RESTRICTION);
+			}
+			updateRestrictedFields(lesson, requestDto, userId, lessonId);
+		}
+
+		Lesson savedLesson = lessonRepository.save(lesson);
+
+		List<LessonImage> updatedImages = updateLessonImagesIfNeeded(savedLesson, requestDto.lessonImages());
+
+		return LessonMapper.toUpdateResponseDto(savedLesson, updatedImages);
+	}
+
+	//레슨 참가자 목록 조회(승인된 사람들만 있음)
+	public ParticipantListResponseDto getLessonParticipants(
+		Long lessonId, int page, int limit, Long userId) {
+
+		// 레슨 존재 및 권한 확인
+		Lesson lesson = validateLessonAccess(lessonId, userId);
+
+		// 페이징 설정
+		Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").ascending());
+
+		// 승인처리(APPROVED)된 -> 레슨 신청자들만 조회
+		Page<LessonApplication> participantPage = lessonApplicationRepository
+			.findByLessonAndStatus(lesson, ApplicationStatus.APPROVED, pageable);
+
+		// dto 변환
+		return LessonParticipantMapper.toParticipantsResponseDto(
+			participantPage.getContent(),
+			participantPage.getTotalElements()
+		);
+	}
+
+	//강사가 개설한 레슨 목록 조회
+	public CreatedLessonListResponseDto getCreatedLessons(
+		Long userId, int page, int limit, String status) {
+
+		// User 존재 확인
+		User user = userService.getUserById(userId);
+
+		// 페이징 설정
+		Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
+
+		// 레슨 상태에 따른 조회
+		Page<Lesson> lessonPage;
+		if (status != null && !status.isEmpty()) {
+			// 레슨 상태에 따라서 필터링
+			LessonStatus lessonStatus = validateLessonStatus(status);
+			lessonPage = lessonRepository.findByLessonLeaderAndStatusAndDeletedAtIsNull(userId, lessonStatus, pageable);
+		} else {
+			// 전체조회
+			lessonPage = lessonRepository.findByLessonLeaderAndDeletedAtIsNull(userId, pageable);
+		}
+
+		// dto 변환
+		return CreatedLessonMapper.toCreatedLessonListResponseDto(
+			lessonPage.getContent(),
+			lessonPage.getTotalElements()
+		);
+	}
+
+	//시간 검증: 시작시간이 종료시간보다 앞에 있는지, 시작시간이 과거가 아닌지
+	private void validateLessonTimes(LocalDateTime startAt, LocalDateTime endAt) {
+		LocalDateTime now = LocalDateTime.now();
+
+		// 시작시간이 현재시간보다 과거인지 확인
+		if (startAt.isBefore(now)) {
+			throw new BusinessException(ErrorCode.LESSON_START_TIME_INVALID);
+		}
+
+		// 종료시간이 시작시간보다 이전인지 확인
+		if (endAt.isBefore(startAt) || endAt.isEqual(startAt)) {
+			throw new BusinessException(ErrorCode.LESSON_END_TIME_BEFORE_START);
+		}
+	}
+
+	//정원 초과 검증-> 승인 시 maxParticipants 초과하지 않는지
+	private void validateCapacity(Lesson lesson) {
+		if (lesson.getParticipantCount() >= lesson.getMaxParticipants()) {
+			throw new BusinessException(ErrorCode.LESSON_MAX_PARTICIPANTS_EXCEEDED);
+		}
+	}
+
+	//레슨 상태 검증: 이미 시작되거나 완료된 레슨 수정/삭제 방지
+	private void lessonEditable(Lesson lesson) {
+		// 진행중이거나 완료된 레슨은 수정/삭제 불가
+		if (lesson.getStatus() == LessonStatus.IN_PROGRESS || lesson.getStatus() == LessonStatus.COMPLETED) {
+			throw new BusinessException(ErrorCode.INVALID_LESSON_DATE);
+		}
+
+		// 레슨 시작 시간이 지났는지도 확인
+		if (lesson.getStartAt().isBefore(LocalDateTime.now())) {
+			throw new BusinessException(ErrorCode.LESSON_START_TIME_INVALID);
+		}
+	}
+
+	//레슨 조회 및 검증
+	public Lesson findLessonById(Long lessonId) {
+		return lessonRepository.findById(lessonId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+	}
+
+	public Lesson findLessonByIdWithLock(Long lessonId) {
+		return lessonRepository.findByIdWithLock(lessonId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_NOT_FOUND));
+	}
+	//레슨 application조회 및 검증
+
+	public LessonApplication findApplicationById(Long applicationId) {
+		return lessonApplicationRepository.findById(applicationId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
+	}
+	//강사 권한 검증
+
+	public void validateIsYourLesson(Lesson lesson, Long userId) {
+		if (!lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_ACCESS_FORBIDDEN);
+		}
+	}
+	//레슨 삭제 여부 검증
+
+	public void validateLessonNotDeleted(Lesson lesson) {
+		if (lesson.isDeleted()) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_FOUND);
+		}
+	}
+	//레슨 접근 권한 검증 -> 올린사람(강사)가 맞는지 체크
+
+	private Lesson validateLessonAccess(Long lessonId, Long userId) {
+		// User 존재 확인
+		User user = userService.getUserById(userId);
+
+		// 레슨 존재하는지 확인
+		Lesson lesson = findLessonById(lessonId);
+
+		// 삭제된 레슨 확인
+		validateLessonNotDeleted(lesson);
+
+		// 강사 본인 확인
+		validateIsYourLesson(lesson, userId);
+
+		return lesson;
+	}
+	//레슨 상태 검증
+
+	private ApplicationStatus validateStatus(String status) {
+		if ("ALL".equals(status)) {
+			return null; // ALL인 경우 null 반환해서 필터링 안함
+		}
+
+		try {
+			return ApplicationStatus.valueOf(status);
+		} catch (IllegalArgumentException e) {
+			throw new BusinessException(ErrorCode.INVALID_APPLICATION_STATUS);
+		}
+	}
+	//레슨 신청 상태 검증
+
+	private LessonStatus validateLessonStatus(String status) {
+		try {
+			return LessonStatus.valueOf(status);
+		} catch (IllegalArgumentException e) {
+			throw new BusinessException(ErrorCode.INVALID_LESSON_STATUS);
+		}
+	}
+	//참가자가 있을때 수정 검증
+
+	private void validatePeopleInLessonUpdate(Lesson lesson, LessonUpdateRequestDto requestDto) {
+		// 카테고리 변경 불가
+		if (!lesson.getCategory().equals(requestDto.category())) {
+			throw new BusinessException(ErrorCode.LESSON_PARTICIPANTS_EXIST_RESTRICTION);
+		}
+
+		// 가격 변경 불가
+		if (!lesson.getPrice().equals(requestDto.price())) {
+			throw new BusinessException(ErrorCode.LESSON_PARTICIPANTS_EXIST_RESTRICTION);
+		}
+
+		// 참여방식 변경 불가
+		if (!lesson.getOpenRun().equals(requestDto.openRun())) {
+			throw new BusinessException(ErrorCode.LESSON_PARTICIPANTS_EXIST_RESTRICTION);
+		}
+
+		// 레슨 시간 변경 불가
+		if (!lesson.getStartAt().equals(requestDto.startAt()) || !lesson.getEndAt().equals(requestDto.endAt())) {
+			throw new BusinessException(ErrorCode.LESSON_PARTICIPANTS_EXIST_RESTRICTION);
+		}
+
+		// 지역 정보 변경 불가
+		if (!lesson.getCity().equals(requestDto.city()) || !lesson.getDistrict().equals(requestDto.district())
+			|| !lesson.getDong().equals(requestDto.dong())) {
+			throw new BusinessException(ErrorCode.LESSON_PARTICIPANTS_EXIST_RESTRICTION);
+		}
+
+		// 상세주소 변경 불가
+		if (!lesson.getAddressDetail().equals(requestDto.addressDetail())) {
+			throw new BusinessException(ErrorCode.LESSON_PARTICIPANTS_EXIST_RESTRICTION);
+		}
+	}
+	//레슨 이미지 업데이트
+
+	private List<LessonImage> updateLessonImages(Lesson lesson, List<String> imageUrls) {
+		// 기존 이미지 삭제
+		List<LessonImage> existingImages = lessonImageRepository.findByLesson(lesson);
+		lessonImageRepository.deleteAll(existingImages);
+
+		// 새 이미지 저장
+		if (imageUrls == null || imageUrls.isEmpty()) {
+			return List.of();
+		}
+
+		List<LessonImage> newImages = imageUrls.stream()
+			.map(url -> LessonImage.builder()
+				.lesson(lesson)
+				.imageUrl(url)
+				.build())
+			.toList();
+
+		return lessonImageRepository.saveAll(newImages);
+	}
+	//기본 정보 수정
+
+	private void updateBasicInfo(Lesson lesson, LessonUpdateRequestDto requestDto) {
+		lesson.updateLessonName(requestDto.lessonName());
+		lesson.updateDescription(requestDto.description());
+	}
+	//제한되어 있는 필드 수정
+
+	private void updateRestrictedFields(Lesson lesson, LessonUpdateRequestDto requestDto, Long userId, Long lessonId) {
+		// 시간 관련 검증
+		if (requestDto.hasTimeChanges()) {
+			LocalDateTime newStartAt = requestDto.startAt() != null ? requestDto.startAt() : lesson.getStartAt();
+			LocalDateTime newEndAt = requestDto.endAt() != null ? requestDto.endAt() : lesson.getEndAt();
+
+			// 시간 검증
+			validateLessonTimes(newStartAt, newEndAt);
+
+			// 시간 겹침 검증
+			boolean hasConflict = lessonRepository.hasTimeConflictForUpdate(
+				userId, newStartAt, newEndAt, lessonId
+			);
+			if (hasConflict) {
+				throw new BusinessException(ErrorCode.LESSON_TIME_OVERLAP);
+			}
+		}
+
+		lesson.updateCategory(requestDto.category());
+		lesson.updatePrice(requestDto.price());
+		lesson.updateLessonTime(requestDto.startAt(), requestDto.endAt());
+		lesson.updateOpenTime(requestDto.openTime());
+		lesson.updateOpenRun(requestDto.openRun());
+		lesson.updateLocation(requestDto.city(), requestDto.district(), requestDto.dong());
+		lesson.updateAddressDetail(requestDto.addressDetail());
+	}
+	//레슨 이미지 수정
+
+	private List<LessonImage> updateLessonImagesIfNeeded(Lesson lesson, List<String> newImageUrls) {
+		if (newImageUrls != null) {
+			// 기존 이미지 삭제
+			List<LessonImage> existingImages = lessonImageRepository.findByLesson(lesson);
+			lessonImageRepository.deleteAll(existingImages);
+
+			// 새 이미지 저장
+			if (!newImageUrls.isEmpty()) {
+				List<LessonImage> newImages = newImageUrls.stream()
+					.map(url -> LessonImage.builder()
+						.lesson(lesson)
+						.imageUrl(url)
+						.build())
+					.toList();
+				return lessonImageRepository.saveAll(newImages);
+			}
+			return List.of();
+		} else {
+			// 이미지 수정 요청 없으면 -> 기존 이미지 유지
+			return lessonImageRepository.findByLesson(lesson);
+		}
+	}
+}

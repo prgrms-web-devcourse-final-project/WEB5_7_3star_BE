@@ -3,8 +3,8 @@ package com.threestar.trainus.domain.lesson.student.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.threestar.trainus.domain.lesson.admin.entity.Category;
-import com.threestar.trainus.domain.lesson.admin.entity.LessonStatus;
+import com.threestar.trainus.domain.lesson.teacher.entity.Category;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
 
 import lombok.Builder;
 
