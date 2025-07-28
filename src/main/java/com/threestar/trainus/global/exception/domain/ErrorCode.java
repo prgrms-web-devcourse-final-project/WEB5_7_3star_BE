@@ -77,6 +77,7 @@ public enum ErrorCode {
 	LESSON_DELETE_STATUS_INVALID(HttpStatus.BAD_REQUEST, "모집중인 레슨만 삭제할 수 있습니다."),
 	LESSON_DELETE_HAS_PARTICIPANTS(HttpStatus.BAD_REQUEST, "참가자가 있는 레슨은 삭제할 수 없습니다."),
 	LESSON_TIME_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "레슨 시작 12시간 전이므로 수정/삭제할 수 없습니다."),
+	LESSON_CREATION_TOO_FREQUENT(HttpStatus.TOO_MANY_REQUESTS, "레슨 생성은 1분에 1번만 가능합니다. 잠시 후 다시 시도해주세요."),
 
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),
