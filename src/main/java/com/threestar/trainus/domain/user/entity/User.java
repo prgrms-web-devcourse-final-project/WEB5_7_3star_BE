@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.profile.entity.Profile;
@@ -32,6 +34,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @AllArgsConstructor
+@SQLRestriction("deleted_at IS NULL") //삭제되지 않은 데이터만 기본적으로 조회하는 필터
 public class User extends BaseDateEntity {
 
 	@Id
@@ -64,5 +67,9 @@ public class User extends BaseDateEntity {
 
 	public void updatePassword(String newPassword) {
 		this.password = newPassword;
+	}
+
+	public void withdraw() {
+		this.deletedAt = LocalDateTime.now();
 	}
 }

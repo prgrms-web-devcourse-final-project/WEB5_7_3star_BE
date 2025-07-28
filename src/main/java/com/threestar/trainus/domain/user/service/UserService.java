@@ -14,7 +14,6 @@ import com.threestar.trainus.domain.user.dto.LoginResponseDto;
 import com.threestar.trainus.domain.user.dto.PasswordUpdateDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
-import com.threestar.trainus.domain.user.dto.UserInfoResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
 import com.threestar.trainus.domain.user.mapper.UserMapper;
@@ -138,6 +137,13 @@ public class UserService {
 		user.updatePassword(encordedNewPassword);
 
 		userRepository.save(user);
+	}
+
+	@Transactional
+	public void withdraw(Long userId) {
+		User user = getUserById(userId);
+
+		user.withdraw();
 	}
 
 	@Transactional(readOnly = true)
