@@ -94,9 +94,7 @@ class CommentControllerTest {
 
 	@Test
 	void create_comment() throws Exception {
-		CommentCreateRequestDto request = new CommentCreateRequestDto();
-		request.setParentCommentId(null);
-		request.setContent("테스트 부모 댓글");
+		CommentCreateRequestDto request = new CommentCreateRequestDto("테스트 부모 댓글", null);
 
 		MockHttpSession session = new MockHttpSession();
 		session.setAttribute("LOGIN_USER", userId);
@@ -155,9 +153,7 @@ class CommentControllerTest {
 	}
 
 	private Long createComment(Long parentId, String content, Long lessonId, Long userId) throws Exception {
-		CommentCreateRequestDto request = new CommentCreateRequestDto();
-		request.setParentCommentId(parentId);
-		request.setContent(content);
+		CommentCreateRequestDto request = new CommentCreateRequestDto(content, parentId);
 
 		MockHttpSession session = new MockHttpSession();
 		session.setAttribute("LOGIN_USER", userId);

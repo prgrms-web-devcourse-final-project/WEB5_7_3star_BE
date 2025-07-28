@@ -124,10 +124,7 @@ class ReviewControllerTest {
 			.rating(0.0D)
 			.build());
 
-		ReviewCreateRequestDto request = new ReviewCreateRequestDto();
-		request.setContent("테스트 리뷰1");
-		request.setRating(3.5D);
-		request.setReviewImage("https://example.com/image.png");
+		ReviewCreateRequestDto request = new ReviewCreateRequestDto("테스트 리뷰1", 3.5D,"https://example.com/image.png" );
 
 		MockHttpSession session = new MockHttpSession();
 		session.setAttribute("LOGIN_USER", reviewer1.getId());
@@ -155,10 +152,7 @@ class ReviewControllerTest {
 		Assertions.assertEquals(1, profileMetadata.getReviewCount());
 		Assertions.assertEquals(3.5D, profileMetadata.getRating());
 
-		ReviewCreateRequestDto request2 = new ReviewCreateRequestDto();
-		request2.setContent("테스트 리뷰2");
-		request2.setRating(4.5D);
-		request2.setReviewImage("https://example.com/image.png");
+		ReviewCreateRequestDto request2 = new ReviewCreateRequestDto("테스트 리뷰2", 4.5D, "https://example.com/image.png");
 
 		session.setAttribute("LOGIN_USER", reviewer2.getId());
 
