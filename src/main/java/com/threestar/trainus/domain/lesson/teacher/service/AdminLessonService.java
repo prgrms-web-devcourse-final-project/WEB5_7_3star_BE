@@ -145,8 +145,8 @@ public class AdminLessonService {
 		Pageable pageable = createPageable(page, limit, "createdAt", true);
 
 		Page<LessonApplication> participantPage = lessonApplicationRepository
-			.findByLessonAndStatus(lesson, ApplicationStatus.APPROVED, pageable);
-
+			.findApprovedParticipantsWithUserAndProfile(lesson, pageable);
+		
 		return LessonParticipantMapper.toParticipantsResponseDto(
 			participantPage.getContent(),
 			participantPage.getTotalElements()
@@ -393,11 +393,12 @@ public class AdminLessonService {
 	//신청 페이지 조회
 	private Page<LessonApplication> getApplicationPage(Lesson lesson, String status,
 		ApplicationStatus applicationStatus, Pageable pageable) {
-	
+
 		if ("ALL".equals(status)) {
-			return lessonApplicationRepository.findByLesson(lesson, pageable);
+			return lessonApplicationRepository.findByLessonWithUserAndProfile(lesson, pageable);
 		} else {
-			return lessonApplicationRepository.findByLessonAndStatus(lesson, applicationStatus, pageable);
+			return lessonApplicationRepository.findByLessonAndStatusWithUserAndProfile(
+				lesson, applicationStatus, pageable);
 		}
 	}
 
@@ -410,8 +411,8 @@ public class AdminLessonService {
 			return lessonRepository.findByLessonLeaderAndDeletedAtIsNull(userId, pageable);
 		}
 	}
-  
-//레슨 이미지 저장
+
+	//레슨 이미지 저장
 	private List<LessonImage> saveLessonImages(Lesson lesson, List<String> imageUrls) {
 		if (imageUrls == null || imageUrls.isEmpty()) {
 			return List.of();
