@@ -43,7 +43,8 @@ public class UserMapper {
 	public static UserInfoResponseDto toUserInfoResponseDto(User user) {
 		return new UserInfoResponseDto(
 			user.getId(),
-			user.getNickname()
+			user.getNickname(),
+			user.getEmail()
 		);
 	}
 }
