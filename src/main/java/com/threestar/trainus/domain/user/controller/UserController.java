@@ -114,11 +114,12 @@ public class UserController {
 	}
 
 	@DeleteMapping("/withdraw")
-	@Operation(summary = "회원탈퇴 api")
+	@Operation(summary = "회원탈퇴 api", description = "회원탈퇴 처리 및 관련 데이터 정리")
 	public ResponseEntity<BaseResponse<Void>> withdraw(
-		@LoginUser Long loginUserId
+		@LoginUser Long loginUserId,
+		HttpSession session
 	) {
-		userService.withdraw(loginUserId);
+		userService.withdraw(loginUserId, session);
 		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}
 }

@@ -36,14 +36,17 @@ public class UserMapper {
 		return new LoginResponseDto(
 			user.getId(),
 			user.getEmail(),
-			user.getNickname()
+			user.getNickname(),
+			user.getRole()
 		);
 	}
 
 	public static UserInfoResponseDto toUserInfoResponseDto(User user) {
 		return new UserInfoResponseDto(
 			user.getId(),
-			user.getNickname()
+			user.getNickname(),
+			user.getEmail(),
+			user.getRole()
 		);
 	}
 }
