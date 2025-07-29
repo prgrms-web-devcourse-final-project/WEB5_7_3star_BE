@@ -1,6 +1,7 @@
 package com.threestar.trainus.domain.lesson.teacher.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -58,14 +59,60 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("excludeLessonId") Long excludeLessonId
 	);
 
-	// 강사가 개설한 레슨 목록 조회 (페이징)
+	// 강사가 개설한 레슨 전체 목록 상태에 따라 필터링해서 조회(모집중인것만...이런식으로)
 	Page<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader, Pageable pageable);
 
-	// 강사가 개설한 레슨 목록 조회 (페이징+필터링)
+	// 강사가 개설한 레슨 전체 목록 조회
 	Page<Lesson> findByLessonLeaderAndStatusAndDeletedAtIsNull(Long lessonLeader, LessonStatus status,
 		Pageable pageable);
 
-	// 레슨 검색
+	// 시작할 레슨을 찾는 메서드
+	// 모집중이거나 모집완료 상태일 때, 시작 시간이 도달한 레슨
+	@Query("""
+		SELECT l FROM Lesson l
+		WHERE l.status IN (
+			com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus.RECRUITING,
+			com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus.RECRUITMENT_COMPLETED
+		)
+		AND l.startAt <= :now
+		AND l.deletedAt IS NULL
+		""")
+	List<Lesson> findLessonsToStart(@Param("now") LocalDateTime now);
+
+	//완료할 레슨을 찾는 메서드
+	//현재는 진행중 -> 종료시간이 지나면 종료중으로 바뀔 레슨
+	@Query("""
+		SELECT l FROM Lesson l
+		WHERE l.status = com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus.IN_PROGRESS
+		AND l.endAt <= :now
+		AND l.deletedAt IS NULL
+		""")
+	List<Lesson> findLessonsToComplete(@Param("now") LocalDateTime now);
+
+	//레슨ID로 레슨 조회 (비관적 락 적용)
+	@Lock(LockModeType.PESSIMISTIC_WRITE) // 비관적 락 적용
+	@Query("SELECT l FROM Lesson l WHERE l.id = :lessonId")
+	Optional<Lesson> findByIdWithLock(@Param("lessonId") Long lessonId);
+
+	@Query("""
+		SELECT l FROM Lesson l
+		WHERE l.city = :city
+		AND l.district = :district
+		AND l.dong = :dong
+		AND (:ri IS NULL OR l.ri = :ri)
+		AND (:category IS NULL OR l.category = :category)
+		""")
+	Page<Lesson> findByLocation(
+		@Param("category") Category category,
+		@Param("city") String city,
+		@Param("district") String district,
+		@Param("dong") String dong,
+		@Param("ri") String ri,
+		Pageable pageable
+	);
+
+	// 주소로만 검색
+	// LIKE 검색
 	@Query("""
 		SELECT l FROM Lesson l
 		WHERE
@@ -78,16 +125,45 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 				LOWER(l.lessonName) LIKE LOWER(CONCAT('%', :search, '%'))
 			)
 		""")
-	Page<Lesson> findBySearchConditions(
+	Page<Lesson> findByLocationAndSearchWithLike(
 		@Param("category") Category category,
 		@Param("city") String city,
 		@Param("district") String district,
 		@Param("dong") String dong,
+		@Param("ri") String ri,
 		@Param("search") String search,
 		Pageable pageable
 	);
 
-	@Lock(LockModeType.PESSIMISTIC_WRITE) // 비관적 락 적용
-	@Query("SELECT l FROM Lesson l WHERE l.id = :lessonId")
-	Optional<Lesson> findByIdWithLock(@Param("lessonId") Long lessonId);
+	// Full-Text 검색 최적화 (서브쿼리 JOIN 방식)
+	@Query(
+		value = """
+				SELECT l.* FROM lessons l
+				JOIN (
+					SELECT id FROM lessons
+					WHERE MATCH(lesson_name) AGAINST(:search IN BOOLEAN MODE)
+				) AS ft ON l.id = ft.id
+				WHERE l.city = :city AND l.district = :district AND l.dong = :dong AND (:ri IS NULL OR l.ri = :ri) AND (:category IS NULL OR l.category = :category)
+				ORDER BY l.created_at DESC
+			""",
+		countQuery = """
+				SELECT count(l.id) FROM lessons l
+				JOIN (
+					SELECT id FROM lessons
+					WHERE MATCH(lesson_name) AGAINST(:search IN BOOLEAN MODE)
+				) AS ft ON l.id = ft.id
+				WHERE l.city = :city AND l.district = :district AND l.dong = :dong AND (:ri IS NULL OR l.ri = :ri) AND (:category IS NULL OR l.category = :category)
+				ORDER BY l.created_at DESC
+			""",
+		nativeQuery = true
+	)
+	Page<Lesson> findByLocationAndFullTextSearchOptimized(
+		@Param("category") Category category,
+		@Param("city") String city,
+		@Param("district") String district,
+		@Param("dong") String dong,
+		@Param("ri") String ri,
+		@Param("search") String search,
+		Pageable pageable
+	);
 }

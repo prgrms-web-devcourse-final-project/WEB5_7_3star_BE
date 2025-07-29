@@ -32,6 +32,7 @@ public record LessonDetailResponseDto(
 	String city,
 	String district,
 	String dong,
+	String ri,
 	String addressDetail,
 	LocalDateTime createdAt,
 	LocalDateTime updatedAt,

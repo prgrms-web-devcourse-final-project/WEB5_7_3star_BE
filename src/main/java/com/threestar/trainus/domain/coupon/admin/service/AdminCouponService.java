@@ -123,13 +123,13 @@ public class AdminCouponService {
 			throw new BusinessException(ErrorCode.INVALID_REQUEST_DATA);
 		}
 
-		// todo : 발급된 쿠폰 수 조회
+		// 발급된 쿠폰 수 조회
 		Long issuedCount = userCouponRepository.countByCouponId(couponId);
 
-		// todo : 삭제 가능 여부 검증 -> 지금은 필요없는데 일단은 만들어둠!
+		// 삭제 가능 여부 검증 (발급된 쿠폰이 있으면 예외 발생)
 		validateCouponDeletion(coupon, issuedCount);
 
-		// 쿠폰 삭제 처리
+		// 쿠폰 삭제 처리(아무도 발급받지 않은 쿠폰만)
 		coupon.markAsDeleted();
 		Coupon deletedCoupon = couponRepository.save(coupon);
 
@@ -338,7 +338,10 @@ public class AdminCouponService {
 	}
 
 	private void validateCouponDeletion(Coupon coupon, Long issuedCount) {
-		//todo: 일단은 다 삭제가능하게 설정 해놨는데, 나중에 결제 붙으면여기에 여러 검증들을 추가할 예정
+		// 발급된 쿠폰이 하나라도 있으면 삭제 불가
+		if (issuedCount > 0) {
+			throw new BusinessException(ErrorCode.COUPON_CANNOT_DELETE_ISSUED);
+		}
 	}
 
 	//쿠폰id로 쿠폰을 조회하는 공통 메서드

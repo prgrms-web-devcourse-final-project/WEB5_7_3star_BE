@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,14 +26,13 @@ import com.threestar.trainus.domain.coupon.admin.service.AdminCouponService;
 import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.global.annotation.LoginUser;
+import com.threestar.trainus.global.dto.PageRequestDto;
 import com.threestar.trainus.global.unit.BaseResponse;
 import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "관리자 쿠폰 API", description = "관리자 쿠폰 생성,수정 및 삭제 관련 API")
@@ -56,15 +56,18 @@ public class AdminCouponController {
 	@GetMapping
 	@Operation(summary = "쿠폰 목록 조회", description = "관리자가 쿠폰 목록을 조회")
 	public ResponseEntity<PagedResponse<CouponListWrapperDto>> getCoupons(
-		@RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.")
-		@Max(value = 1000, message = "페이지는 1000 이하여야 합니다.") int page,
-		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
-		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
 		@RequestParam(required = false) CouponStatus status,
 		@RequestParam(required = false) CouponCategory category,
 		@LoginUser Long loginUserId
 	) {
-		CouponListResponseDto couponsInfo = adminCouponService.getCoupons(page, limit, status, category, loginUserId);
+		CouponListResponseDto couponsInfo = adminCouponService.getCoupons(
+			pageRequestDto.getPage(),
+			pageRequestDto.getLimit(),
+			status,
+			category,
+			loginUserId
+		);
 
 		CouponListWrapperDto coupons = AdminCouponMapper.toCouponListWrapperDto(couponsInfo);
 

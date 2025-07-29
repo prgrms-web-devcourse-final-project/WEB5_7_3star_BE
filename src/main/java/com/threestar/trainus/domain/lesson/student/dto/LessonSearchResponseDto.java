@@ -25,6 +25,7 @@ public record LessonSearchResponseDto(
 	String city,
 	String district,
 	String dong,
+	String ri,
 	LocalDateTime createdAt,
 	List<String> lessonImages
 ) {
