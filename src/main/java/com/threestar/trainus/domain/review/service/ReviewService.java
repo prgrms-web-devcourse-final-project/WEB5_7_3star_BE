@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
 import com.threestar.trainus.domain.metadata.service.ProfileMetadataService;
 import com.threestar.trainus.domain.review.dto.ReviewCreateRequestDto;
@@ -16,6 +17,7 @@ import com.threestar.trainus.domain.review.entity.Review;
 import com.threestar.trainus.domain.review.mapper.ReviewMapper;
 import com.threestar.trainus.domain.review.repository.ReviewRepository;
 import com.threestar.trainus.domain.user.entity.User;
+import com.threestar.trainus.domain.user.repository.UserRepository;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
@@ -64,7 +66,7 @@ public class ReviewService {
 			.image(reviewRequestDto.reviewImage())
 			.build());
 
-		profileMetadataService.increaseReviewCountAndRating(lessonLeader.getId(), reviewRequestDto.rating());
+		// 메타데이터 업데이트는 스케줄러에서 배치 처리
 		return ReviewMapper.toReviewResponseDto(newReview);
 	}
 

@@ -41,13 +41,4 @@ public class ProfileMetadata {
 	@Column(nullable = false)
 	private Double rating;
 
-	public void increaseReviewCount() {
-		this.reviewCount++;
-	}
-
-	public double updateRating(double newRating) {
-		double totalRatingBefore = this.rating * (reviewCount - 1);
-		totalRatingBefore += newRating;
-		return totalRatingBefore / reviewCount;
-	}
 }

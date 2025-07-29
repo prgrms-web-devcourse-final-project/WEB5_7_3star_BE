@@ -26,9 +26,11 @@ public class SecurityConfig {
 		http
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/api/v1/users/**", "/api/lessons/test-auth", "/swagger-ui/**", "/v3/api-docs/**",
-					"/api/v1/profiles/**", "/api/v1/lessons/**", "/api/v1/comments/**", "/api/v1/reviews/**"
-					, "/api/v1/rankings/**", "/api/v1/payments/**", "/api/v1/admin/**")
+					"/api/v1/profiles/**", "/api/v1/lessons/**", "/api/v1/comments/**", "/api/v1/reviews/**",
+					"/api/v1/rankings/**", "/api/v1/payments/**")
 				.permitAll()
+				.requestMatchers("/api/v1/admin/**")
+				.hasRole("ADMIN")
 				.anyRequest()
 				.authenticated()
 			)
