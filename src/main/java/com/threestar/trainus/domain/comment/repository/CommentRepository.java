@@ -25,13 +25,13 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 			from (
 				select comment_id
 				from comments c
-				join users u on c.user_id = u.id and u.deleted_at IS NULL
+				join user u on c.user_id = u.id and u.deleted_at IS NULL
 				where lesson_id = :lessonId
 		  	    	order by parent_comment_id asc, comment_id asc
 		  	    	limit :limit offset :offset
 			) t
 			join comments c on t.comment_id = c.comment_id
-			join users u on c.user_id = u.id
+			join user u on c.user_id = u.id
 		""", nativeQuery = true)
 	List<CommentWithUserProjection> findAll(@Param("lessonId") Long lessonId, @Param("offset") int offset,
 		@Param("limit") int limit);
@@ -40,7 +40,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 		select count(*) from ( 
 		    select comment_id 
 		    from comments c
-		    join users u on c.user_id = u.id and u.deleted_at IS NULL
+		    join user u on c.user_id = u.id and u.deleted_at IS NULL
 		    where lesson_id = :lessonId 
 		    limit :limit
 		) t
@@ -51,7 +51,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 		select count(*) from (
 		    select comment_id 
 		    from comments c
-		    join users u on c.user_id = u.id and u.deleted_at IS NULL
+		    join user u on c.user_id = u.id and u.deleted_at IS NULL
 		    where lesson_id = :lessonId and parent_comment_id = :parentCommentId 
 		    limit :limit
 		) t
