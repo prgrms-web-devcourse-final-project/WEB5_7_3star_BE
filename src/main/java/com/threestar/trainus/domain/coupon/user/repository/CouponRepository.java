@@ -74,4 +74,36 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
 		AND c.deletedAt IS NULL
 		""")
 	List<Coupon> findActiveCouponsToDeactivate(@Param("now") LocalDateTime now);
+
+	@Query(value = """
+        SELECT *
+        FROM coupons c
+        WHERE (:status IS NULL OR c.status = :status)
+          AND (:category IS NULL OR c.category = :category)
+          AND c.deleted_at IS NULL
+        ORDER BY c.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """, nativeQuery = true)
+	List<Coupon> findCouponsWithFilters(
+		@Param("status") CouponStatus status,
+		@Param("category") CouponCategory category,
+		@Param("offset") int offset,
+		@Param("limit") int limit
+	);
+
+	@Query(value = """
+        SELECT COUNT(*) FROM (
+            SELECT c.id
+            FROM coupons c
+            WHERE (:status IS NULL OR c.status = :status)
+              AND (:category IS NULL OR c.category = :category)
+              AND c.deleted_at IS NULL
+            LIMIT :limit
+        ) t
+    """, nativeQuery = true)
+	int countCouponsWithFilters(
+		@Param("status") CouponStatus status,
+		@Param("category") CouponCategory category,
+		@Param("limit") int limit
+	);
 }
