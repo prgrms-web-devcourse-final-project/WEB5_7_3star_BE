@@ -27,11 +27,9 @@ public class ProfileMetadataScheduler {
 		try {
 			List<User> instructors = userRepository.findByRole(UserRole.USER);
 
-			int updatedCount = 0;
 			for (User instructor : instructors) {
 				try {
 					profileMetadataService.batchUpdateMetadata(instructor.getId());
-					updatedCount++;
 				} catch (Exception e) {
 					log.warn("강사 ID {}의 메타데이터 업데이트 실패: {}", instructor.getId(), e.getMessage());
 				}
