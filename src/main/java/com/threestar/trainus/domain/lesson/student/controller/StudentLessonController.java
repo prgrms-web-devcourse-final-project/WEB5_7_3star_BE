@@ -18,6 +18,7 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListWrapperDt
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListWrapperDto;
+import com.threestar.trainus.domain.lesson.student.entity.LessonSortType;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.global.annotation.LoginUser;
@@ -43,18 +44,21 @@ public class StudentLessonController {
 	private final StudentLessonService studentLessonService;
 
 	@GetMapping
-	@Operation(summary = "레슨 검색 api", description = "category(필수, Default: \"ALL\") / search(선택) / 그외 법정동 선택 필수")
+	@Operation(summary = "레슨 검색 api", description = "category(선택(null 가능)) / search(선택) "
+		+ "/ 정렬 선택 필수 / 법정동 선택 필수(리(ri) 단위 제외)")
 	public ResponseEntity<PagedResponse<LessonSearchListWrapperDto>> searchLessons(
 		@Valid @ModelAttribute PageRequestDto pageRequestDto,
-		@RequestParam Category category,
+		@RequestParam(required = false) Category category,
 		@RequestParam(required = false) String search,
 		@RequestParam String city,
 		@RequestParam String district,
-		@RequestParam String dong
+		@RequestParam String dong,
+		@RequestParam(required = false) String ri,
+		@RequestParam(required = false) LessonSortType sortBy
 	) {
 
 		LessonSearchListResponseDto serviceResponse = studentLessonService.searchLessons(
-			pageRequestDto.getPage(), pageRequestDto.getLimit(), category, search, city, district, dong
+			pageRequestDto.getPage(), pageRequestDto.getLimit(), category, search, city, district, dong, ri, sortBy
 		);
 		LessonSearchListWrapperDto response = new LessonSearchListWrapperDto(serviceResponse.lessons());
 

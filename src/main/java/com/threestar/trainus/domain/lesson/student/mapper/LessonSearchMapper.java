@@ -40,6 +40,7 @@ public class LessonSearchMapper {
 			lesson.getCity(),
 			lesson.getDistrict(),
 			lesson.getDong(),
+			lesson.getRi(),
 			lesson.getCreatedAt(),
 			lessonImageUrls
 		);
