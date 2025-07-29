@@ -47,7 +47,7 @@ public class ReviewMapper {
 
 	public static ReviewPageWrapperDto toReviewPageWrapperDto(ReviewPageResponseDto reviewPageResponseDto) {
 		return ReviewPageWrapperDto.builder()
-			.reviews(reviewPageResponseDto.getReviews())
+			.reviews(reviewPageResponseDto.reviews())
 			.build();
 	}
 }

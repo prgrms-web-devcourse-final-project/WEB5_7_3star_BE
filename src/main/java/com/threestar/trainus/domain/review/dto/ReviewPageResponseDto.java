@@ -3,12 +3,11 @@ package com.threestar.trainus.domain.review.dto;
 import java.util.List;
 
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
 @Builder
-public class ReviewPageResponseDto {
-	private Long userId;
-	private Integer count;
-	private List<ReviewViewResponseDto> reviews;
+public record ReviewPageResponseDto(
+	Long userId,
+	Integer count,
+	List<ReviewViewResponseDto> reviews
+) {
 }

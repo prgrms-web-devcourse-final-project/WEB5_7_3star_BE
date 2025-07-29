@@ -94,9 +94,7 @@ class CommentControllerTest {
 
 	@Test
 	void create_comment() throws Exception {
-		CommentCreateRequestDto request = new CommentCreateRequestDto();
-		request.setParentCommentId(null);
-		request.setContent("테스트 부모 댓글");
+		CommentCreateRequestDto request = new CommentCreateRequestDto("테스트 부모 댓글", null);
 
 		MockHttpSession session = new MockHttpSession();
 		session.setAttribute("LOGIN_USER", userId);
@@ -129,22 +127,31 @@ class CommentControllerTest {
 		// 부모 댓글 1 - user
 		Long parentId1 = createComment(null, "댓글1", lessonId, user.getId());
 		createComment(parentId1, "대댓글1", lessonId, user2.getId());
+		createComment(parentId1, "대댓글2", lessonId, user2.getId());
+		createComment(parentId1, "대댓글3", lessonId, user2.getId());
 
 		// 부모 댓글 2 - user2
 		Long parentId2 = createComment(null, "댓글2", lessonId, user2.getId());
 
 		createComment(parentId2, "대댓글2", lessonId, user3.getId());
 		createComment(parentId1, "대댓글2", lessonId, user3.getId());
+		createComment(parentId2, "대댓글3", lessonId, user3.getId());
+		createComment(parentId2, "대댓글4", lessonId, user3.getId());
+		createComment(parentId2, "대댓글5", lessonId, user3.getId());
 
 		// 부모 댓글 3 - user3
 		Long parentId3 = createComment(null, "댓글3", lessonId, user3.getId());
 		createComment(parentId3, "대댓글1", lessonId, user.getId());
 		createComment(parentId2, "대댓글1", lessonId, user.getId());
 		createComment(parentId3, "대댓글2", lessonId, user2.getId());
+		createComment(parentId3, "대댓글3", lessonId, user2.getId());
+		createComment(parentId3, "대댓글5", lessonId, user2.getId());
+		createComment(parentId3, "대댓글5", lessonId, user2.getId());
+		createComment(parentId3, "대댓글5", lessonId, user2.getId());
 
 		mockMvc.perform(get("/api/v1/comments/" + lesson.getId())
-				.param("page", "2")
-				.param("pageSize", "5"))
+				.param("page", "1")
+				.param("pageSize", "3"))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.message").value("댓글 조회 성공"));
@@ -155,9 +162,7 @@ class CommentControllerTest {
 	}
 
 	private Long createComment(Long parentId, String content, Long lessonId, Long userId) throws Exception {
-		CommentCreateRequestDto request = new CommentCreateRequestDto();
-		request.setParentCommentId(parentId);
-		request.setContent(content);
+		CommentCreateRequestDto request = new CommentCreateRequestDto(content, parentId);
 
 		MockHttpSession session = new MockHttpSession();
 		session.setAttribute("LOGIN_USER", userId);
