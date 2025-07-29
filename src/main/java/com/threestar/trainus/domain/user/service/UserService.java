@@ -1,6 +1,8 @@
 package com.threestar.trainus.domain.user.service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -8,12 +10,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonApplication;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonApplicationRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
 import com.threestar.trainus.domain.user.dto.LoginRequestDto;
 import com.threestar.trainus.domain.user.dto.LoginResponseDto;
 import com.threestar.trainus.domain.user.dto.PasswordUpdateDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
+import com.threestar.trainus.domain.user.dto.UserInfoResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
 import com.threestar.trainus.domain.user.mapper.UserMapper;
@@ -23,7 +31,9 @@ import com.threestar.trainus.global.exception.handler.BusinessException;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -32,6 +42,8 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final ProfileFacadeService facadeService;
 	private final EmailVerificationService emailVerificationService;
+	private final LessonRepository lessonRepository;
+	private final LessonApplicationRepository lessonApplicationRepository;
 
 	@Transactional
 	public SignupResponseDto signup(SignupRequestDto request) {
@@ -140,10 +152,63 @@ public class UserService {
 	}
 
 	@Transactional
-	public void withdraw(Long userId) {
+	public void withdraw(Long userId, HttpSession session) {
 		User user = getUserById(userId);
 
+		//강사는 탈퇴 불가 (레슨 있을 시)
+		validateInstructorCanWithdraw(user);
+
+		//사용자의 활성 레슨 신청이 있으면 탈퇴 불가
+		validateUserHasNoActiveApplications(user);
+
+		//개인정보 비식별화
+		String anonymizedNickname = "탈퇴한사용자" + user.getId();
+
+		user.anonymizePersonalData( anonymizedNickname);
+
 		user.withdraw();
+		userRepository.save(user);
+
+		invalidateUserSession(session);
+	}
+
+	private void validateInstructorCanWithdraw(User user) {
+		List<Lesson> instructorLessons = lessonRepository.findByLessonLeaderAndDeletedAtIsNull(user.getId());
+
+		if (!instructorLessons.isEmpty()) {
+			throw new BusinessException(ErrorCode.INSTRUCTOR_HAS_LESSONS);
+		}
+	}
+
+	private void validateUserHasNoActiveApplications(User user) {
+		List<LessonApplication> applications = lessonApplicationRepository.findByUserId(user.getId());
+
+		if (applications.isEmpty()) {
+			return;
+		}
+
+		LocalDateTime now = LocalDateTime.now();
+		long activeApplicationsCount = applications.stream()
+			.filter(application -> application.getLesson().getStartAt().isAfter(now))
+			.count();
+
+		if (activeApplicationsCount > 0) {
+			throw new BusinessException(ErrorCode.USER_HAS_ACTIVE_APPLICATIONS);
+		}
+	}
+
+	private void invalidateUserSession(HttpSession session) {
+		try {
+			// 세션 무효화
+			if (session != null) {
+				session.invalidate();
+			}
+
+			// Spring Security 컨텍스트 정리
+			SecurityContextHolder.clearContext();
+		} catch (Exception e) {
+			// 세션 무효화 실패해도 탈퇴는 진행
+		}
 	}
 
 	@Transactional(readOnly = true)

@@ -1,6 +1,7 @@
 package com.threestar.trainus.domain.lesson.teacher.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -60,6 +61,9 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
 	// 강사가 개설한 레슨 목록 조회 (페이징)
 	Page<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader, Pageable pageable);
+	
+	// 강사가 개설한 레슨 목록 조회 (전체 목록 - 탈퇴 검증용)
+	List<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader);
 
 	// 강사가 개설한 레슨 목록 조회 (페이징+필터링)
 	Page<Lesson> findByLessonLeaderAndStatusAndDeletedAtIsNull(Long lessonLeader, LessonStatus status,

@@ -72,4 +72,9 @@ public class User extends BaseDateEntity {
 	public void withdraw() {
 		this.deletedAt = LocalDateTime.now();
 	}
+
+	public void anonymizePersonalData(String anonymizedNickname) {
+		this.nickname = anonymizedNickname;
+	}
+
 }
