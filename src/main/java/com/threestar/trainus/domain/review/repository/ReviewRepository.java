@@ -28,4 +28,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 		@Param("userId") Long userId,
 		@Param("limit") int limit
 	);
+
+	@Query("SELECT COUNT(r) FROM Review r WHERE r.reviewee.id = :revieweeId")
+	Integer countByRevieweeId(@Param("revieweeId") Long revieweeId);
+
+	@Query("SELECT AVG(r.rating) FROM Review r WHERE r.reviewee.id = :revieweeId")
+	Double findAverageRatingByRevieweeId(@Param("revieweeId") Long revieweeId);
 }

@@ -68,7 +68,8 @@ public class ReviewService {
 			.image(reviewRequestDto.getReviewImage())
 			.build());
 
-		profileMetadataService.increaseReviewCountAndRating(lessonLeader.getId(), reviewRequestDto.getRating());
+		//profileMetadataService.increaseReviewCountAndRating(lessonLeader.getId(), reviewRequestDto.getRating());
+		// 실시간 메타데이터 업데이트 제거 - 스케줄러에서 배치 처리
 		return ReviewMapper.toReviewResponseDto(newReview);
 	}
 
