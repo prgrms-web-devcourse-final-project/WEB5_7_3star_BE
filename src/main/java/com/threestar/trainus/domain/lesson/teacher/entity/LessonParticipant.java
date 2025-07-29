@@ -6,6 +6,8 @@ import com.threestar.trainus.domain.user.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -39,10 +41,19 @@ public class LessonParticipant {
 	@Column(nullable = false)
 	private LocalDateTime joinAt;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private ParticipantStatus status;
+
 	@Builder
 	public LessonParticipant(Lesson lesson, User user) {
 		this.lesson = lesson;
 		this.user = user;
+		if (lesson.getPrice() == 0) {
+			this.status = ParticipantStatus.COMPLETED;
+		} else {
+			this.status = ParticipantStatus.PAYMENT_PENDING;
+		}
 	}
 
 	@PrePersist
