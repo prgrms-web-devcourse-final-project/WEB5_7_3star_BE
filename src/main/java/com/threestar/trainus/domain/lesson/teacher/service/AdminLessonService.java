@@ -334,7 +334,7 @@ public class AdminLessonService {
 		lesson.updateLessonTime(requestDto.startAt(), requestDto.endAt());
 		lesson.updateOpenTime(requestDto.openTime());
 		lesson.updateOpenRun(requestDto.openRun());
-		lesson.updateLocation(requestDto.city(), requestDto.district(), requestDto.dong());
+		lesson.updateLocation(requestDto.city(), requestDto.district(), requestDto.dong(), requestDto.ri());
 		lesson.updateAddressDetail(requestDto.addressDetail());
 	}
 

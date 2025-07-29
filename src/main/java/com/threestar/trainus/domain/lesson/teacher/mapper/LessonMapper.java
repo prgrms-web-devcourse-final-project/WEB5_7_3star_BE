@@ -29,6 +29,7 @@ public class LessonMapper {
 			.city(requestDto.city())
 			.district(requestDto.district())
 			.dong(requestDto.dong())
+			.ri(requestDto.ri())
 			.addressDetail(requestDto.addressDetail())
 			.build();
 	}
@@ -122,6 +123,7 @@ public class LessonMapper {
 			.city(lesson.getCity())
 			.district(lesson.getDistrict())
 			.dong(lesson.getDong())
+			.ri(lesson.getRi())
 			.addressDetail(lesson.getAddressDetail())
 			.status(lesson.getStatus())
 			.createdAt(lesson.getCreatedAt())
