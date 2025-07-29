@@ -221,4 +221,10 @@ public class Lesson extends BaseDateEntity {
 			this.addressDetail = addressDetail;
 		}
 	}
+
+	//레슨 상태 수정->스케쥴러꺼
+	public void updateStatus(LessonStatus status) {
+		this.status = status;
+	}
+
 }

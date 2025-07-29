@@ -18,6 +18,9 @@ public enum ErrorCode {
 	// 401
 	AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "인증이 필요한 요청입니다. 로그인 해주세요."),
 
+	//403
+	ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다."),
+
 	// 404
 	LESSON_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 레슨을 찾을 수 없습니다."),
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다."),
@@ -33,7 +36,8 @@ public enum ErrorCode {
 	COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "쿠폰 발급 기간이 종료되었습니다."),
 	COUPON_NOT_YET_OPEN(HttpStatus.BAD_REQUEST, "아직 발급이 시작되지 않은 쿠폰입니다."),
 	COUPON_BE_EXHAUSTED(HttpStatus.BAD_REQUEST, "수량이 소진된 쿠폰입니다."),
-
+	COUPON_CANNOT_DELETE_ISSUED(HttpStatus.BAD_REQUEST, "발급된 쿠폰이 있어 삭제할 수 없습니다. 상태를 비활성화로 변경해주세요."),
+	COUPON_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 쿠폰입니다."),
 	//404
 	COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 쿠폰을 찾을 수 없습니다."),
 
@@ -70,6 +74,10 @@ public enum ErrorCode {
 	LESSON_NOT_EDITABLE(HttpStatus.BAD_REQUEST, "수정할 수 없는 상태의 레슨입니다. 모집중 상태의 레슨만 수정 가능합니다."),
 	LESSON_MAX_PARTICIPANTS_CANNOT_DECREASE(HttpStatus.BAD_REQUEST, "참가자가 있는 레슨은 최대 참가 인원을 줄일 수 없습니다."),
 	LESSON_PARTICIPANTS_EXIST_RESTRICTION(HttpStatus.BAD_REQUEST, "참가자가 있어 해당 필드는 수정할 수 없습니다."),
+	LESSON_DELETE_STATUS_INVALID(HttpStatus.BAD_REQUEST, "모집중인 레슨만 삭제할 수 있습니다."),
+	LESSON_DELETE_HAS_PARTICIPANTS(HttpStatus.BAD_REQUEST, "참가자가 있는 레슨은 삭제할 수 없습니다."),
+	LESSON_TIME_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "레슨 시작 12시간 전이므로 수정/삭제할 수 없습니다."),
+	LESSON_CREATION_TOO_FREQUENT(HttpStatus.TOO_MANY_REQUESTS, "레슨 생성은 1분에 1번만 가능합니다. 잠시 후 다시 시도해주세요."),
 
 	// 403 Forbidden
 	LESSON_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "레슨 삭제 권한이 없습니다. 강사만 삭제할 수 있습니다."),

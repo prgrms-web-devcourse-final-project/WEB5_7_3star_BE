@@ -53,4 +53,25 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
 		@Param("category") CouponCategory category,
 		Pageable pageable
 	);
+
+	//활성화할 쿠폰을 찾는 메서드
+	// 현재는 비활성화 상태이지만, 오픈시간에 도달했으면서 마감기한이 안지난 쿠폰들
+	@Query("""
+		SELECT c FROM Coupon c
+		WHERE c.status = com.threestar.trainus.domain.coupon.user.entity.CouponStatus.INACTIVE
+		AND c.openAt <= :now
+		AND c.closeAt > :now
+		AND c.deletedAt IS NULL
+		""")
+	List<Coupon> findInactiveCouponsToActivate(@Param("now") LocalDateTime now);
+
+	//비활성화 할 쿠폰을 찾는 메서드
+	//현재 활성화 상태이지만, 마감시간이 지난 쿠폰들을 검사
+	@Query("""
+		SELECT c FROM Coupon c
+		WHERE c.status = com.threestar.trainus.domain.coupon.user.entity.CouponStatus.ACTIVE
+		AND c.closeAt <= :now
+		AND c.deletedAt IS NULL
+		""")
+	List<Coupon> findActiveCouponsToDeactivate(@Param("now") LocalDateTime now);
 }

@@ -59,13 +59,13 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("excludeLessonId") Long excludeLessonId
 	);
 
-	// 강사가 개설한 레슨 목록 조회 (페이징)
+	// 강사가 개설한 레슨 전체 목록 상태에 따라 필터링해서 조회(모집중인것만...이런식으로)
 	Page<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader, Pageable pageable);
 	
 	// 강사가 개설한 레슨 목록 조회 (전체 목록 - 탈퇴 검증용)
 	List<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader);
 
-	// 강사가 개설한 레슨 목록 조회 (페이징+필터링)
+	// 강사가 개설한 레슨 전체 목록 조회
 	Page<Lesson> findByLessonLeaderAndStatusAndDeletedAtIsNull(Long lessonLeader, LessonStatus status,
 		Pageable pageable);
 
@@ -90,6 +90,29 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("search") String search,
 		Pageable pageable
 	);
+
+	// 시작할 레슨을 찾는 메서드
+	// 모집중이거나 모집완료 상태일 때, 시작 시간이 도달한 레슨
+	@Query("""
+		SELECT l FROM Lesson l
+		WHERE l.status IN (
+			com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus.RECRUITING,
+			com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus.RECRUITMENT_COMPLETED
+		)
+		AND l.startAt <= :now
+		AND l.deletedAt IS NULL
+		""")
+	List<Lesson> findLessonsToStart(@Param("now") LocalDateTime now);
+
+	//완료할 레슨을 찾는 메서드
+	//현재는 진행중 -> 종료시간이 지나면 종료중으로 바뀔 레슨
+	@Query("""
+		SELECT l FROM Lesson l
+		WHERE l.status = com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus.IN_PROGRESS
+		AND l.endAt <= :now
+		AND l.deletedAt IS NULL
+		""")
+	List<Lesson> findLessonsToComplete(@Param("now") LocalDateTime now);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE) // 비관적 락 적용
 	@Query("SELECT l FROM Lesson l WHERE l.id = :lessonId")
