@@ -57,11 +57,11 @@ public class AdminLessonService {
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
 		User user = userService.getUserById(userId);
 
-		//레슨 생성 제한 확인 및 쿨타임 설정
-		lessonCreationLimitService.checkAndSetCreationLimit(userId);
-
 		// 생성시에 필요한 검증을 진행
 		validateLessonCreation(requestDto, userId);
+
+		//레슨 생성 제한 확인 및 쿨타임 설정
+		lessonCreationLimitService.checkAndSetCreationLimit(userId);
 
 		// 레슨 생성 및 저장
 		Lesson lesson = LessonMapper.toEntity(requestDto, user);
