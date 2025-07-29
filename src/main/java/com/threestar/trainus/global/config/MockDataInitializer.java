@@ -116,11 +116,11 @@ public class MockDataInitializer implements CommandLineRunner {
 			profile.updateProfileIntro(instructorNames[i] + "입니다. 최고의 레슨을 제공합니다!");
 			profileRepository.save(profile);
 
-			// ProfileMetadata 생성 (랭킹용 데이터)
+			// ProfileMetadata 초기값으로 생성 (스케줄러 테스트용)
 			ProfileMetadata metadata = ProfileMetadata.builder()
 				.user(savedInstructor)
-				.reviewCount(generateReviewCount())
-				.rating(generateRating())
+				.reviewCount(0)
+				.rating(0.0)
 				.build();
 			profileMetadataRepository.save(metadata);
 
@@ -217,9 +217,6 @@ public class MockDataInitializer implements CommandLineRunner {
 
 	private void createReviews(List<User> instructors, List<User> students, List<Lesson> lessons) {
 		for (User instructor : instructors) {
-			ProfileMetadata metadata = profileMetadataRepository.findByUserId(instructor.getId())
-				.orElseThrow();
-
 			// 해당 강사의 레슨들 찾기
 			List<Lesson> instructorLessons = lessons.stream()
 				.filter(lesson -> lesson.getLessonLeader().equals(instructor.getId()))
@@ -229,17 +226,16 @@ public class MockDataInitializer implements CommandLineRunner {
 				continue;
 			}
 
-			// reviewCount만큼 실제 리뷰 생성
-			int reviewCount = metadata.getReviewCount();
+			// 실제 리뷰 생성 (랜덤하게 5-15개)
+			int reviewCount = random.nextInt(11) + 5; // 5-15개
 
 			for (int i = 0; i < reviewCount; i++) {
 				User randomStudent = students.get(random.nextInt(students.size()));
 				Lesson randomLesson = instructorLessons.get(random.nextInt(instructorLessons.size()));
 
-				// 평점은 metadata의 rating 주변으로 생성
-				double baseRating = metadata.getRating();
-				double reviewRating = Math.max(1.0d, Math.min(5.0d,
-					baseRating + (random.nextDouble() - 0.5d) * 2)); // ±1점 범위
+				// 평점은 3.0-5.0 사이에서 랜덤 생성
+				double reviewRating = 3.0 + random.nextDouble() * 2.0; // 3.0-5.0
+				reviewRating = Math.round(reviewRating * 10) / 10.0; // 소수점 1자리
 
 				Review review = Review.builder()
 					.reviewer(randomStudent)
