@@ -8,6 +8,7 @@ import lombok.Builder;
 public record CommentResponseDto(
 	Long commentId,
 	Long userId,
+	String nickname,
 	String content,
 	Long parentCommentId,
 	Boolean deleted,

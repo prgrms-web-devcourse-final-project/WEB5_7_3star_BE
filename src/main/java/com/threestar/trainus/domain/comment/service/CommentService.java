@@ -65,7 +65,7 @@ public class CommentService {
 	public CommentPageResponseDto readAll(Long lessonId, int page, int pageSize) {
 		return CommentMapper.toCommentPageResponseDto(
 			commentRepository.findAll(lessonId, (page - 1) * pageSize, pageSize)
-				.stream().map(CommentMapper::toCommentResponseDto)
+				.stream().map(CommentMapper::toCommentResponseDtoWithProjection)
 				.toList(),
 			commentRepository.count(lessonId, PageLimitCalculator.calculatePageLimit(page, pageSize, 5))
 			//한번에 보일 수 있는 페이지 이동 갯수 5개(프론트와 협의)
