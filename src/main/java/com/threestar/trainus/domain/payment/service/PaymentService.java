@@ -3,9 +3,12 @@ package com.threestar.trainus.domain.payment.service;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,7 @@ import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.utils.PageLimitCalculator;
+import com.threestar.trainus.global.utils.RefundPolicyUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -55,19 +59,7 @@ public class PaymentService {
 	private final PaymentRepository paymentRepository;
 	private final TossPaymentRepository tossPaymentRepository;
 
-	private static int getRefundPrice(LocalDateTime cancelTime, Payment payment) {
-		int refundPrice = 0;
-		if (cancelTime.isBefore(payment.getLesson().getStartAt().minusMonths(1))) {
-			refundPrice = payment.getPayPrice();
-		} else if (cancelTime.isBefore(payment.getLesson().getStartAt().minusWeeks(1))) {
-			refundPrice = (payment.getPayPrice() * 50 / 100);
-		} else if (cancelTime.isBefore(payment.getLesson().getStartAt().minusDays(3))) {
-			refundPrice = (payment.getPayPrice() * 30 / 100);
-		} else {
-			refundPrice = (payment.getPayPrice() * 30 / 100);
-		}
-		return refundPrice;
-	}
+	private final DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 	@Transactional
 	public PaymentResponseDto preparePayment(PaymentRequestDto request, Long userId) {
@@ -81,7 +73,6 @@ public class PaymentService {
 		validateDuplicatedPayment(lesson, user);
 
 		int discount = 0;
-
 		UserCoupon coupon = null;
 		if (request.userCouponId() != null) {  //쿠폰이 있는 주문 내역(실제 결제 진행 전) 불러오기
 			coupon = couponService.getValidUserCoupon(request.userCouponId(), userId);
@@ -89,56 +80,35 @@ public class PaymentService {
 			Optional<Payment> existingCoupon = paymentRepository.findByUserAndLessonAndUserCouponAndStatus(user, lesson,
 				coupon, PaymentStatus.READY);
 			if (existingCoupon.isPresent()) {
-				return PaymentResponseDto.builder()
-					.originPrice(existingCoupon.get().getOriginPrice())
-					.lessonTitle(lesson.getLessonName())
-					.paymentMethod(existingCoupon.get().getPaymentMethod())
-					.payPrice(existingCoupon.get().getPayPrice())
-					.orderId(existingCoupon.get().getOrderId())
-					.build();
+				return PaymentMapper.toPaymentResponseDto(existingCoupon.get().getOriginPrice(),
+					lesson.getLessonName(),
+					existingCoupon.get().getPaymentMethod(),
+					existingCoupon.get().getPayPrice(),
+					existingCoupon.get().getOrderId());
 			}
-
 			discount = couponService.calculateDiscountedPrice(lesson.getPrice(), coupon);
 		} else {
 			Optional<Payment> existingNoneCoupon = paymentRepository.findByUserAndLessonAndUserCouponIsNullAndStatus(
 				user, lesson,
 				PaymentStatus.READY);
 			if (existingNoneCoupon.isPresent()) {
-				return PaymentResponseDto.builder()
-					.originPrice(existingNoneCoupon.get().getOriginPrice())
-					.lessonTitle(lesson.getLessonName())
-					.paymentMethod(existingNoneCoupon.get().getPaymentMethod())
-					.payPrice(existingNoneCoupon.get().getPayPrice())
-					.orderId(existingNoneCoupon.get().getOrderId())
-					.build();
+				return PaymentMapper.toPaymentResponseDto(existingNoneCoupon.get().getOriginPrice(),
+					lesson.getLessonName(),
+					existingNoneCoupon.get().getPaymentMethod(),
+					existingNoneCoupon.get().getPayPrice(),
+					existingNoneCoupon.get().getOrderId());
 			}
 		}
 
 		int finalPrice = Math.max(0, lesson.getPrice() - discount);
-
 		String orderId = UUID.randomUUID().toString();
-
-		Payment payment = Payment.builder()
-			.user(user)
-			.lesson(lesson)
-			.orderId(orderId)
-			.payPrice(finalPrice)
-			.originPrice(lesson.getPrice())
-			.payDate(LocalDateTime.now())
-			.userCoupon(coupon)
-			.status(PaymentStatus.READY)
-			.paymentMethod(PaymentMethod.CREDIT_CARD)
-			.build();
+		Payment payment = PaymentMapper.toPayment(user, lesson, orderId, finalPrice, coupon, PaymentStatus.READY,
+			PaymentMethod.CREDIT_CARD);
 
 		paymentRepository.save(payment);
 
-		return PaymentResponseDto.builder()
-			.originPrice(lesson.getPrice())
-			.lessonTitle(lesson.getLessonName())
-			.paymentMethod(PaymentMethod.CREDIT_CARD)
-			.payPrice(finalPrice)
-			.orderId(orderId)
-			.build();
+		return PaymentMapper.toPaymentResponseDto(lesson.getPrice(), lesson.getLessonName(), PaymentMethod.CREDIT_CARD,
+			finalPrice, orderId);
 	}
 
 	@Transactional
@@ -153,26 +123,13 @@ public class PaymentService {
 			throw new BusinessException(ErrorCode.INVALID_PAYMENT);
 		}
 
-		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 		LocalDateTime paidAt = OffsetDateTime.parse(tossResponseDto.approvedAt(), formatter).toLocalDateTime();
 		LocalDateTime requestAt = OffsetDateTime.parse(tossResponseDto.requestedAt(), formatter).toLocalDateTime();
 
-		payment.setPayPrice(tossResponseDto.totalAmount());
-		payment.setPayDate(paidAt);
-		payment.setStatus(PaymentStatus.DONE);
-		payment.setPaymentMethod(PaymentMethod.fromTossMethod(tossResponseDto.method()));
+		payment.processPayment(tossResponseDto.totalAmount(), paidAt, tossResponseDto.method());
 
-		TossPayment tossPayment = TossPayment.builder()
-			.payment(payment)
-			.paymentKey(tossResponseDto.paymentKey())
-			.orderId(tossResponseDto.orderId())
-			.amount(tossResponseDto.totalAmount())
-			.orderName(tossResponseDto.orderName())
-			.paymentStatus(PaymentStatus.DONE)
-			.paymentMethod(PaymentMethod.fromTossMethod(tossResponseDto.method()))
-			.requestedAt(requestAt)
-			.approvedAt(paidAt)
-			.build();
+		TossPayment tossPayment = PaymentMapper.toTossPayment(payment, tossResponseDto, requestAt, paidAt,
+			PaymentStatus.DONE);
 
 		if (payment.getUserCoupon() != null) {
 			couponService.useCoupon(payment.getUserCoupon());
@@ -190,14 +147,12 @@ public class PaymentService {
 		Payment payment = tossPayment.getPayment();
 		LocalDateTime cancelTime = LocalDateTime.now();
 
-		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-
 		//날짜 검증(취소 가능은 24시간 전까지)
 		if (cancelTime.isAfter(payment.getLesson().getStartAt().minusDays(1))) {
 			throw new BusinessException(ErrorCode.INVALID_CANCEL_DATE);
 		}
 
-		int refundPrice = getRefundPrice(cancelTime, payment);
+		int refundPrice = RefundPolicyUtils.getRefundPrice(cancelTime, payment);
 
 		//여기서 client 호출
 		TossPaymentResponseDto tossResponse = paymentClient.cancelPayment(
@@ -209,9 +164,7 @@ public class PaymentService {
 		tossPayment.changeStatus(cancelAt, PaymentStatus.CANCELED, request.cancelReason());
 		tossPaymentRepository.save(tossPayment);
 
-		payment.setStatus(PaymentStatus.CANCELED);
-		payment.setCancelledAt(cancelAt);
-		payment.setRefundPrice(refundPrice);
+		payment.cancelPayment(cancelAt, refundPrice);
 
 		// lesson 관련 데이터 업데이트(lessonRepository 삭제 및 lesson 데이터 변경)
 		studentLessonService.cancelPayment(payment.getLesson().getId(), payment.getUser().getId());
@@ -229,8 +182,20 @@ public class PaymentService {
 
 	@Transactional(readOnly = true)
 	public PaymentSuccessHistoryPageDto viewAllSuccessTransaction(Long userId, int page, int pageSize) {
-		List<Payment> allSuccessPayments = paymentRepository.findAllByUserAndStatus(userId, PaymentStatus.DONE.name(),
-			(page - 1) * pageSize, pageSize);
+		List<Long> paymentIds = paymentRepository.findPaymentIdsByUserAndStatus(userId,
+			PaymentStatus.DONE.name(), (page - 1) * pageSize, pageSize);
+
+		if (paymentIds.isEmpty()) {
+			return PaymentMapper.toPaymentSuccessHistoryPageDto(Collections.emptyList(), 0);
+		}
+
+		List<Payment> payments = paymentRepository.findAllWithAssociationsByIds(paymentIds);
+		Map<Long, Payment> map = payments.stream()
+			.collect(Collectors.toMap(Payment::getPaymentId, p -> p));
+		List<Payment> allSuccessPayments = paymentIds.stream()
+			.map(map::get)
+			.toList();
+
 		List<PaymentSuccessHistoryResponseDto> dtoList = allSuccessPayments.stream()
 			.map(payment -> {
 				TossPayment tossPayment = tossPaymentRepository.findByOrderId(payment.getOrderId())
@@ -247,9 +212,20 @@ public class PaymentService {
 
 	@Transactional(readOnly = true)
 	public PaymentCancelHistoryPageDto viewAllFailureTransaction(Long userId, int page, int pageSize) {
-		List<Payment> allFailurePayments = paymentRepository.findAllByUserAndStatus(userId,
-			PaymentStatus.CANCELED.name(),
-			(page - 1) * pageSize, pageSize);
+		List<Long> paymentIds = paymentRepository.findPaymentIdsByUserAndStatus(userId,
+			PaymentStatus.CANCELED.name(), (page - 1) * pageSize, pageSize);
+
+		if (paymentIds.isEmpty()) {
+			return PaymentMapper.toPaymentFailureHistoryPageDto(Collections.emptyList(), 0);
+		}
+
+		List<Payment> payments = paymentRepository.findAllWithAssociationsByIds(paymentIds);
+		Map<Long, Payment> map = payments.stream()
+			.collect(Collectors.toMap(Payment::getPaymentId, p -> p));
+		List<Payment> allFailurePayments = paymentIds.stream()
+			.map(map::get)
+			.toList();
+
 		List<PaymentCancelHistoryResponseDto> dtoList = allFailurePayments.stream()
 			.map(payment -> {
 				TossPayment tossPayment = tossPaymentRepository.findByOrderId(payment.getOrderId())
@@ -266,7 +242,7 @@ public class PaymentService {
 
 	public void validateDuplicatedPayment(Lesson lesson, User user) {
 		boolean alreadyPaid = paymentRepository.existsByLessonAndUserAndStatusIn(
-			lesson, user, List.of(PaymentStatus.DONE)
+			lesson, user, List.of(PaymentStatus.DONE, PaymentStatus.CANCELED)
 		);
 
 		if (alreadyPaid) {

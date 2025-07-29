@@ -16,24 +16,32 @@ import com.threestar.trainus.domain.user.entity.User;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	Optional<Payment> findByOrderId(String orderId);
 
-	Optional<Payment> findByUserAndLessonAndUserCouponAndStatus(User user, Lesson lesson, UserCoupon coupon, PaymentStatus status);
+	Optional<Payment> findByUserAndLessonAndUserCouponAndStatus(User user, Lesson lesson, UserCoupon coupon,
+		PaymentStatus status);
 
 	Optional<Payment> findByUserAndLessonAndUserCouponIsNullAndStatus(User user, Lesson lesson, PaymentStatus status);
 
 	@Query(value = """
-			select * from payments
-			where user_id = :userId
-			and status = :status
-			order by pay_date desc
-			limit :limit offset :offset
-		""", nativeQuery = true
-	)
-	List<Payment> findAllByUserAndStatus(
+		select p.payment_id from payments p
+		where p.user_id = :userId
+		and p.status = :status
+		order by p.pay_date desc
+		limit :limit offset :offset
+		""", nativeQuery = true)
+	List<Long> findPaymentIdsByUserAndStatus(
 		@Param("userId") Long userId,
 		@Param("status") String status,
 		@Param("offset") int offset,
 		@Param("limit") int limit
 	);
+
+	@Query("""
+			select p from Payment p
+			left join fetch p.lesson
+			left join fetch p.userCoupon
+			where p.paymentId in :ids
+		""")
+	List<Payment> findAllWithAssociationsByIds(@Param("ids") List<Long> ids);
 
 	@Query(value = """
 			select count(*) from (select payment_id from payments where user_id = :userId and status = :status limit :limit) t
