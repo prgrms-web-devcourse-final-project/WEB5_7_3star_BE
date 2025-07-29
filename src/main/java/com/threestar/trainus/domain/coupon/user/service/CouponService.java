@@ -48,11 +48,13 @@ public class CouponService {
 		if (alreadyIssued) {
 			throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
 		}
+
+		//쿠폰 오픈 시간 전이라면 예외 처리(모든 쿠폰 공통)
+		if (LocalDateTime.now().isBefore(coupon.getOpenAt())) {
+			throw new BusinessException(ErrorCode.COUPON_NOT_YET_OPEN);
+		}
+
 		if (coupon.getCategory() == CouponCategory.OPEN_RUN) {
-			//선착순 쿠폰 발급 시 오픈시각 전이라면 예외처리
-			if (LocalDateTime.now().isBefore(coupon.getOpenAt())) {
-				throw new BusinessException(ErrorCode.COUPON_NOT_YET_OPEN);
-			}
 			//선착순 쿠폰 발급 시 수량이 소진되면 예외처리
 			if (coupon.getQuantity() <= 0) {
 				throw new BusinessException(ErrorCode.COUPON_BE_EXHAUSTED);
@@ -87,8 +89,8 @@ public class CouponService {
 	public CouponPageResponseDto getCoupons(Long userId) {
 		userService.validateUserExists(userId);
 
-		List<CouponResponseDto> dtoList =
-			couponRepository.findAvailableCouponsWithOwnership(userId, LocalDateTime.now());
+		List<CouponResponseDto> dtoList = couponRepository.findAvailableCouponsWithOwnership(userId,
+			LocalDateTime.now());
 
 		return new CouponPageResponseDto(dtoList);
 	}
