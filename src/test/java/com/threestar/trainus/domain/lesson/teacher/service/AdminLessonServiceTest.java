@@ -67,6 +67,7 @@ public class AdminLessonServiceTest {
 			"서울시",
 			"강남구",
 			"역삼동",
+			"",
 			"테스트 주소",
 			List.of()
 		);
@@ -128,6 +129,7 @@ public class AdminLessonServiceTest {
 			"서울시",
 			"강남구",
 			"역삼동",
+			"",
 			"테스트 주소",
 			List.of()
 		);
@@ -165,6 +167,7 @@ public class AdminLessonServiceTest {
 			"서울시",
 			"강남구",
 			"역삼동",
+			"",
 			"테스트 주소",
 			List.of()
 		);
