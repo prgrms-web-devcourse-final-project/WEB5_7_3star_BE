@@ -65,4 +65,17 @@ public class Payment extends BaseDateEntity {
 	@Enumerated(EnumType.STRING)
 	private PaymentMethod paymentMethod;
 
+	public void processPayment(int totalPrice, LocalDateTime paidAt, String method) {
+		this.payPrice = totalPrice;
+		this.payDate = paidAt;
+		this.status = PaymentStatus.DONE;
+		this.paymentMethod = PaymentMethod.fromTossMethod(method);
+	}
+
+	public void cancelPayment(LocalDateTime cancelAt, int refundPrice) {
+		this.status = PaymentStatus.CANCELED;
+		this.cancelledAt = cancelAt;
+		this.refundPrice = refundPrice;
+	}
+
 }
