@@ -1,9 +1,11 @@
 package com.threestar.trainus.domain.user.dto;
 
-public record LoginResponseDto(
+import com.threestar.trainus.domain.user.entity.UserRole;
 
+public record LoginResponseDto(
 	Long id,
 	String email,
-	String nickname
+	String nickname,
+	UserRole role
 ) {
 }
