@@ -27,6 +27,7 @@ public record LessonUpdateResponseDto(
 	String city,
 	String district,
 	String dong,
+	String ri,
 	String addressDetail,
 	LessonStatus status,
 	LocalDateTime createdAt,

@@ -71,6 +71,7 @@ public enum ErrorCode {
 	LESSON_CREATOR_CANNOT_APPLY(HttpStatus.BAD_REQUEST, "레슨 개설자는 자신이 개설한 레슨에 참여 신청할 수 없습니다."),
 	CANNOT_CANCEL_APPROVED_APPLICATION(HttpStatus.BAD_REQUEST, "승인된 신청은 취소할 수 없습니다."),
 	INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "잘못된 카테고리입니다."),
+	INVALID_SORT(HttpStatus.BAD_REQUEST, "잘못된 정렬입니다."),
 	LESSON_NOT_EDITABLE(HttpStatus.BAD_REQUEST, "수정할 수 없는 상태의 레슨입니다. 모집중 상태의 레슨만 수정 가능합니다."),
 	LESSON_MAX_PARTICIPANTS_CANNOT_DECREASE(HttpStatus.BAD_REQUEST, "참가자가 있는 레슨은 최대 참가 인원을 줄일 수 없습니다."),
 	LESSON_PARTICIPANTS_EXIST_RESTRICTION(HttpStatus.BAD_REQUEST, "참가자가 있어 해당 필드는 수정할 수 없습니다."),

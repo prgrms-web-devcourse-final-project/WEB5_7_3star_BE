@@ -1,5 +1,7 @@
 package com.threestar.trainus.domain.comment.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.threestar.trainus.domain.comment.dto.CommentCreateRequestDto;
 import com.threestar.trainus.domain.comment.dto.CommentPageResponseDto;
-import com.threestar.trainus.domain.comment.dto.CommentPageWrapperDto;
 import com.threestar.trainus.domain.comment.dto.CommentResponseDto;
-import com.threestar.trainus.domain.comment.mapper.CommentMapper;
 import com.threestar.trainus.domain.comment.service.CommentService;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
@@ -47,14 +47,13 @@ public class CommentController {
 
 	@GetMapping("/{lessonId}")
 	@Operation(summary = "댓글 조회", description = "레슨 ID에 해당되는 댓글들을 조회합니다.")
-	public ResponseEntity<PagedResponse<CommentPageWrapperDto>> readAll(@PathVariable Long lessonId,
+	public ResponseEntity<PagedResponse<List<CommentResponseDto>>> readAll(@PathVariable Long lessonId,
 		@RequestParam("page") int page,
 		@RequestParam("pageSize") int pageSize) {
 		int correctPage = Math.max(page, 1);
 		int correctPageSize = Math.max(1, Math.min(pageSize, pageSizeLimit));
 		CommentPageResponseDto commentsInfo = commentService.readAll(lessonId, correctPage, correctPageSize);
-		CommentPageWrapperDto comments = CommentMapper.toCommentPageWrapperDto(commentsInfo);
-		return PagedResponse.ok("댓글 조회 성공", comments, commentsInfo.getCount(), HttpStatus.OK);
+		return PagedResponse.ok("댓글 조회 성공", commentsInfo.comments(), commentsInfo.count(), HttpStatus.OK);
 	}
 
 	@DeleteMapping("/{commentId}")

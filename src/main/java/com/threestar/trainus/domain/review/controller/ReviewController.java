@@ -55,7 +55,7 @@ public class ReviewController {
 		int correctPageSize = Math.max(1, Math.min(pageSize, pageSizeLimit));
 		ReviewPageResponseDto reviewsInfo = reviewService.readAll(userId, correctPage, correctPageSize);
 		ReviewPageWrapperDto reviews = ReviewMapper.toReviewPageWrapperDto(reviewsInfo);
-		return PagedResponse.ok("조회가 완료됐습니다.", reviews, reviewsInfo.getCount(), HttpStatus.OK);
+		return PagedResponse.ok("조회가 완료됐습니다.", reviews, reviewsInfo.count(), HttpStatus.OK);
 	}
 	/*
 	 * TODO:구조 통일

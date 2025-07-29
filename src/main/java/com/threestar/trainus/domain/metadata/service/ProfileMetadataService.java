@@ -42,13 +42,6 @@ public class ProfileMetadataService {
 		return ProfileMetadataMapper.toResponseDto(profileMetadata, user);
 	}
 
-	// @Transactional
-	// public void increaseReviewCountAndRating(Long userId, double newRating) {
-	// 	ProfileMetadata profileMetadata = profileMetadataRepository.findWithLockByUserId(userId)
-	// 		.orElseThrow(() -> new BusinessException(ErrorCode.METADATA_NOT_FOUND));
-	// 	profileMetadata.increaseReviewCount();
-	// 	profileMetadata.setRating(profileMetadata.updateRating(newRating));
-	// }
 
 	@Transactional
 	public void batchUpdateMetadata(Long userId) {

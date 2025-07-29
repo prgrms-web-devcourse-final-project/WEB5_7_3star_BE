@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
@@ -13,6 +14,7 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseD
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
+import com.threestar.trainus.domain.lesson.student.entity.LessonSortType;
 import com.threestar.trainus.domain.lesson.student.mapper.LessonApplicationMapper;
 import com.threestar.trainus.domain.lesson.student.mapper.LessonApplyMapper;
 import com.threestar.trainus.domain.lesson.student.mapper.LessonSearchMapper;
@@ -59,23 +61,48 @@ public class StudentLessonService {
 	public LessonSearchListResponseDto searchLessons(
 		int page, int limit,
 		Category category, String search,
-		String city, String district, String dong
+		String city, String district, String dong, String ri,
+		LessonSortType sortBy
 	) {
-		Pageable pageable = PageRequest.of(page - 1, limit);
-
-		Category categoryEnum = null;
-		if (!category.name().equalsIgnoreCase("ALL")) {
-			try {
-				categoryEnum = category;
-			} catch (IllegalArgumentException e) {
-				throw new BusinessException(ErrorCode.INVALID_CATEGORY);
+		// 정렬 조건 처리
+		Sort sort = Sort.unsorted();
+		if (sortBy != null) {
+			switch (sortBy) {
+				case LATEST:
+					sort = Sort.by(Sort.Direction.DESC, sortBy.getProperty());
+					break;
+				case OLDEST:
+					sort = Sort.by(Sort.Direction.ASC, sortBy.getProperty());
+					break;
+				case PRICE_HIGH:
+					sort = Sort.by(Sort.Direction.DESC, sortBy.getProperty());
+					break;
+				case PRICE_LOW:
+					sort = Sort.by(Sort.Direction.ASC, sortBy.getProperty());
+					break;
 			}
+		} else {
+			throw new BusinessException(ErrorCode.INVALID_SORT);
 		}
 
-		Page<Lesson> lessonPage = lessonRepository.findBySearchConditions(
-			categoryEnum, city, district, dong, search, pageable
-		);
+		Pageable pageable = PageRequest.of(page - 1, limit, sort);
 
+		Category categoryEnum = null;
+		if (category != null && !category.name().equalsIgnoreCase("ALL")) {
+			categoryEnum = category;
+		}
+
+		Page<Lesson> lessonPage;
+		// 검색어 유무 분기
+		if (search != null && !search.isEmpty()) {
+			lessonPage = lessonRepository.findByLocationAndFullTextSearchOptimized(
+				categoryEnum, city, district, dong, ri, search, pageable
+			);
+		} else {
+			lessonPage = lessonRepository.findByLocation(
+				categoryEnum, city, district, dong, ri, pageable
+			);
+		}
 		// 응답 DTO 리스트 매핑
 		List<LessonSearchResponseDto> lessonDtos = lessonPage.getContent().stream()
 			.map(lesson -> {
@@ -164,7 +191,7 @@ public class StudentLessonService {
 
 		// 선착순 여부에 따라 저장 처리 분기
 		if (lesson.getOpenRun()) {
-			// 바로 참가자 등록, 인원수 증가 TODO 성능개선시 동시성 고려
+			// 바로 참가자 등록, 인원수 증가
 			LessonParticipant participant = LessonParticipant.builder()
 				.lesson(lesson)
 				.user(user)

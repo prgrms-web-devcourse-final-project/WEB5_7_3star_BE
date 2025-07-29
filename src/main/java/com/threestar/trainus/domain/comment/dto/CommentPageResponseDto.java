@@ -3,12 +3,10 @@ package com.threestar.trainus.domain.comment.dto;
 import java.util.List;
 
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
 @Builder
-public class CommentPageResponseDto {
-
-	private List<CommentResponseDto> comments;
-	private Integer count;
+public record CommentPageResponseDto(
+	List<CommentResponseDto> comments,
+	Integer count
+) {
 }
