@@ -21,7 +21,7 @@ public interface RankingRepository extends JpaRepository<ProfileMetadata, Long> 
 		FROM ProfileMetadata pm
 		JOIN pm.user u
 		LEFT JOIN Profile p ON p.user = u
-		WHERE pm.reviewCount >= 20
+		WHERE pm.reviewCount >= 5
 		ORDER BY (
 			(pm.rating / 5.0) * 0.5 +
 			(LEAST(pm.reviewCount, 100) / 100.0) * 0.5
@@ -43,7 +43,7 @@ public interface RankingRepository extends JpaRepository<ProfileMetadata, Long> 
 		WHERE l.category = :category
 		AND r.deletedAt IS NULL
 		GROUP BY r.reviewee.id, r.reviewee.nickname, p.profileImage
-		HAVING COUNT(r.reviewId) >= 20
+		HAVING COUNT(r.reviewId) >= 5
 		ORDER BY (
 			(AVG(r.rating) / 5.0) * 0.5 +
 			(LEAST(COUNT(r.reviewId), 100) / 100.0) * 0.5
