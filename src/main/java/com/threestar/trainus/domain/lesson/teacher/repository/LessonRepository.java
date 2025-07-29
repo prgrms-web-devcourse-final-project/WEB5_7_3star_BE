@@ -61,7 +61,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
 	// 강사가 개설한 레슨 전체 목록 상태에 따라 필터링해서 조회(모집중인것만...이런식으로)
 	Page<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader, Pageable pageable);
-	
+
 	// 강사가 개설한 레슨 목록 조회 (전체 목록 - 탈퇴 검증용)
 	List<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader);
 

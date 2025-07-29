@@ -21,9 +21,9 @@ public interface LessonApplicationRepository extends JpaRepository<LessonApplica
 	Optional<LessonApplication> findByLessonIdAndUserId(Long lessonId, Long userId);
 
 	Page<LessonApplication> findByUserId(Long userId, Pageable pageable);
-	
+
 	List<LessonApplication> findByUserId(Long userId);
-	
+
 	List<LessonApplication> findByLessonId(Long lessonId);
 
 	Page<LessonApplication> findByUserIdAndStatus(Long userId, ApplicationStatus status, Pageable pageable);
