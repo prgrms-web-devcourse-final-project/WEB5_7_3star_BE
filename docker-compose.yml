@@ -61,6 +61,33 @@ services:
     networks:
       - app-tier
 
+  prometheus:
+    user: "root"
+    image: prom/prometheus
+    container_name: prometheus_container
+    volumes:
+      - /home/ubuntu/WEB5_7_3star_BE/prometheus-grafana/prometheus/config:/etc/prometheus
+      - /home/ubuntu/WEB5_7_3star_BE/prometheus-grafana/prometheus/volume:/prometheus/data
+    ports:
+      - 9090:9090
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: always
+    networks:
+      - app-tier
+
+  grafana:
+    user: "root"
+    image: grafana/grafana
+    container_name: grafana_container
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/volume:/var/lib/grafana
+    restart: always
+    networks:
+      - app-tier
+
 volumes:
   mysqldb-data:
     driver: local
