@@ -2,6 +2,8 @@ package com.threestar.trainus.domain.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +19,7 @@ import com.threestar.trainus.domain.user.dto.NicknameCheckRequestDto;
 import com.threestar.trainus.domain.user.dto.PasswordUpdateDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
+import com.threestar.trainus.domain.user.dto.UserInfoResponseDto;
 import com.threestar.trainus.domain.user.service.EmailVerificationService;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.annotation.LoginUser;

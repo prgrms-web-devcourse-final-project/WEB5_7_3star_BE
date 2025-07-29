@@ -90,9 +90,7 @@ public class CouponService {
 		List<CouponResponseDto> dtoList =
 			couponRepository.findAvailableCouponsWithOwnership(userId, LocalDateTime.now());
 
-		return CouponPageResponseDto.builder()
-			.coupons(dtoList)
-			.build();
+		return new CouponPageResponseDto(dtoList);
 	}
 
 	@Transactional

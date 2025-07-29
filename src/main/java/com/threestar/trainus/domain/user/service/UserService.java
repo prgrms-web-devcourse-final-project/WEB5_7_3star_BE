@@ -14,6 +14,7 @@ import com.threestar.trainus.domain.user.dto.LoginResponseDto;
 import com.threestar.trainus.domain.user.dto.PasswordUpdateDto;
 import com.threestar.trainus.domain.user.dto.SignupRequestDto;
 import com.threestar.trainus.domain.user.dto.SignupResponseDto;
+import com.threestar.trainus.domain.user.dto.UserInfoResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
 import com.threestar.trainus.domain.user.mapper.UserMapper;
