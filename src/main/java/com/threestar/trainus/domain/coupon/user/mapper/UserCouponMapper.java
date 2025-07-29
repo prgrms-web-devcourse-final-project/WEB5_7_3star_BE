@@ -13,26 +13,26 @@ public final class UserCouponMapper {
 	}
 
 	public static CreateUserCouponResponseDto toCreateUserCouponResponseDto(UserCoupon userCoupon) {
-		return CreateUserCouponResponseDto.builder()
-			.couponId(userCoupon.getCoupon().getId())
-			.userId(userCoupon.getUser().getId())
-			.createdAt(userCoupon.getCreatedAt())
-			.expirationDate(userCoupon.getExpirationDate())
-			.status(userCoupon.getStatus())
-			.build();
+		return new CreateUserCouponResponseDto(
+			userCoupon.getCoupon().getId(),
+			userCoupon.getUser().getId(),
+			userCoupon.getCreatedAt(),
+			userCoupon.getExpirationDate(),
+			userCoupon.getStatus()
+		);
 	}
 
 	public static UserCouponResponseDto toUserCouponResponseDto(UserCoupon userCoupon) {
 		Coupon coupon = userCoupon.getCoupon();
-		return UserCouponResponseDto.builder()
-			.couponId(coupon.getId())
-			.couponName(coupon.getName())
-			.discountPrice(coupon.getDiscountPrice())
-			.minOrderPrice(coupon.getMinOrderPrice())
-			.expirationDate(coupon.getExpirationDate())
-			.status(coupon.getStatus())
-			.useDate(userCoupon.getUseDate())
-			.build();
+		return new UserCouponResponseDto(
+			coupon.getId(),
+			coupon.getName(),
+			coupon.getDiscountPrice(),
+			coupon.getMinOrderPrice(),
+			coupon.getExpirationDate(),
+			coupon.getStatus(),
+			userCoupon.getUseDate()
+		);
 	}
 
 	public static List<UserCouponResponseDto> toDtoList(List<UserCoupon> userCoupons) {

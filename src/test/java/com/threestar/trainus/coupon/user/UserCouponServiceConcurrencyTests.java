@@ -1,4 +1,4 @@
-package com.threestar.trainus.coupon;
+package com.threestar.trainus.coupon.user;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
@@ -8,16 +8,16 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.StopWatch;
 
 import com.threestar.trainus.domain.coupon.user.entity.Coupon;
 import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
@@ -30,20 +30,12 @@ import com.threestar.trainus.domain.user.entity.UserRole;
 import com.threestar.trainus.domain.user.repository.UserRepository;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
-@SpringBootTest
-@TestPropertySource(properties = {
-	"logging.level.root=ERROR",
-	"logging.level.com.threestar.trainus.coupon=INFO",
-	"logging.level.org.springframework=ERROR",
-	"logging.level.org.hibernate=ERROR",
-	"logging.level.com.zaxxer.hikari=ERROR",
-	"spring.jpa.show-sql=false",
-	"logging.level.org.hibernate.SQL=ERROR",
-	"logging.level.org.hibernate.type.descriptor.sql=ERROR"
-})
-class CouponServiceTests {
+import lombok.extern.slf4j.Slf4j;
 
-	private static final Logger log = LoggerFactory.getLogger(CouponServiceTests.class);
+@Slf4j
+@SpringBootTest
+class UserCouponServiceConcurrencyTests {
+
 	@Autowired
 	CouponService couponService;
 
@@ -56,35 +48,32 @@ class CouponServiceTests {
 	@Autowired
 	UserCouponRepository userCouponRepository;
 
+	private static final int COUPON_QUANTITY = 300;
+	private static final int CONCURRENT_USERS = 3000;
 	List<User> users;
 	Coupon coupon;
 
 	@BeforeEach
 	void setUp() {
-		// 기존 데이터 정리
-		userCouponRepository.deleteAll();
-		couponRepository.deleteAll();
-		userRepository.deleteAll();
-
-		// 1000명의 유저 생성
 		users = new ArrayList<>();
-		for (int i = 0; i < 10000; i++) {
+		for (int i = 0; i < CONCURRENT_USERS; i++) {
 			User user = userRepository.save(
 				User.builder()
 					.email("user" + i + "@test.com")
-					.password("test1234")
+					.password("12341234")
 					.nickname("user" + i)
 					.role(UserRole.USER)
 					.build()
 			);
 			users.add(user);
+			userRepository.flush();
 		}
 
-		// 재고 100장의 쿠폰 생성
+		// 쿠폰 생성
 		coupon = couponRepository.save(
 			Coupon.builder()
 				.name("선착순 쿠폰")
-				.quantity(100)
+				.quantity(COUPON_QUANTITY)
 				.category(CouponCategory.OPEN_RUN)
 				.status(CouponStatus.ACTIVE)
 				.discountPrice("1000")
@@ -94,12 +83,6 @@ class CouponServiceTests {
 				.closeAt(LocalDateTime.now().plusDays(1))
 				.build()
 		);
-
-		// 데이터가 실제로 저장되었는지 확인
-		System.out.println("사용자 수: " + userRepository.count());
-		System.out.println("쿠폰 수: " + couponRepository.count());
-		System.out.println("쿠폰 ID: " + coupon.getId());
-		System.out.println("첫 번째 사용자 ID: " + users.get(0).getId());
 	}
 
 	@AfterEach
@@ -111,20 +94,30 @@ class CouponServiceTests {
 	}
 
 	@Test
-	@DisplayName("1000명의 유저가 동시 요청해도 100장만 발급된다")
+	@DisplayName("동시 요청 시 - 비관적 락 적용: 발급된 쿠폰 수량만큼 발급")
 	void 쿠폰_동시_발급_테스트() throws InterruptedException {
-		int threadCount = 10000;
-		ExecutorService executorService = Executors.newFixedThreadPool(32);
-		CountDownLatch latch = new CountDownLatch(threadCount);
+		ExecutorService executor = Executors.newFixedThreadPool(300);
+		CountDownLatch latch = new CountDownLatch(CONCURRENT_USERS);
 
-		for (int i = 0; i < threadCount; i++) {
+		AtomicInteger successCount = new AtomicInteger();
+		AtomicInteger failCount = new AtomicInteger();
+
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+
+		for (int i = 0; i < CONCURRENT_USERS; i++) {
 			final int idx = i;
 
-			executorService.submit(() -> {
+			executor.submit(() -> {
 				try {
+
 					couponService.createUserCoupon(users.get(idx).getId(), coupon.getId());
-				} catch (BusinessException e) {
+					log.info("발급 성공 - id: {} | 발급된 쿠폰 수량: {}", idx,
+						userCouponRepository.countByCouponId(coupon.getId()));
+					successCount.incrementAndGet();
 				} catch (Exception e) {
+					failCount.incrementAndGet();
+					log.error("발급 실패 - id: {} | message: {}", idx, e.getMessage());
 				} finally {
 					latch.countDown();
 				}
@@ -132,15 +125,21 @@ class CouponServiceTests {
 		}
 
 		latch.await();
-		executorService.shutdown();
+		stopWatch.stop();
+		executor.shutdown();
 
-		Long issuedCount = userCouponRepository.countByCouponId(coupon.getId());
-		Integer leftQuantity = couponRepository.findById(coupon.getId()).get().getQuantity();
-		log.info("===== 테스트 결과 =====");
-		log.info("총 발급된 쿠폰 수: {}", issuedCount);
-		log.info("쿠폰 남은 수량: {}", leftQuantity);
-		assertThat(issuedCount).isEqualTo(100L);
-		assertThat(leftQuantity).isEqualTo(0);
+		long issuedCount = userCouponRepository.countByCouponId(coupon.getId());
+		int remainingQuantity = couponRepository.findById(coupon.getId()).orElseThrow().getQuantity();
+
+		log.info("총 소요 시간(ms): {}", stopWatch.getTotalTimeMillis());
+		log.info("요청 총 수: {}", CONCURRENT_USERS);
+		log.info("성공 요청 수: {}", successCount.get());
+		log.info("실패 요청 수: {}", failCount.get());
+		log.info("DB 기준 발급 수 (userCoupon): {}", issuedCount);
+		log.info("남은 수량: {}", remainingQuantity);
+
+		Assertions.assertEquals(COUPON_QUANTITY, issuedCount, "정확한 수량만큼 발급돼야 함");
+		Assertions.assertEquals(successCount.get(), COUPON_QUANTITY, "성공 요청 수도 수량과 같아야 함");
 	}
 
 	@Test

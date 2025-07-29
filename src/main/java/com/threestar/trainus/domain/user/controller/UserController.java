@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -110,5 +111,14 @@ public class UserController {
 	) {
 		UserInfoResponseDto response = userService.getCurrentUserInfo(loginUserId);
 		return BaseResponse.ok("사용자 정보 조회가 완료되었습니다.", response, HttpStatus.OK);
+	}
+
+	@DeleteMapping("/withdraw")
+	@Operation(summary = "회원탈퇴 api")
+	public ResponseEntity<BaseResponse<Void>> withdraw(
+		@LoginUser Long loginUserId
+	) {
+		userService.withdraw(loginUserId);
+		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}
 }
