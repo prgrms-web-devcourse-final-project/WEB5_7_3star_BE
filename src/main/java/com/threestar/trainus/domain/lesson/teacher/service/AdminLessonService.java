@@ -25,6 +25,7 @@ import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonImage;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
 import com.threestar.trainus.domain.lesson.teacher.mapper.CreatedLessonMapper;
 import com.threestar.trainus.domain.lesson.teacher.mapper.LessonApplicationMapper;
@@ -32,6 +33,7 @@ import com.threestar.trainus.domain.lesson.teacher.mapper.LessonMapper;
 import com.threestar.trainus.domain.lesson.teacher.mapper.LessonParticipantMapper;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonApplicationRepository;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonImageRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
@@ -50,6 +52,7 @@ public class AdminLessonService {
 	private final LessonRepository lessonRepository;
 	private final LessonImageRepository lessonImageRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
+	private final LessonParticipantRepository lessonParticipantRepository;
 	private final UserService userService;
 	private final LessonCreationLimitService lessonCreationLimitService;
 
@@ -146,10 +149,10 @@ public class AdminLessonService {
 		Long lessonId, int page, int limit, Long userId) {
 
 		Lesson lesson = validateLessonAccess(lessonId, userId);
-		Pageable pageable = createPageable(page, limit, "createdAt", true);
+		Pageable pageable = createPageable(page, limit, "joinAt", true);
 
-		Page<LessonApplication> participantPage = lessonApplicationRepository
-			.findApprovedParticipantsWithUserAndProfile(lesson, pageable);
+		Page<LessonParticipant> participantPage = lessonParticipantRepository
+			.findByLessonWithUserAndProfile(lesson, pageable);
 
 		return LessonParticipantMapper.toParticipantsResponseDto(
 			participantPage.getContent(),
@@ -361,6 +364,12 @@ public class AdminLessonService {
 		if (action == ApplicationAction.APPROVED) {
 			validateCapacity(lesson);
 			application.approve();
+			LessonParticipant participant = LessonParticipant.builder()
+				.lesson(lesson)
+				.user(application.getUser())
+				.build(); //
+			lessonParticipantRepository.save(participant);
+
 			lesson.incrementParticipantCount();
 		} else if (action == ApplicationAction.DENIED) {
 			application.deny();

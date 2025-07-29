@@ -17,6 +17,9 @@ import com.threestar.trainus.domain.coupon.user.entity.UserCoupon;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
+import com.threestar.trainus.domain.lesson.teacher.entity.ParticipantStatus;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
 import com.threestar.trainus.domain.payment.dto.ConfirmPaymentRequestDto;
 import com.threestar.trainus.domain.payment.dto.PaymentClient;
@@ -58,6 +61,7 @@ public class PaymentService {
 	private final StudentLessonService studentLessonService;
 	private final PaymentRepository paymentRepository;
 	private final TossPaymentRepository tossPaymentRepository;
+	private final LessonParticipantRepository lessonParticipantRepository;
 
 	private final DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
@@ -127,6 +131,17 @@ public class PaymentService {
 		LocalDateTime requestAt = OffsetDateTime.parse(tossResponseDto.requestedAt(), formatter).toLocalDateTime();
 
 		payment.processPayment(tossResponseDto.totalAmount(), paidAt, tossResponseDto.method());
+
+		LessonParticipant participant = lessonParticipantRepository
+			.findByLessonIdAndUserIdAndStatus(
+				payment.getLesson().getId(),
+				payment.getUser().getId(),
+				ParticipantStatus.PAYMENT_PENDING
+			)
+			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT));
+
+		participant.completePayment();
+		lessonParticipantRepository.save(participant);
 
 		TossPayment tossPayment = PaymentMapper.toTossPayment(payment, tossResponseDto, requestAt, paidAt,
 			PaymentStatus.DONE);

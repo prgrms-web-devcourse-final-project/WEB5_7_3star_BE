@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.lesson.teacher.dto;
 
 import java.time.LocalDateTime;
 
+import com.threestar.trainus.domain.lesson.teacher.entity.ParticipantStatus;
 import com.threestar.trainus.domain.profile.dto.ProfileResponseDto;
 
 import lombok.Builder;
@@ -11,6 +12,7 @@ import lombok.Builder;
 public record ParticipantDto(
 	Long lessonApplicationId,
 	ProfileResponseDto user,
+	ParticipantStatus participantStatus,
 	LocalDateTime joinedAt
 ) {
 }

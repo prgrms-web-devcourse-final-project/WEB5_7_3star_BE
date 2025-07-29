@@ -1,6 +1,7 @@
 package com.threestar.trainus.domain.lesson.student.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ import com.threestar.trainus.domain.lesson.teacher.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonImage;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
+import com.threestar.trainus.domain.lesson.teacher.entity.ParticipantStatus;
 import com.threestar.trainus.domain.lesson.teacher.mapper.LessonMapper;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonApplicationRepository;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonImageRepository;
@@ -272,7 +274,6 @@ public class StudentLessonService {
 		}
 	}
 
-
 	@Transactional
 	public void cancelLessonApplication(Long lessonId, Long userId) {
 		// 레슨 조회
@@ -348,8 +349,14 @@ public class StudentLessonService {
 
 	@Transactional
 	public void checkValidLessonParticipant(Lesson lesson, User user) {
-		boolean ifExists = lessonParticipantRepository.existsByLessonIdAndUserId(lesson.getId(), user.getId());
-		if (!ifExists) {
+		Optional<LessonParticipant> participant = lessonParticipantRepository
+			.findByLessonIdAndUserIdAndStatus(
+				lesson.getId(),
+				user.getId(),
+				ParticipantStatus.PAYMENT_PENDING
+			);
+
+		if (participant.isEmpty()) {
 			throw new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT);
 		}
 	}

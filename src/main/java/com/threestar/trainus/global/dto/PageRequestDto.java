@@ -4,8 +4,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter // @ModelAttribute 바인딩을 위한 setter, 외부노출X
 @RequiredArgsConstructor
 public class PageRequestDto {
 
