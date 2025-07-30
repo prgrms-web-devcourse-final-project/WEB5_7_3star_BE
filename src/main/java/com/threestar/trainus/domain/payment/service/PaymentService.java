@@ -198,7 +198,7 @@ public class PaymentService {
 
 		List<Payment> payments = paymentRepository.findAllWithAssociationsByIds(paymentIds);
 		Map<Long, Payment> map = payments.stream()
-			.collect(Collectors.toMap(Payment::getPaymentId, p -> p));
+			.collect(Collectors.toMap(Payment::getId, p -> p));
 		List<Payment> allSuccessPayments = paymentIds.stream()
 			.map(map::get)
 			.toList();
@@ -228,7 +228,7 @@ public class PaymentService {
 
 		List<Payment> payments = paymentRepository.findAllWithAssociationsByIds(paymentIds);
 		Map<Long, Payment> map = payments.stream()
-			.collect(Collectors.toMap(Payment::getPaymentId, p -> p));
+			.collect(Collectors.toMap(Payment::getId, p -> p));
 		List<Payment> allFailurePayments = paymentIds.stream()
 			.map(map::get)
 			.toList();
