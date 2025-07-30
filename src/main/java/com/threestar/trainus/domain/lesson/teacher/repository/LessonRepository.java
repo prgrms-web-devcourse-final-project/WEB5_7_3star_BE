@@ -18,6 +18,8 @@ import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
 import jakarta.persistence.LockModeType;
 
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
+	//삭제되지 않은 레슨만 조회
+	Optional<Lesson> findByIdAndDeletedAtIsNull(Long lessonId);
 
 	// 중복 레슨 검증(같은 강사가 같은 이름과 시작시간으로 레슨 생성했는지 체크)
 	@Query("""
@@ -57,8 +59,15 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("excludeLessonId") Long excludeLessonId
 	);
 
+	// 강사가 개설한 레슨 전체 목록 상태에 따라 필터링해서 조회(모집중인것만...이런식으로)
+	Page<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader, Pageable pageable);
+	
 	// 강사가 개설한 레슨 목록 조회 (전체 목록 - 탈퇴 검증용)
 	List<Lesson> findByLessonLeaderAndDeletedAtIsNull(Long lessonLeader);
+
+	// 강사가 개설한 레슨 전체 목록 조회
+	Page<Lesson> findByLessonLeaderAndStatusAndDeletedAtIsNull(Long lessonLeader, LessonStatus status,
+		Pageable pageable);
 
 	// 시작할 레슨을 찾는 메서드
 	// 모집중이거나 모집완료 상태일 때, 시작 시간이 도달한 레슨
@@ -159,186 +168,5 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("ri") String ri,
 		@Param("search") String search,
 		Pageable pageable
-	);
-
-	@Query(value = """
-		    SELECT l.* 
-		    FROM lessons l
-		    WHERE (:category IS NULL OR l.category = :category)
-		      AND (:city IS NULL OR l.city = :city)
-		      AND (:district IS NULL OR l.district = :district)
-		      AND (:dong IS NULL OR l.dong = :dong)
-		      AND (:ri IS NULL OR l.ri = :ri)
-		      AND MATCH(l.lesson_name, l.description) AGAINST(:search IN BOOLEAN MODE)
-		    ORDER BY 
-		      CASE WHEN :sort = 'LATEST' THEN l.created_at END DESC,
-		      CASE WHEN :sort = 'OLDEST' THEN l.created_at END ASC,
-		      CASE WHEN :sort = 'PRICE_HIGH' THEN l.price END DESC,
-		      CASE WHEN :sort = 'PRICE_LOW' THEN l.price END ASC,
-		      l.created_at DESC
-		    LIMIT :limit OFFSET :offset
-		""", nativeQuery = true)
-	List<Lesson> findLessonsWithFullText(
-		@Param("category") String category,
-		@Param("city") String city,
-		@Param("district") String district,
-		@Param("dong") String dong,
-		@Param("ri") String ri,
-		@Param("search") String search,
-		@Param("sort") String sort,
-		@Param("offset") int offset,
-		@Param("limit") int limit
-	);
-
-	@Query(value = """
-		    SELECT COUNT(*) FROM (
-		        SELECT l.id
-		        FROM lessons l
-		        WHERE (:category IS NULL OR l.category = :category)
-		          AND (:city IS NULL OR l.city = :city)
-		          AND (:district IS NULL OR l.district = :district)
-		          AND (:dong IS NULL OR l.dong = :dong)
-		          AND (:ri IS NULL OR l.ri = :ri)
-		          AND MATCH(l.lesson_name, l.description) AGAINST(:search IN BOOLEAN MODE)
-		        LIMIT :limit
-		    ) t
-		""", nativeQuery = true)
-	int countLessonsWithFullText(
-		@Param("category") String category,
-		@Param("city") String city,
-		@Param("district") String district,
-		@Param("dong") String dong,
-		@Param("ri") String ri,
-		@Param("search") String search,
-		@Param("limit") int limit
-	);
-
-	@Query(value = """
-		    SELECT l.* 
-		    FROM lessons l
-		    WHERE (:category IS NULL OR l.category = :category)
-		      AND (:city IS NULL OR l.city = :city)
-		      AND (:district IS NULL OR l.district = :district)
-		      AND (:dong IS NULL OR l.dong = :dong)
-		      AND (:ri IS NULL OR l.ri = :ri)
-		    ORDER BY 
-		      CASE WHEN :sort = 'LATEST' THEN l.created_at END DESC,
-		      CASE WHEN :sort = 'OLDEST' THEN l.created_at END ASC,
-		      CASE WHEN :sort = 'PRICE_HIGH' THEN l.price END DESC,
-		      CASE WHEN :sort = 'PRICE_LOW' THEN l.price END ASC,
-		      l.created_at DESC
-		    LIMIT :limit OFFSET :offset
-		""", nativeQuery = true)
-	List<Lesson> findLessonsWithoutFullText(
-		@Param("category") String category,
-		@Param("city") String city,
-		@Param("district") String district,
-		@Param("dong") String dong,
-		@Param("ri") String ri,
-		@Param("sort") String sort,
-		@Param("offset") int offset,
-		@Param("limit") int limit
-	);
-
-	@Query(value = """
-		    SELECT COUNT(*) FROM (
-		        SELECT l.id
-		        FROM lessons l
-		        WHERE (:category IS NULL OR l.category = :category)
-		          AND (:city IS NULL OR l.city = :city)
-		          AND (:district IS NULL OR l.district = :district)
-		          AND (:dong IS NULL OR l.dong = :dong)
-		          AND (:ri IS NULL OR l.ri = :ri)
-		        LIMIT :limit
-		    ) t
-		""", nativeQuery = true)
-	int countLessonsWithoutFullText(
-		@Param("category") String category,
-		@Param("city") String city,
-		@Param("district") String district,
-		@Param("dong") String dong,
-		@Param("ri") String ri,
-		@Param("limit") int limit
-	);
-
-	// 상태 필터 없는 전체 조회
-	@Query(value = """
-		    SELECT *
-		    FROM lessons l
-		    WHERE l.lesson_leader = :userId
-		      AND l.deleted_at IS NULL
-		    ORDER BY l.created_at DESC
-		    LIMIT :limit OFFSET :offset
-		""", nativeQuery = true)
-	List<Lesson> findCreatedLessons(
-		@Param("userId") Long userId,
-		@Param("offset") int offset,
-		@Param("limit") int limit
-	);
-
-	// // 상태가 있는 경우
-	@Query(value = """
-		    SELECT *
-		    FROM lessons l
-		    WHERE l.lesson_leader = :userId
-		      AND l.status = :status
-		      AND l.deleted_at IS NULL
-		    ORDER BY l.created_at DESC
-		    LIMIT :limit OFFSET :offset
-		""", nativeQuery = true)
-	List<Lesson> findCreatedLessonsByStatus(
-		@Param("userId") Long userId,
-		@Param("status") LessonStatus status,
-		@Param("offset") int offset,
-		@Param("limit") int limit
-	);
-
-	// 목록 조회
-	@Query(value = """
-		    SELECT *
-		    FROM lessons l
-		    WHERE l.lesson_leader = :userId
-		      AND (:status IS NULL OR l.status = :status)
-		      AND l.deleted_at IS NULL
-		    ORDER BY l.created_at DESC
-		    LIMIT :limit OFFSET :offset
-		""", nativeQuery = true)
-	List<Lesson> findCreatedLessonsByUser(
-		@Param("userId") Long userId,
-		@Param("status") String status,
-		@Param("limit") int limit,
-		@Param("offset") int offset
-	);
-
-	// totalCount (상태 포함)
-	@Query(value = """
-		    SELECT COUNT(*) FROM (
-		        SELECT l.id
-		        FROM lessons l
-		        WHERE l.lesson_leader = :userId
-		          AND l.status = :status
-		          AND l.deleted_at IS NULL
-		        LIMIT :limit
-		    ) t
-		""", nativeQuery = true)
-	int countCreatedLessonsByStatus(
-		@Param("userId") Long userId,
-		@Param("status") LessonStatus status,
-		@Param("limit") int limit
-	);
-
-	// totalCount (모든 상태)
-	@Query(value = """
-		    SELECT COUNT(*) FROM (
-		        SELECT l.id
-		        FROM lessons l
-		        WHERE l.lesson_leader = :userId
-		          AND l.deleted_at IS NULL
-		        LIMIT :limit
-		    ) t
-		""", nativeQuery = true)
-	int countCreatedLessons(
-		@Param("userId") Long userId,
-		@Param("limit") int limit
 	);
 }

@@ -30,7 +30,7 @@ public class LessonApplicationMapper {
 
 	//신청자 목록과 전체 개수를 리스트 응답 DTO로 변환
 	public static LessonApplicationListResponseDto toListResponseDto(
-		List<LessonApplication> applications, int totalCount) {
+		List<LessonApplication> applications, Long totalCount) {
 
 		// 각 신청을 응답 DTO로 변환
 		List<LessonApplicationResponseDto> applicationDtos = applications.stream()
@@ -40,7 +40,7 @@ public class LessonApplicationMapper {
 		// 리스트 응답 DTO 생성
 		return LessonApplicationListResponseDto.builder()
 			.lessonApplications(applicationDtos)
-			.count(totalCount)
+			.count(totalCount.intValue())
 			.build();
 	}
 
