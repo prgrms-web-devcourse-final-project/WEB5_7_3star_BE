@@ -22,7 +22,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	Optional<Payment> findByUserAndLessonAndUserCouponIsNullAndStatus(User user, Lesson lesson, PaymentStatus status);
 
 	@Query(value = """
-		SELECT p.payment_id FROM payments p
+		SELECT p.id FROM payments p
 		WHERE p.user_id = :userId
 		AND p.status = :status
 		ORDER BY p.pay_date DESC 
@@ -39,12 +39,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 			SELECT p FROM Payment p
 			LEFT JOIN FETCH p.lesson
 			LEFT JOIN FETCH p.userCoupon
-			WHERE p.paymentId IN :ids
+			WHERE p.id IN :ids
 		""")
 	List<Payment> findAllWithAssociationsByIds(@Param("ids") List<Long> ids);
 
 	@Query(value = """
-			SELECT count(*) FROM (SELECT payment_id FROM payments WHERE user_id = :userId AND status = :status LIMIT :limit) t
+			SELECT count(*) FROM (SELECT id FROM payments WHERE user_id = :userId AND status = :status LIMIT :limit) t
 		""", nativeQuery = true
 	)
 	Integer count(
