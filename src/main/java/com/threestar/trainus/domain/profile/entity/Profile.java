@@ -33,10 +33,10 @@ public class Profile {
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
-	@Column(length = 255)
+	@Column(length = 2048)
 	private String profileImage;
 
-	@Column(length = 255)
+	@Column(length = 512)
 	private String intro;
 
 	public void updateProfileImage(String profileImage) {

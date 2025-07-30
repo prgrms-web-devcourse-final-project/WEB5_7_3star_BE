@@ -48,10 +48,10 @@ public class Review extends BaseDateEntity {
 	@Column(nullable = false)
 	private Double rating;
 
-	@Column(length = 255, nullable = false)
+	@Column(length = 512, nullable = false)
 	private String content;
 
-	@Column(length = 255)
+	@Column(length = 2048)
 	private String image;
 
 	private LocalDateTime deletedAt;

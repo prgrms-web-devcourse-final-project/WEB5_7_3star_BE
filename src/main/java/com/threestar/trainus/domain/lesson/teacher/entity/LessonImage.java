@@ -28,7 +28,7 @@ public class LessonImage {
 	@JoinColumn(name = "lesson_id", nullable = false)
 	private Lesson lesson;
 
-	@Column(name = "image_url", nullable = false, length = 1024)
+	@Column(name = "image_url", nullable = false, length = 2048)
 	private String imageUrl;
 
 	@Builder
