@@ -1,5 +1,7 @@
 package com.threestar.trainus.domain.coupon.admin.mapper;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
 import com.threestar.trainus.domain.coupon.admin.dto.CouponCreateRequestDto;
@@ -57,14 +59,26 @@ public class AdminCouponMapper {
 		);
 	}
 
-	public static CouponListResponseDto toCouponListResponseDto(Page<Coupon> couponPage) {
+	// public static CouponListResponseDto toCouponListResponseDto(Page<Coupon> couponPage) {
+	// 	return new CouponListResponseDto(
+	// 		(int)couponPage.getTotalElements(),
+	// 		couponPage.getContent().stream()
+	// 			.map(AdminCouponMapper::toCouponListItemDto)
+	// 			.toList()
+	// 	);
+	// }
+
+	public static CouponListResponseDto toCouponListResponseDto(
+		List<Coupon> coupons, int totalCount
+	) {
 		return new CouponListResponseDto(
-			(int)couponPage.getTotalElements(),
-			couponPage.getContent().stream()
+			totalCount,
+			coupons.stream()
 				.map(AdminCouponMapper::toCouponListItemDto)
 				.toList()
 		);
 	}
+
 
 	public static CouponDetailResponseDto toCouponDetailResponseDto(Coupon coupon, Integer issuedCount) {
 		return new CouponDetailResponseDto(

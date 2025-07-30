@@ -25,8 +25,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 		SELECT COUNT(*) FROM (
 		    SELECT r.review_id 
 		    FROM reviews r 
-		    JOIN users u1 ON r.reviewee_id = u1.id AND u1.deleted_at IS NULL
-		    JOIN users u2 ON r.reviewer_id = u2.id AND u2.deleted_at IS NULL
+		    JOIN user u1 ON r.reviewee_id = u1.id AND u1.deleted_at IS NULL
+		    JOIN user u2 ON r.reviewer_id = u2.id AND u2.deleted_at IS NULL
 		    WHERE r.reviewee_id = :userId 
 		    LIMIT :limit
 		) t
