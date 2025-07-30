@@ -20,6 +20,7 @@ public class CreatedLessonMapper {
 			.status(lesson.getStatus())
 			.startAt(lesson.getStartAt())
 			.endAt(lesson.getEndAt())
+			.openTime(lesson.getOpenTime())
 			.openRun(lesson.getOpenRun())
 			.addressDetail(lesson.getAddressDetail())
 			.build();

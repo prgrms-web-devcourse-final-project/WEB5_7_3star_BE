@@ -19,6 +19,7 @@ public record CreatedLessonDto(
 	LessonStatus status,
 	LocalDateTime startAt,
 	LocalDateTime endAt,
+	LocalDateTime openTime,
 	Boolean openRun,
 	String addressDetail
 ) {
