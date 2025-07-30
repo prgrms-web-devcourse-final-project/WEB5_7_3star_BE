@@ -13,8 +13,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	@Query("""
 		   	SELECT r 
 		   	FROM Review r
-		   	JOIN FETCH r.lesson
-		   	JOIN FETCH r.reviewer
+		   	JOIN FETCH r.lesson l
+		   	JOIN FETCH r.reviewer u
+		   	LEFT JOIN FETCH u.profile p
+          	LEFT JOIN FETCH u.profileMetadata pm
 		   	WHERE r.reviewee.id = :userId
 		""")
 	List<Review> findByReviewee_Id(@Param("userId") Long userId);
