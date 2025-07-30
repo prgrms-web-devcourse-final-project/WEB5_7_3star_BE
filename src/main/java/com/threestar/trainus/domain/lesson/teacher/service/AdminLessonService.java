@@ -1,12 +1,9 @@
 package com.threestar.trainus.domain.lesson.teacher.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +22,7 @@ import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonApplication;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonImage;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
 import com.threestar.trainus.domain.lesson.teacher.mapper.CreatedLessonMapper;
 import com.threestar.trainus.domain.lesson.teacher.mapper.LessonApplicationMapper;
@@ -32,11 +30,13 @@ import com.threestar.trainus.domain.lesson.teacher.mapper.LessonMapper;
 import com.threestar.trainus.domain.lesson.teacher.mapper.LessonParticipantMapper;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonApplicationRepository;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonImageRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
+import com.threestar.trainus.global.utils.PageLimitCalculator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -50,6 +50,7 @@ public class AdminLessonService {
 	private final LessonRepository lessonRepository;
 	private final LessonImageRepository lessonImageRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
+	private final LessonParticipantRepository lessonParticipantRepository;
 	private final UserService userService;
 	private final LessonCreationLimitService lessonCreationLimitService;
 
@@ -106,20 +107,49 @@ public class AdminLessonService {
 		return LessonMapper.toUpdateResponseDto(savedLesson, updatedImages);
 	}
 
-	//레슨 신청자 목록 조회
+	@Transactional(readOnly = true)
 	public LessonApplicationListResponseDto getLessonApplications(
 		Long lessonId, int page, int limit, String status, Long userId) {
 
 		Lesson lesson = validateLessonAccess(lessonId, userId);
 		ApplicationStatus applicationStatus = toApplicationStatus(status);
-		Pageable pageable = createPageable(page, limit, "createdAt", false);
 
-		Page<LessonApplication> applicationPage = getApplicationPage(lesson, status, applicationStatus, pageable);
+		// offset, limit 계산
+		int offset = (page - 1) * limit;
+		int countLimit = PageLimitCalculator.calculatePageLimit(page, limit, 5);
 
-		return LessonApplicationMapper.toListResponseDto(
-			applicationPage.getContent(),
-			applicationPage.getTotalElements()
-		);
+		List<LessonApplication> applications;
+		int total;
+
+		if ("ALL".equals(status)) {
+			// 모든 상태 조회
+			List<Long> ids = lessonApplicationRepository.findIdsByLesson(
+				lessonId, offset, limit
+			);
+
+			applications = ids.isEmpty()
+				? Collections.emptyList()
+				: lessonApplicationRepository.findAllWithUserProfileLesson(ids);
+
+			total = lessonApplicationRepository.countAllByLesson(
+				lesson.getId(), countLimit
+			);
+		} else {
+			// 특정 상태 조회
+			List<Long> ids = lessonApplicationRepository.findIdsByLessonAndStatus(
+				lesson.getId(), applicationStatus.name(), offset, limit
+			);
+
+			applications = ids.isEmpty()
+				? Collections.emptyList()
+				: lessonApplicationRepository.findAllWithUserProfileLesson(ids);
+
+			total = lessonApplicationRepository.countAllByLessonAndStatus(
+				lesson.getId(), applicationStatus.name(), countLimit
+			);
+		}
+
+		return LessonApplicationMapper.toListResponseDto(applications, total);
 	}
 
 	//레슨 신청 승인/거절 처리
@@ -141,35 +171,65 @@ public class AdminLessonService {
 		return buildApplicationProcessResponse(savedApplication);
 	}
 
-	//레슨 참가자 목록 조회
+	@Transactional(readOnly = true)
 	public ParticipantListResponseDto getLessonParticipants(
 		Long lessonId, int page, int limit, Long userId) {
 
+		// 레슨 접근 권한 검증
 		Lesson lesson = validateLessonAccess(lessonId, userId);
-		Pageable pageable = createPageable(page, limit, "createdAt", true);
 
-		Page<LessonApplication> participantPage = lessonApplicationRepository
-			.findApprovedParticipantsWithUserAndProfile(lesson, pageable);
+		// offset & countLimit 계산
+		int offset = (page - 1) * limit;
+		int countLimit = PageLimitCalculator.calculatePageLimit(page, limit, 5);
 
-		return LessonParticipantMapper.toParticipantsResponseDto(
-			participantPage.getContent(),
-			participantPage.getTotalElements()
+		// 참가자 조회
+		List<Long> ids = lessonParticipantRepository.findIdsByLesson(lessonId, offset, limit);
+
+		List<LessonParticipant> participants = ids.isEmpty()
+			? Collections.emptyList()
+			: lessonParticipantRepository.findAllWithUserAndProfile(ids);
+
+		// 전체 카운트 조회
+		int totalCount = lessonParticipantRepository.countAllByLesson(
+			lesson.getId(), countLimit
 		);
+
+		return LessonParticipantMapper.toParticipantsResponseDto(participants, totalCount);
 	}
 
-	//강사가 개설한 레슨 목록 조회
+	@Transactional(readOnly = true)
 	public CreatedLessonListResponseDto getCreatedLessons(
 		Long userId, int page, int limit, String status) {
 
-		User user = userService.getUserById(userId);
-		Pageable pageable = createPageable(page, limit, "createdAt", false);
+		// user 검증
+		userService.getUserById(userId);
 
-		Page<Lesson> lessonPage = getLessonPage(userId, status, pageable);
+		// offset / countLimit 계산
+		int offset = (page - 1) * limit;
+		int countLimit = PageLimitCalculator.calculatePageLimit(page, limit, 5);
 
-		return CreatedLessonMapper.toCreatedLessonListResponseDto(
-			lessonPage.getContent(),
-			lessonPage.getTotalElements()
-		);
+		List<Lesson> lessons;
+		int total;
+
+		if (status != null && !status.isEmpty()) {
+			// 상태 값이 있는 경우
+			lessons = lessonRepository.findCreatedLessonsByStatus(
+				userId, LessonStatus.valueOf(status), offset, limit
+			);
+			total = lessonRepository.countCreatedLessonsByStatus(
+				userId, LessonStatus.valueOf(status), countLimit
+			);
+		} else {
+			// 상태 필터 없는 경우
+			lessons = lessonRepository.findCreatedLessons(
+				userId, offset, limit
+			);
+			total = lessonRepository.countCreatedLessons(
+				userId, countLimit
+			);
+		}
+
+		return CreatedLessonMapper.toCreatedLessonListResponseDto(lessons, total);
 	}
 
 	// 검증 메서드
@@ -361,16 +421,16 @@ public class AdminLessonService {
 		if (action == ApplicationAction.APPROVED) {
 			validateCapacity(lesson);
 			application.approve();
+			LessonParticipant participant = LessonParticipant.builder()
+				.lesson(lesson)
+				.user(application.getUser())
+				.build(); //
+			lessonParticipantRepository.save(participant);
+
 			lesson.incrementParticipantCount();
 		} else if (action == ApplicationAction.DENIED) {
 			application.deny();
 		}
-	}
-
-	//페이지 객체 생성
-	private Pageable createPageable(int page, int limit, String sortBy, boolean ascending) {
-		Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-		return PageRequest.of(page - 1, limit, sort);
 	}
 
 	//신청 상태 파싱
@@ -382,37 +442,6 @@ public class AdminLessonService {
 			return ApplicationStatus.valueOf(status);
 		} catch (IllegalArgumentException e) {
 			throw new BusinessException(ErrorCode.INVALID_APPLICATION_STATUS);
-		}
-	}
-
-	//레슨 신청 상태 검증
-	private LessonStatus toLessonStatus(String status) {
-		try {
-			return LessonStatus.valueOf(status);
-		} catch (IllegalArgumentException e) {
-			throw new BusinessException(ErrorCode.INVALID_LESSON_STATUS);
-		}
-	}
-
-	//신청 페이지 조회
-	private Page<LessonApplication> getApplicationPage(Lesson lesson, String status,
-		ApplicationStatus applicationStatus, Pageable pageable) {
-
-		if ("ALL".equals(status)) {
-			return lessonApplicationRepository.findByLessonWithUserAndProfile(lesson, pageable);
-		} else {
-			return lessonApplicationRepository.findByLessonAndStatusWithUserAndProfile(
-				lesson, applicationStatus, pageable);
-		}
-	}
-
-	//레슨 페이지 조회
-	private Page<Lesson> getLessonPage(Long userId, String status, Pageable pageable) {
-		if (status != null && !status.isEmpty()) {
-			LessonStatus lessonStatus = toLessonStatus(status);
-			return lessonRepository.findByLessonLeaderAndStatusAndDeletedAtIsNull(userId, lessonStatus, pageable);
-		} else {
-			return lessonRepository.findByLessonLeaderAndDeletedAtIsNull(userId, pageable);
 		}
 	}
 

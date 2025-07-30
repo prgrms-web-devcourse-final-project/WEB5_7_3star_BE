@@ -60,4 +60,21 @@ public class LessonParticipant {
 	private void prePersist() {
 		this.joinAt = LocalDateTime.now();
 	}
+
+	// 결제 완료 시 상태 변경 메서드
+	public void completePayment() {
+		if (this.status == ParticipantStatus.PAYMENT_PENDING) {
+			this.status = ParticipantStatus.COMPLETED;
+		}
+	}
+
+	// 결제 대기 상태인지 확인하는 메서드
+	public boolean isPaymentPending() {
+		return this.status == ParticipantStatus.PAYMENT_PENDING;
+	}
+
+	// 참가 완료 상태인지 확인하는 메서드
+	public boolean isCompleted() {
+		return this.status == ParticipantStatus.COMPLETED;
+	}
 }

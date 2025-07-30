@@ -20,6 +20,7 @@ public class CreatedLessonMapper {
 			.status(lesson.getStatus())
 			.startAt(lesson.getStartAt())
 			.endAt(lesson.getEndAt())
+			.openTime(lesson.getOpenTime())
 			.openRun(lesson.getOpenRun())
 			.addressDetail(lesson.getAddressDetail())
 			.build();
@@ -27,7 +28,7 @@ public class CreatedLessonMapper {
 
 	// 개설한 레슨 목록과 총 레슨의 수를 응답 DTO로 변환
 	public static CreatedLessonListResponseDto toCreatedLessonListResponseDto(
-		List<Lesson> lessons, Long totalCount) {
+		List<Lesson> lessons, int totalCount) {
 
 		// 각 레슨을 DTO로 변환
 		List<CreatedLessonDto> lessonDtos = lessons.stream()
@@ -37,7 +38,7 @@ public class CreatedLessonMapper {
 		// 응답 DTO 생성
 		return CreatedLessonListResponseDto.builder()
 			.lessons(lessonDtos)
-			.count(totalCount.intValue())
+			.count(totalCount)
 			.build();
 	}
 

@@ -1,11 +1,8 @@
 package com.threestar.trainus.domain.coupon.admin.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +22,7 @@ import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
+import com.threestar.trainus.global.utils.PageLimitCalculator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -54,21 +52,32 @@ public class AdminCouponService {
 
 	//쿠폰 조회
 	@Transactional(readOnly = true)
-	public CouponListResponseDto getCoupons(int page, int limit, CouponStatus status, CouponCategory category,
-		Long userId) {
+	public CouponListResponseDto getCoupons(
+		int page, int limit,
+		CouponStatus status, CouponCategory category,
+		Long userId
+	) {
 		// 관리자 권한 검증
 		userService.validateAdminRole(userId);
 
-		Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
+		// offset / countLimit 계산
+		int offset = (page - 1) * limit;
+		int countLimit = PageLimitCalculator.calculatePageLimit(page, limit, 5);
 
-		// 조건에 따른 쿠폰 조회
-		Page<Coupon> couponPage = couponRepository.findCouponsWithFilters(status, category, pageable);
+		// 쿠폰 조회 및 count
+		List<Coupon> coupons = couponRepository.findCouponsWithFilters(
+			status, category, offset, limit
+		);
 
-		//응답 DTO 변환
-		return AdminCouponMapper.toCouponListResponseDto(couponPage);
+		int total = couponRepository.countCouponsWithFilters(
+			status, category, countLimit
+		);
+
+		// 응답 DTO 변환
+		return AdminCouponMapper.toCouponListResponseDto(coupons, total);
 	}
 
-	//쿠폰 상세 조횧
+	//쿠폰 상세 조회
 	@Transactional(readOnly = true)
 	public CouponDetailResponseDto getCouponDetail(Long couponId, Long userId) {
 		// 관리자 권한 검증

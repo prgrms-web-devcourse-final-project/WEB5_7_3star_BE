@@ -60,6 +60,7 @@ public class UserCouponServiceTests {
 			.category(CouponCategory.NORMAL)
 			.closeAt(LocalDateTime.now().plusDays(1))
 			.expirationDate(LocalDateTime.now().plusDays(30))
+			.openAt(LocalDateTime.now())
 			.build();
 
 		given(userService.getUserById(userId))
@@ -72,7 +73,7 @@ public class UserCouponServiceTests {
 		CreateUserCouponResponseDto responseDto = couponService.createUserCoupon(userId, couponId);
 
 		assertThat(responseDto).isNotNull();
-		assertThat(responseDto.getCouponId()).isEqualTo(couponId);
+		assertThat(responseDto.couponId()).isEqualTo(couponId);
 		then(userCouponRepository).should().save(any(UserCoupon.class));
 
 	}
@@ -205,7 +206,7 @@ public class UserCouponServiceTests {
 		UserCouponPageResponseDto dto = couponService.getUserCoupons(userId, null);
 
 		assertThat(dto).isNotNull();
-		assertThat(dto.getUserCoupons()).hasSize(1);
+		assertThat(dto.userCoupons()).hasSize(1);
 	}
 
 	@Test
@@ -248,8 +249,8 @@ public class UserCouponServiceTests {
 		UserCouponPageResponseDto dto = couponService.getUserCoupons(userId, status);
 
 		assertThat(dto).isNotNull();
-		assertThat(dto.getUserCoupons()).hasSize(1);
-		assertThat(dto.getUserCoupons().get(0).getCouponId()).isEqualTo(coupon.getId());
+		assertThat(dto.userCoupons()).hasSize(1);
+		assertThat(dto.userCoupons().get(0).couponId()).isEqualTo(coupon.getId());
 	}
 
 	@Test
@@ -265,7 +266,7 @@ public class UserCouponServiceTests {
 
 		// then
 		assertThat(result).isNotNull();
-		assertThat(result.getCoupons()).hasSize(1);
+		assertThat(result.coupons()).hasSize(1);
 	}
 
 	private User createMockUser() {

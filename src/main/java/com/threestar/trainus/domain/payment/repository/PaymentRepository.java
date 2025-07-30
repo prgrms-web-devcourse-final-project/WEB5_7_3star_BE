@@ -22,11 +22,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	Optional<Payment> findByUserAndLessonAndUserCouponIsNullAndStatus(User user, Lesson lesson, PaymentStatus status);
 
 	@Query(value = """
-		select p.payment_id from payments p
-		where p.user_id = :userId
-		and p.status = :status
-		order by p.pay_date desc
-		limit :limit offset :offset
+		SELECT p.payment_id FROM payments p
+		WHERE p.user_id = :userId
+		AND p.status = :status
+		ORDER BY p.pay_date DESC 
+		LIMIT :limit OFFSET :offset
 		""", nativeQuery = true)
 	List<Long> findPaymentIdsByUserAndStatus(
 		@Param("userId") Long userId,
@@ -36,15 +36,15 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	);
 
 	@Query("""
-			select p from Payment p
-			left join fetch p.lesson
-			left join fetch p.userCoupon
-			where p.paymentId in :ids
+			SELECT p FROM Payment p
+			LEFT JOIN FETCH p.lesson
+			LEFT JOIN FETCH p.userCoupon
+			WHERE p.paymentId IN :ids
 		""")
 	List<Payment> findAllWithAssociationsByIds(@Param("ids") List<Long> ids);
 
 	@Query(value = """
-			select count(*) from (select payment_id from payments where user_id = :userId and status = :status limit :limit) t
+			SELECT count(*) FROM (SELECT payment_id FROM payments WHERE user_id = :userId AND status = :status LIMIT :limit) t
 		""", nativeQuery = true
 	)
 	Integer count(
