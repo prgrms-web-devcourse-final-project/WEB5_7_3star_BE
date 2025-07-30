@@ -360,4 +360,14 @@ public class StudentLessonService {
 			throw new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT);
 		}
 	}
+
+	@Transactional
+	public void completeParticipantPayment(Long lessonId, Long userId) {
+		LessonParticipant participant = lessonParticipantRepository
+			.findByLessonIdAndUserIdAndStatus(lessonId, userId, ParticipantStatus.PAYMENT_PENDING)
+			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT));
+
+		participant.completePayment();
+		lessonParticipantRepository.save(participant);
+	}
 }
