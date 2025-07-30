@@ -14,7 +14,7 @@ import com.threestar.trainus.global.annotation.LoginUser;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/s3")
+@RequestMapping("/api/v1/s3")
 public class S3Controller {
 	private final S3Service s3Service;
 
