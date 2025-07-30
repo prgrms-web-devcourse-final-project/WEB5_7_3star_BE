@@ -22,8 +22,10 @@ import com.threestar.trainus.domain.lesson.teacher.entity.ApplicationStatus;
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonApplication;
+import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonApplicationRepository;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonImageRepository;
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
 import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
@@ -47,6 +49,12 @@ public class AdminLessonServiceTest {
 
 	@InjectMocks
 	private AdminLessonService adminLessonService;
+
+	@Mock
+	private LessonParticipantRepository lessonParticipantRepository;
+
+	@Mock
+	private LessonCreationLimitService lessonCreationLimitService;
 
 	@Test
 	@DisplayName("정상적인 레슨 생성 테스트")
@@ -102,12 +110,16 @@ public class AdminLessonServiceTest {
 			.willReturn(false);
 		given(lessonRepository.save(any(Lesson.class))).willReturn(savedLesson);
 
+		willDoNothing().given(lessonCreationLimitService).checkAndSetCreationLimit(userId);
+
 		LessonResponseDto response = adminLessonService.createLesson(request, userId);
 
 		assertThat(response).isNotNull();
 		assertThat(response.lessonName()).isEqualTo("테스트 레슨");
 		assertThat(response.lessonLeader()).isEqualTo(userId);
 		verify(lessonRepository).save(any(Lesson.class));
+
+		verify(lessonCreationLimitService).checkAndSetCreationLimit(userId);
 	}
 
 	@Test
@@ -295,12 +307,15 @@ public class AdminLessonServiceTest {
 
 		given(lessonApplicationRepository.findById(applicationId)).willReturn(Optional.of(application));
 		given(lessonApplicationRepository.save(any(LessonApplication.class))).willReturn(application);
+		given(lessonParticipantRepository.save(any(LessonParticipant.class))).willReturn(any());
 
 		var response = adminLessonService.processLessonApplication(applicationId, ApplicationAction.APPROVED, userId);
 
 		assertThat(response).isNotNull();
 		assertThat(response.status()).isEqualTo(ApplicationStatus.APPROVED);
 		verify(lessonApplicationRepository).save(application);
+
+		verify(lessonParticipantRepository).save(any(LessonParticipant.class));
 	}
 
 	@Test
