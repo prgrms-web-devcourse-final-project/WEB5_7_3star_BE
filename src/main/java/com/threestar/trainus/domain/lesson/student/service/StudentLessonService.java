@@ -172,8 +172,14 @@ public class StudentLessonService {
 			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
 		}
 
+
+
 		// 선착순 여부에 따라 저장 처리 분기
 		if (lesson.getOpenRun()) {
+			// 신청 시간 체크
+			if (java.time.LocalDateTime.now().isBefore(lesson.getOpenTime())) {
+				throw new BusinessException(ErrorCode.LESSON_NOT_YET_OPEN);
+			}
 			// 바로 참가자 등록, 인원수 증가
 			LessonParticipant participant = LessonParticipant.builder()
 				.lesson(lesson)

@@ -92,6 +92,7 @@ public enum ErrorCode {
 	DUPLICATE_LESSON(HttpStatus.CONFLICT, "동일한 이름과 시간으로 이미 생성된 레슨이 있습니다."),
 	LESSON_TIME_OVERLAP(HttpStatus.CONFLICT, "해당 시간대에 이미 다른 레슨이 예정되어 있습니다."),
 	LESSON_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "신청 불가능한 상태의 레슨입니다."),
+	LESSON_NOT_YET_OPEN(HttpStatus.BAD_REQUEST, "아직 신청 가능한 시간이 아닙니다."),
 
 	// 409
 	ALREADY_APPLIED(HttpStatus.CONFLICT, "이미 신청한 레슨입니다."),
