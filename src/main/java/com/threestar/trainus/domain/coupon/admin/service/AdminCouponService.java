@@ -95,7 +95,7 @@ public class AdminCouponService {
 		return AdminCouponMapper.toCouponListResponseDto(coupons, total);
 	}
 
-	//쿠폰 상세 조횧
+	//쿠폰 상세 조회
 	@Transactional(readOnly = true)
 	public CouponDetailResponseDto getCouponDetail(Long couponId, Long userId) {
 		// 관리자 권한 검증
