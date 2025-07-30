@@ -41,7 +41,7 @@ public class ReviewService {
 
 		LocalDateTime reviewEndDate = findLesson.getEndAt().plusDays(7);
 
-		if (LocalDateTime.now().isBefore(findLesson.getEndAt()) && LocalDateTime.now().isAfter(reviewEndDate)) {
+		if (LocalDateTime.now().isBefore(findLesson.getEndAt()) || LocalDateTime.now().isAfter(reviewEndDate)) {
 			throw new BusinessException(ErrorCode.INVALID_REVIEW_DATE);
 		}
 
