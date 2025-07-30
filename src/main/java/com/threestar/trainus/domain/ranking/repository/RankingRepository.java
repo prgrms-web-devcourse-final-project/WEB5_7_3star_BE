@@ -31,22 +31,25 @@ public interface RankingRepository extends JpaRepository<ProfileMetadata, Long> 
 	List<RankingData> findTopRankings();
 
 	@Query("""
-		SELECT r.reviewee.id as userId,
-			r.reviewee.nickname as userNickname,
-			CAST(COUNT(r.reviewId) AS INTEGER) as reviewCount,
-			CAST(AVG(r.rating) AS DOUBLE) as rating,
-			p.profileImage as profileImage
-		FROM Review r
-		JOIN r.lesson l
-		JOIN r.reviewee u
+		SELECT pm.user.id as userId,
+		    pm.user.nickname as userNickname,
+		    pm.reviewCount as reviewCount,
+		    pm.rating as rating,
+		    p.profileImage as profileImage
+		FROM ProfileMetadata pm
+		JOIN pm.user u
 		LEFT JOIN Profile p ON p.user = u
-		WHERE l.category = :category
-		AND r.deletedAt IS NULL
-		GROUP BY r.reviewee.id, r.reviewee.nickname, p.profileImage
-		HAVING COUNT(r.reviewId) >= 5
+		WHERE pm.reviewCount >= 5
+		AND EXISTS (
+		    SELECT 1 FROM Review r 
+		    JOIN r.lesson l 
+		    WHERE r.reviewee = u 
+		    AND l.category = :category 
+		    AND r.deletedAt IS NULL
+		)
 		ORDER BY (
-			(AVG(r.rating) / 5.0) * 0.5 +
-			(LEAST(COUNT(r.reviewId), 100) / 100.0) * 0.5
+		    (pm.rating / 5.0) * 0.5 +
+		    (LEAST(pm.reviewCount, 100) / 100.0) * 0.5
 		) DESC
 		LIMIT 10
 		""")
