@@ -1,13 +1,12 @@
 package com.threestar.trainus.domain.payment.controller;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.threestar.trainus.domain.payment.dto.ConfirmPaymentRequestDto;
@@ -24,6 +23,7 @@ import com.threestar.trainus.domain.payment.dto.success.SuccessfulPaymentRespons
 import com.threestar.trainus.domain.payment.mapper.PaymentMapper;
 import com.threestar.trainus.domain.payment.service.PaymentService;
 import com.threestar.trainus.global.annotation.LoginUser;
+import com.threestar.trainus.global.dto.PageRequestDto;
 import com.threestar.trainus.global.unit.BaseResponse;
 import com.threestar.trainus.global.unit.PagedResponse;
 
@@ -42,9 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentController {
 
 	private final PaymentService paymentService;
-
-	@Value("${spring.page.size.limit}")
-	private int pageSizeLimit;
 
 	@PostMapping("/prepare")
 	@Operation(summary = "결제 준비", description = "실제 결제 전 최종 가격 적용 후 결제 준비")
@@ -95,13 +92,10 @@ public class PaymentController {
 	@GetMapping("/view/success")
 	@Operation(summary = "완료 결제 조회", description = "완료된 결제 내역 조회")
 	public ResponseEntity<PagedResponse<PaymentSuccessPageWrapperDto>> readAll(
-		@RequestParam("page") int page,
-		@RequestParam("pageSize") int pageSize,
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
 		@LoginUser Long userId) {
-		int correctPage = Math.max(page, 1);
-		int correctPageSize = Math.max(1, Math.min(pageSize, pageSizeLimit));
 		PaymentSuccessHistoryPageDto paymentSuccessHistoryPageDto = paymentService.viewAllSuccessTransaction(userId,
-			correctPage, correctPageSize);
+			pageRequestDto.getPage(), pageRequestDto.getLimit());
 		PaymentSuccessPageWrapperDto payments = PaymentMapper.toPaymentSuccessPageWrapperDto(
 			paymentSuccessHistoryPageDto);
 		return PagedResponse.ok("성공 결제 조회 성공", payments, paymentSuccessHistoryPageDto.count(), HttpStatus.OK);
@@ -110,13 +104,10 @@ public class PaymentController {
 	@GetMapping("/view/cancel")
 	@Operation(summary = "취소 결제 조회", description = "취소된 결제 내역 조회")
 	public ResponseEntity<PagedResponse<PaymentCancelPageWrapperDto>> readAllFailure(HttpSession session,
-		@RequestParam("page") int page,
-		@RequestParam("pageSize") int pageSize,
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
 		@LoginUser Long userId) {
-		int correctPage = Math.max(page, 1);
-		int correctPageSize = Math.max(1, Math.min(pageSize, pageSizeLimit));
 		PaymentCancelHistoryPageDto paymentCancelHistoryPageDto = paymentService.viewAllFailureTransaction(userId,
-			correctPage, correctPageSize);
+			pageRequestDto.getPage(), pageRequestDto.getLimit());
 		PaymentCancelPageWrapperDto payments = PaymentMapper.toPaymentFailurePageWrapperDto(
 			paymentCancelHistoryPageDto);
 		return PagedResponse.ok("취소 결제 조회 성공", payments, paymentCancelHistoryPageDto.count(), HttpStatus.OK);
