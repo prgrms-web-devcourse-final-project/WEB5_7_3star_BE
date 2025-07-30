@@ -1,12 +1,9 @@
 package com.threestar.trainus.domain.lesson.teacher.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -126,17 +123,27 @@ public class AdminLessonService {
 
 		if ("ALL".equals(status)) {
 			// 모든 상태 조회
-			applications = lessonApplicationRepository.findAllByLesson(
-				lesson.getId(), offset, limit
+			List<Long> ids = lessonApplicationRepository.findIdsByLesson(
+				lessonId, offset, limit
 			);
+
+			applications = ids.isEmpty()
+				? Collections.emptyList()
+				: lessonApplicationRepository.findAllWithUserProfileLesson(ids);
+
 			total = lessonApplicationRepository.countAllByLesson(
 				lesson.getId(), countLimit
 			);
 		} else {
 			// 특정 상태 조회
-			applications = lessonApplicationRepository.findAllByLessonAndStatus(
+			List<Long> ids = lessonApplicationRepository.findIdsByLessonAndStatus(
 				lesson.getId(), applicationStatus.name(), offset, limit
 			);
+
+			applications = ids.isEmpty()
+				? Collections.emptyList()
+				: lessonApplicationRepository.findAllWithUserProfileLesson(ids);
+
 			total = lessonApplicationRepository.countAllByLessonAndStatus(
 				lesson.getId(), applicationStatus.name(), countLimit
 			);
@@ -144,7 +151,6 @@ public class AdminLessonService {
 
 		return LessonApplicationMapper.toListResponseDto(applications, total);
 	}
-
 
 	//레슨 신청 승인/거절 처리
 	@Transactional
@@ -177,9 +183,11 @@ public class AdminLessonService {
 		int countLimit = PageLimitCalculator.calculatePageLimit(page, limit, 5);
 
 		// 참가자 조회
-		List<LessonParticipant> participants = lessonParticipantRepository.findAllByLesson(
-			lesson.getId(), offset, limit
-		);
+		List<Long> ids = lessonParticipantRepository.findIdsByLesson(lessonId, offset, limit);
+
+		List<LessonParticipant> participants = ids.isEmpty()
+			? Collections.emptyList()
+			: lessonParticipantRepository.findAllWithUserAndProfile(ids);
 
 		// 전체 카운트 조회
 		int totalCount = lessonParticipantRepository.countAllByLesson(

@@ -3,8 +3,6 @@ package com.threestar.trainus.domain.lesson.teacher.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,15 +23,28 @@ public interface LessonApplicationRepository extends JpaRepository<LessonApplica
 	int countByLessonAndStatus(Lesson lesson, ApplicationStatus status);
 
 	@Query(value = """
-		      SELECT *
-		      FROM lesson_applications la
-		      WHERE la.user_id = :userId
-		        AND (:status IS NULL OR la.status = :status)
-		      ORDER BY la.created_at DESC
-		      limit :limit OFFSET :offset
+		    SELECT la.id
+		    FROM lesson_applications la
+		    WHERE la.user_id = :userId
+		      AND (:status IS NULL OR la.status = :status)
+		    ORDER BY la.created_at DESC
+		    limit :limit OFFSET :offset
 		""", nativeQuery = true)
-	List<LessonApplication> findAllByUserAndStatus(@Param("userId") Long userId, @Param("status") String status,
-		@Param("offset") int offset, @Param("limit") int limit);
+	List<Long> findIdsByUserAndStatus(@Param("userId") Long userId,
+		@Param("status") String status,
+		@Param("offset") int offset,
+		@Param("limit") int limit);
+
+	@Query("""
+		    SELECT la FROM LessonApplication la
+		    JOIN FETCH la.lesson l
+		    JOIN FETCH la.user u
+		    JOIN FETCH u.profile p
+          	LEFT JOIN FETCH u.profileMetadata pm
+		    WHERE la.id IN :ids
+		    ORDER BY la.createdAt DESC
+		""")
+	List<LessonApplication> findAllWithFetchJoin(@Param("ids") List<Long> ids);
 
 	@Query(value = """
 		   SELECT count(*)
@@ -49,16 +60,27 @@ public interface LessonApplicationRepository extends JpaRepository<LessonApplica
 
 	// 모든 상태 신청자 조회
 	@Query(value = """
-		    SELECT la.*
+		    SELECT la.id
 		    FROM lesson_applications la
-		    LEFT JOIN user u ON la.user_id = u.id
-		    LEFT JOIN profile p ON u.id = p.user_id
 		    WHERE la.lesson_id = :lessonId
 		    ORDER BY la.created_at DESC
 		    LIMIT :limit OFFSET :offset
 		""", nativeQuery = true)
-	List<LessonApplication> findAllByLesson(@Param("lessonId") Long lessonId, @Param("offset") int offset,
+	List<Long> findIdsByLesson(@Param("lessonId") Long lessonId,
+		@Param("offset") int offset,
 		@Param("limit") int limit);
+
+	@Query("""
+		    SELECT DISTINCT la
+		    FROM LessonApplication la
+		    JOIN FETCH la.user u
+		    JOIN FETCH la.lesson l
+		    LEFT JOIN FETCH u.profile p
+          	LEFT JOIN FETCH u.profileMetadata pm
+		    WHERE la.id IN :ids
+		    ORDER BY la.createdAt DESC
+		""")
+	List<LessonApplication> findAllWithUserProfileLesson(@Param("ids") List<Long> ids);
 
 	// 모든 상태 신청자 count (최대 countLimit까지만)
 	@Query(value = """
@@ -73,16 +95,14 @@ public interface LessonApplicationRepository extends JpaRepository<LessonApplica
 
 	// 특정 상태 신청자 조회
 	@Query(value = """
-		    SELECT la.*
+		    SELECT la.id
 		    FROM lesson_applications la
-		    LEFT JOIN user u ON la.user_id = u.id
-		    LEFT JOIN profile p ON u.id = p.user_id
 		    WHERE la.lesson_id = :lessonId
 		      AND la.status = :status
 		    ORDER BY la.created_at DESC
 		    LIMIT :limit OFFSET :offset
 		""", nativeQuery = true)
-	List<LessonApplication> findAllByLessonAndStatus(@Param("lessonId") Long lessonId, @Param("status") String status,
+	List<Long> findIdsByLessonAndStatus(@Param("lessonId") Long lessonId, @Param("status") String status,
 		@Param("offset") int offset, @Param("limit") int limit);
 
 	// 특정 상태 신청자 count

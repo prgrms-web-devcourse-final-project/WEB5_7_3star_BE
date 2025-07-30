@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.lesson.student.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -299,12 +300,16 @@ public class StudentLessonService {
 		int countLimit = PageLimitCalculator.calculatePageLimit(page, limit, 5);
 
 		// 목록 조회
-		List<LessonApplication> applications = lessonApplicationRepository.findAllByUserAndStatus(
+		List<Long> ids = lessonApplicationRepository.findIdsByUserAndStatus(
 			userId,
 			status != null ? status.name() : null,
 			offset,
 			limit
 		);
+
+		List<LessonApplication> applications = ids.isEmpty()
+			? Collections.emptyList()
+			: lessonApplicationRepository.findAllWithFetchJoin(ids);
 
 		// count 조회 (최대 countLimit까지만 계산)
 		int total = lessonApplicationRepository.countByUserAndStatus(

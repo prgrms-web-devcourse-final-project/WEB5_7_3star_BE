@@ -39,19 +39,28 @@ public interface LessonParticipantRepository extends CrudRepository<LessonPartic
 	);
 
 	@Query(value = """
-		    SELECT lp.*
+		    SELECT lp.id
 		    FROM lesson_participants lp
-		    JOIN user u ON lp.user_id = u.id
-		    JOIN profile p ON u.id = p.user_id
 		    WHERE lp.lesson_id = :lessonId
 		    ORDER BY lp.join_at ASC
 		    LIMIT :limit OFFSET :offset
 		""", nativeQuery = true)
-	List<LessonParticipant> findAllByLesson(
+	List<Long> findIdsByLesson(
 		@Param("lessonId") Long lessonId,
 		@Param("offset") int offset,
 		@Param("limit") int limit
 	);
+
+	@Query("""
+		    SELECT lp
+		    FROM LessonParticipant lp
+		    JOIN FETCH lp.user u
+		    JOIN FETCH u.profile p
+		    LEFT JOIN FETCH u.profileMetadata pm
+		    WHERE lp.id IN :ids
+		    ORDER BY lp.joinAt ASC
+		""")
+	List<LessonParticipant> findAllWithUserAndProfile(@Param("ids") List<Long> ids);
 
 	@Query(value = """
 		    SELECT COUNT(*) FROM (
