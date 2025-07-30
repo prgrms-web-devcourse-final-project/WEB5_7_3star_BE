@@ -218,7 +218,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		      AND (:district IS NULL OR l.district = :district)
 		      AND (:dong IS NULL OR l.dong = :dong)
 		      AND (:ri IS NULL OR l.ri = :ri)
-		      AND MATCH(l.lesson_name, l.description) AGAINST(:search IN BOOLEAN MODE)
+		      AND MATCH(l.lesson_name) AGAINST(:search IN BOOLEAN MODE)
 		    ORDER BY 
 		      CASE WHEN :sort = 'LATEST' THEN l.created_at END DESC,
 		      CASE WHEN :sort = 'OLDEST' THEN l.created_at END ASC,
@@ -248,7 +248,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		          AND (:district IS NULL OR l.district = :district)
 		          AND (:dong IS NULL OR l.dong = :dong)
 		          AND (:ri IS NULL OR l.ri = :ri)
-		          AND MATCH(l.lesson_name, l.description) AGAINST(:search IN BOOLEAN MODE)
+		          AND MATCH(l.lesson_name) AGAINST(:search IN BOOLEAN MODE)
 		        LIMIT :limit
 		    ) t
 		""", nativeQuery = true)
