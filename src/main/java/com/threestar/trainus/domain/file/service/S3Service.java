@@ -83,7 +83,7 @@ public class S3Service {
 	}
 
 	@Transactional(readOnly = true)
-	public GetS3UrlDto getGetS3Url(Long memberId, String key) {
+	public GetS3UrlDto getGetS3Url(String key) {
 		// url 유효기간 설정하기(1시간)
 		Date expiration = getExpiration();
 
