@@ -22,7 +22,7 @@ public class S3Controller {
 
 	@GetMapping(value = "/posturl")
 	public ResponseEntity<BaseResponse<GetS3UrlDto>> getPostS3Url(@LoginUser Long userId, String filename) {
-		GetS3UrlDto response = s3Service.getPostS3Url("image/"+userId, filename);
+		GetS3UrlDto response = s3Service.getPostS3Url("image/" + userId, filename);
 		return BaseResponse.ok("업로드용 presigned url 발급 완료", response, HttpStatus.OK);
 	}
 
