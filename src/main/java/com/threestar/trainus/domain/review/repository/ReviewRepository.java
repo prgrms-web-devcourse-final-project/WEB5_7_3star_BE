@@ -11,12 +11,14 @@ import com.threestar.trainus.domain.review.entity.Review;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 	@Query("""
-    	select r 
-    	from Review r
-    	join fetch r.lesson
-    	join fetch r.reviewer
-    	where r.reviewee.id = :userId
-	""")
+		   	SELECT r 
+		   	FROM Review r
+		   	JOIN FETCH r.lesson l
+		   	JOIN FETCH r.reviewer u
+		   	LEFT JOIN FETCH u.profile p
+          	LEFT JOIN FETCH u.profileMetadata pm
+		   	WHERE r.reviewee.id = :userId
+		""")
 	List<Review> findByReviewee_Id(@Param("userId") Long userId);
 
 	boolean existsByReviewer_IdAndLessonId(Long reviewerId, Long lessonId);

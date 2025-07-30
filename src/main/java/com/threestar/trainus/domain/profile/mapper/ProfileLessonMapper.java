@@ -31,7 +31,7 @@ public class ProfileLessonMapper {
 
 	// 개설한 레슨 목록과 총 레슨의 수를 응답 DTO로 변환
 	public static ProfileCreatedLessonListResponseDto toProfileCreatedLessonListResponseDto(
-		List<Lesson> lessons, Long totalCount) {
+		List<Lesson> lessons, int totalCount) {
 
 		// 각 레슨을 DTO로 변환
 		List<ProfileCreatedLessonDto> lessonDtos = lessons.stream()
@@ -39,7 +39,7 @@ public class ProfileLessonMapper {
 			.toList();
 		return ProfileCreatedLessonListResponseDto.builder()
 			.lessons(lessonDtos)
-			.count(totalCount.intValue())
+			.count(totalCount)
 			.build();
 	}
 

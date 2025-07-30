@@ -1,13 +1,11 @@
 package com.threestar.trainus.domain.lesson.student.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
@@ -42,8 +40,8 @@ import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
+import com.threestar.trainus.global.utils.PageLimitCalculator;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -59,68 +57,51 @@ public class StudentLessonService {
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
 
-	@Transactional
+	@Transactional(readOnly = true)
 	public LessonSearchListResponseDto searchLessons(
-		int page, int limit,
+		int page, int pageSize,
 		Category category, String search,
 		String city, String district, String dong, String ri,
 		LessonSortType sortBy
 	) {
-		// 정렬 조건 처리
-		Sort sort = Sort.unsorted();
-		if (sortBy != null) {
-			switch (sortBy) {
-				case LATEST:
-					sort = Sort.by(Sort.Direction.DESC, sortBy.getProperty());
-					break;
-				case OLDEST:
-					sort = Sort.by(Sort.Direction.ASC, sortBy.getProperty());
-					break;
-				case PRICE_HIGH:
-					sort = Sort.by(Sort.Direction.DESC, sortBy.getProperty());
-					break;
-				case PRICE_LOW:
-					sort = Sort.by(Sort.Direction.ASC, sortBy.getProperty());
-					break;
-			}
-		} else {
+		if (sortBy == null) {
 			throw new BusinessException(ErrorCode.INVALID_SORT);
 		}
 
-		Pageable pageable = PageRequest.of(page - 1, limit, sort);
+		// offset/limit 계산
+		int offset = (page - 1) * pageSize;
+		int countLimit = PageLimitCalculator.calculatePageLimit(page, pageSize, 5);
 
-		Category categoryEnum = null;
-		if (category != null && !category.name().equalsIgnoreCase("ALL")) {
-			categoryEnum = category;
-		}
+		// 카테고리 ALL 처리
+		String categoryValue = (category != null && !category.name().equalsIgnoreCase("ALL"))
+			? category.name() : null;
 
-		Page<Lesson> lessonPage;
-		// 검색어 유무 분기
-		if (search != null && !search.isEmpty()) {
-			lessonPage = lessonRepository.findByLocationAndFullTextSearchOptimized(
-				categoryEnum, city, district, dong, ri, search, pageable
-			);
-		} else {
-			lessonPage = lessonRepository.findByLocation(
-				categoryEnum, city, district, dong, ri, pageable
-			);
-		}
-		// 응답 DTO 리스트 매핑
-		List<LessonSearchResponseDto> lessonDtos = lessonPage.getContent().stream()
+		// Lesson 목록 조회 (검색어 여부에 따라 분기)
+		List<Lesson> lessons = (search != null && !search.isEmpty())
+			? lessonRepository.findLessonsWithFullText(
+			categoryValue, city, district, dong, ri, search, sortBy.name(), offset, pageSize
+		)
+			: lessonRepository.findLessonsWithoutFullText(
+			categoryValue, city, district, dong, ri, sortBy.name(), offset, pageSize
+		);
+
+		// count 조회 (검색어 여부에 따라 분기)
+		int total = (search != null && !search.isEmpty())
+			? lessonRepository.countLessonsWithFullText(
+			categoryValue, city, district, dong, ri, search, countLimit
+		)
+			: lessonRepository.countLessonsWithoutFullText(
+			categoryValue, city, district, dong, ri, countLimit
+		);
+
+		// DTO 매핑
+		List<LessonSearchResponseDto> lessonDtos = lessons.stream()
 			.map(lesson -> {
-				// 개설자 정보 조회
 				User leader = userService.getUserById(lesson.getLessonLeader());
-
-				// 프로필 이미지
 				Profile profile = profileRepository.findByUserId(leader.getId())
 					.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
-				/*
-				 * TODO: 프로필 공통예외처리 분리
-				 *  */
-				// 리뷰 개수, 평점 등 메타데이터
 				ProfileMetadataResponseDto metadata = profileMetadataService.getMetadata(leader.getId());
 
-				// 이미지 URL 목록
 				List<String> imageUrls = lessonImageRepository.findAllByLessonId(lesson.getId()).stream()
 					.map(LessonImage::getImageUrl)
 					.toList();
@@ -129,7 +110,7 @@ public class StudentLessonService {
 			})
 			.toList();
 
-		return new LessonSearchListResponseDto(lessonDtos, (int)lessonPage.getTotalElements());
+		return new LessonSearchListResponseDto(lessonDtos, total);
 	}
 
 	@Transactional
@@ -298,13 +279,13 @@ public class StudentLessonService {
 		lessonApplicationRepository.delete(application);
 	}
 
-	@Transactional
-	public MyLessonApplicationListResponseDto getMyLessonApplications(Long userId, int page, int limit,
-		String statusStr) {
+	@Transactional(readOnly = true)
+	public MyLessonApplicationListResponseDto getMyLessonApplications(
+		Long userId, int page, int limit, String statusStr
+	) {
 		// status enum 변환
 		ApplicationStatus status = null;
-		if (!statusStr.equalsIgnoreCase("ALL")) {
-			//status value 검증
+		if (!"ALL".equalsIgnoreCase(statusStr)) {
 			try {
 				status = ApplicationStatus.valueOf(statusStr.toUpperCase());
 			} catch (IllegalArgumentException e) {
@@ -312,19 +293,32 @@ public class StudentLessonService {
 			}
 		}
 
-		// 페이징 정렬
-		Pageable pageable = PageRequest.of(page - 1, limit);
+		// offset 계산
+		int offset = (page - 1) * limit;
 
-		// 신청 내역 조회
-		Page<LessonApplication> applicationPage = (status == null)
-			? lessonApplicationRepository.findByUserId(userId, pageable)
-			: lessonApplicationRepository.findByUserIdAndStatus(userId, status, pageable);
+		// count limit 계산 (5개씩 이동 기준)
+		int countLimit = PageLimitCalculator.calculatePageLimit(page, limit, 5);
 
-		// DTO 변환
-		return LessonApplicationMapper.toDtoListWithCount(
-			applicationPage.getContent(),
-			(int)applicationPage.getTotalElements()
+		// 목록 조회
+		List<Long> ids = lessonApplicationRepository.findIdsByUserAndStatus(
+			userId,
+			status != null ? status.name() : null,
+			offset,
+			limit
 		);
+
+		List<LessonApplication> applications = ids.isEmpty()
+			? Collections.emptyList()
+			: lessonApplicationRepository.findAllWithFetchJoin(ids);
+
+		// count 조회 (최대 countLimit까지만 계산)
+		int total = lessonApplicationRepository.countByUserAndStatus(
+			userId,
+			status != null ? status.name() : null,
+			countLimit
+		);
+
+		return LessonApplicationMapper.toDtoListWithCount(applications, total);
 	}
 
 	@Transactional

@@ -30,7 +30,7 @@ public class LessonParticipantMapper {
 
 	//참가자 목록과 전체 개수를 응답 DTO로 변환
 	public static ParticipantListResponseDto toParticipantsResponseDto(
-		List<LessonParticipant> participants, Long totalCount) {
+		List<LessonParticipant> participants, int totalCount) {
 
 		// 각 참가자를 DTO로 변환
 		List<ParticipantDto> participantDtos = participants.stream()
@@ -39,7 +39,7 @@ public class LessonParticipantMapper {
 
 		return ParticipantListResponseDto.builder()
 			.lessonApplications(participantDtos)
-			.count(totalCount.intValue())
+			.count(totalCount)
 			.build();
 	}
 

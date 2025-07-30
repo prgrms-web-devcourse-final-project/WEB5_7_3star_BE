@@ -3,10 +3,6 @@ package com.threestar.trainus.domain.coupon.admin.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,20 +51,6 @@ public class AdminCouponService {
 	}
 
 	//쿠폰 조회
-	// @Transactional(readOnly = true)
-	// public CouponListResponseDto getCoupons(int page, int limit, CouponStatus status, CouponCategory category,
-	// 	Long userId) {
-	// 	// 관리자 권한 검증
-	// 	userService.validateAdminRole(userId);
-	//
-	// 	Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
-	//
-	// 	// 조건에 따른 쿠폰 조회
-	// 	Page<Coupon> couponPage = couponRepository.findCouponsWithFilters(status, category, pageable);
-	//
-	// 	//응답 DTO 변환
-	// 	return AdminCouponMapper.toCouponListResponseDto(couponPage);
-	// }
 	@Transactional(readOnly = true)
 	public CouponListResponseDto getCoupons(
 		int page, int limit,
