@@ -90,14 +90,14 @@ public class RankingService {
 	private void saveToRedis(List<RankingResponseDto> rankings, String cacheKey) {
 		try {
 			String json = objectMapper.writeValueAsString(rankings);
-			redisTemplate.opsForValue().set(cacheKey, json, Duration.ofHours(24));
+			redisTemplate.opsForValue().set(cacheKey, json, Duration.ofMinutes(11));
 		} catch (Exception e) {
 			log.warn("Redis 저장 실패: {}", e.getMessage());
 		}
 	}
 
 	//매 10분마다 랭킹 업데이트
-	@Scheduled(cron = "0 */10 * * * *")
+	@Scheduled(cron = "0 */1 * * * *")
 	public void updateRankings() {
 		log.info("랭킹 업데이트 시작");
 
