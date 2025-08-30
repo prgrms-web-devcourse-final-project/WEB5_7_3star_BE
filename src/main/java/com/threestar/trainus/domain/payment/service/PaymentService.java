@@ -203,10 +203,20 @@ public class PaymentService {
 			.map(map::get)
 			.toList();
 
+		List<String> orderIds = allSuccessPayments.stream()
+			.map(Payment::getOrderId)
+			.toList();
+
+		Map<String, TossPayment> tossPaymentMap = tossPaymentRepository.findAllByOrderIds(orderIds)
+			.stream()
+			.collect(Collectors.toMap(TossPayment::getOrderId, t -> t));
+
 		List<PaymentSuccessHistoryResponseDto> dtoList = allSuccessPayments.stream()
 			.map(payment -> {
-				TossPayment tossPayment = tossPaymentRepository.findByOrderId(payment.getOrderId())
-					.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
+				TossPayment tossPayment = tossPaymentMap.get(payment.getOrderId());
+				if (tossPayment == null) {
+					throw new BusinessException(ErrorCode.INVALID_PAYMENT);
+				}
 				return PaymentMapper.toPaymentSuccessHistoryResponseDto(payment, tossPayment);
 			})
 			.toList();
@@ -219,7 +229,7 @@ public class PaymentService {
 
 	@Transactional(readOnly = true)
 	public PaymentCancelHistoryPageDto viewAllFailureTransaction(Long userId, int page, int pageSize) {
-		List<Long> paymentIds = paymentRepository.findPaymentIdsByUserAndStatus(userId,
+		List<Long> paymentIds = paymentRepository.findCancelledPaymentIdsByUserAndStatus(userId,
 			PaymentStatus.CANCELED.name(), (page - 1) * pageSize, pageSize);
 
 		if (paymentIds.isEmpty()) {
@@ -233,10 +243,20 @@ public class PaymentService {
 			.map(map::get)
 			.toList();
 
+		List<String> orderIds = allFailurePayments.stream()
+			.map(Payment::getOrderId)
+			.toList();
+
+		Map<String, TossPayment> tossPaymentMap = tossPaymentRepository.findAllByOrderIds(orderIds)
+			.stream()
+			.collect(Collectors.toMap(TossPayment::getOrderId, t -> t));
+
 		List<PaymentCancelHistoryResponseDto> dtoList = allFailurePayments.stream()
 			.map(payment -> {
-				TossPayment tossPayment = tossPaymentRepository.findByOrderId(payment.getOrderId())
-					.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PAYMENT));
+				TossPayment tossPayment = tossPaymentMap.get(payment.getOrderId());
+				if (tossPayment == null) {
+					throw new BusinessException(ErrorCode.INVALID_PAYMENT);
+				}
 				return PaymentMapper.toPaymentFailureHistoryResponseDto(payment, tossPayment);
 			})
 			.toList();
