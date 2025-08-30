@@ -35,10 +35,23 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 		@Param("limit") int limit
 	);
 
+	@Query(value = """
+		SELECT p.id FROM payments p
+		WHERE p.user_id = :userId
+		AND p.status = :status
+		ORDER BY p.cancelled_at DESC 
+		LIMIT :limit OFFSET :offset
+		""", nativeQuery = true)
+	List<Long> findCancelledPaymentIdsByUserAndStatus(
+		@Param("userId") Long userId,
+		@Param("status") String status,
+		@Param("offset") int offset,
+		@Param("limit") int limit
+	);
+
 	@Query("""
 			SELECT p FROM Payment p
 			LEFT JOIN FETCH p.lesson
-			LEFT JOIN FETCH p.userCoupon
 			WHERE p.id IN :ids
 		""")
 	List<Payment> findAllWithAssociationsByIds(@Param("ids") List<Long> ids);
