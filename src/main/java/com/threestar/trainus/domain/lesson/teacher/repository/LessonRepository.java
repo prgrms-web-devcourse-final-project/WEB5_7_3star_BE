@@ -135,7 +135,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 				SELECT l.* FROM lessons l
 				JOIN (
 					SELECT id FROM lessons
-					WHERE MATCH(lesson_name) AGAINST(:search IN BOOLEAN MODE)
+					WHERE to_tsvector('korean', lesson_name) @@ websearch_to_tsquery('korean', :search)
 				) AS ft ON l.id = ft.id
 				WHERE l.city = :city AND l.district = :district AND l.dong = :dong AND (:ri IS NULL OR l.ri = :ri) AND (:category IS NULL OR l.category = :category)
 				ORDER BY l.created_at DESC
@@ -144,7 +144,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 				SELECT count(l.id) FROM lessons l
 				JOIN (
 					SELECT id FROM lessons
-					WHERE MATCH(lesson_name) AGAINST(:search IN BOOLEAN MODE)
+					WHERE to_tsvector('korean', lesson_name) @@ websearch_to_tsquery('korean', :search)
 				) AS ft ON l.id = ft.id
 				WHERE l.city = :city AND l.district = :district AND l.dong = :dong AND (:ri IS NULL OR l.ri = :ri) AND (:category IS NULL OR l.category = :category)
 				ORDER BY l.created_at DESC
@@ -218,7 +218,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		      AND (:district IS NULL OR l.district = :district)
 		      AND (:dong IS NULL OR l.dong = :dong)
 		      AND (:ri IS NULL OR l.ri = :ri)
-		      AND MATCH(l.lesson_name) AGAINST(:search IN BOOLEAN MODE)
+		      AND to_tsvector('korean', l.lesson_name) @@ websearch_to_tsquery('korean', :search)
 		    ORDER BY 
 		      CASE WHEN :sort = 'LATEST' THEN l.created_at END DESC,
 		      CASE WHEN :sort = 'OLDEST' THEN l.created_at END ASC,
@@ -248,7 +248,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		          AND (:district IS NULL OR l.district = :district)
 		          AND (:dong IS NULL OR l.dong = :dong)
 		          AND (:ri IS NULL OR l.ri = :ri)
-		          AND MATCH(l.lesson_name) AGAINST(:search IN BOOLEAN MODE)
+		          AND to_tsvector('korean', l.lesson_name) @@ websearch_to_tsquery('korean', :search)
 		        LIMIT :limit
 		    ) t
 		""", nativeQuery = true)
