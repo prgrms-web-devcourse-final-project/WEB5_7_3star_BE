@@ -236,6 +236,13 @@ public class Lesson extends BaseDateEntity {
 		}
 	}
 
+	//좌표 정보 수정
+	public void updateLocationPoint(Point locationPoint) {
+		if (locationPoint != null) {
+			this.locationPoint = locationPoint;
+		}
+	}
+
 	//레슨 상태 수정->스케쥴러꺼
 	public void updateStatus(LessonStatus status) {
 		this.status = status;
