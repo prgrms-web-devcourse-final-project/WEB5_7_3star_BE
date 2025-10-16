@@ -85,12 +85,14 @@ public class Lesson extends BaseDateEntity {
 	@Column(length = 10)
 	private String ri;
 
-	@Column(nullable = false, length = 25)
+	@Column(nullable = false, length = 255)
+	private String address;
+
+	@Column(length = 25)
 	private String addressDetail;
 
 	@Column(columnDefinition = "geography(Point, 4326)")
 	private Point locationPoint;
-
 
 	@Column(nullable = true)
 	private Integer participantCount;
@@ -101,7 +103,7 @@ public class Lesson extends BaseDateEntity {
 		Integer price, Category category, LocalDateTime openTime,
 		Boolean openRun, String city, String district, String dong,
 		String ri,
-		String addressDetail,
+		String addressDetail, String address,
 		Point locationPoint) {
 		this.lessonLeader = lessonLeader;
 		this.lessonName = lessonName;
@@ -118,6 +120,7 @@ public class Lesson extends BaseDateEntity {
 		this.dong = dong;
 		this.ri = ri;
 		this.addressDetail = addressDetail;
+		this.address = address;
 		this.locationPoint = locationPoint;
 		//새로 생성된 레슨은 항상 모집중 상태로 초기값 설정
 		this.status = LessonStatus.RECRUITING;
@@ -233,6 +236,13 @@ public class Lesson extends BaseDateEntity {
 	public void updateAddressDetail(String addressDetail) {
 		if (addressDetail != null && !addressDetail.trim().isEmpty()) {
 			this.addressDetail = addressDetail;
+		}
+	}
+
+	//주소 수정
+	public void updateAddress(String address) {
+		if (address != null && !address.trim().isEmpty()) {
+			this.address = address;
 		}
 	}
 
