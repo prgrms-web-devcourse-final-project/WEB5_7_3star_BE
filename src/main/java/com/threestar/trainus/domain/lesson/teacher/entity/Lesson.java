@@ -2,6 +2,8 @@ package com.threestar.trainus.domain.lesson.teacher.entity;
 
 import java.time.LocalDateTime;
 
+import org.locationtech.jts.geom.Point;
+
 import com.threestar.trainus.global.entity.BaseDateEntity;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
@@ -86,6 +88,10 @@ public class Lesson extends BaseDateEntity {
 	@Column(nullable = false, length = 25)
 	private String addressDetail;
 
+	@Column(columnDefinition = "geography(Point, 4326)")
+	private Point locationPoint;
+
+
 	@Column(nullable = true)
 	private Integer participantCount;
 
@@ -95,7 +101,8 @@ public class Lesson extends BaseDateEntity {
 		Integer price, Category category, LocalDateTime openTime,
 		Boolean openRun, String city, String district, String dong,
 		String ri,
-		String addressDetail) {
+		String addressDetail,
+		Point locationPoint) {
 		this.lessonLeader = lessonLeader;
 		this.lessonName = lessonName;
 		this.description = description;
@@ -111,6 +118,7 @@ public class Lesson extends BaseDateEntity {
 		this.dong = dong;
 		this.ri = ri;
 		this.addressDetail = addressDetail;
+		this.locationPoint = locationPoint;
 		//새로 생성된 레슨은 항상 모집중 상태로 초기값 설정
 		this.status = LessonStatus.RECRUITING;
 		//새로 생성된 참가자 수도 0명으로 시작하도록 설정
