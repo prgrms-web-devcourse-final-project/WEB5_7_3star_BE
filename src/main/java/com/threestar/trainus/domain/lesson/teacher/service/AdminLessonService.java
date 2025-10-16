@@ -40,6 +40,10 @@ import com.threestar.trainus.global.utils.PageLimitCalculator;
 
 import lombok.RequiredArgsConstructor;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+
 /**
  * 강사용(레슨 생성한 사람)만 처리하는 서비스입니다.
  */
@@ -53,6 +57,7 @@ public class AdminLessonService {
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final UserService userService;
 	private final LessonCreationLimitService lessonCreationLimitService;
+	private final GeometryFactory geometryFactory;
 
 	//레슨 생성
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
@@ -64,8 +69,12 @@ public class AdminLessonService {
 		//레슨 생성 제한 확인 및 쿨타임 설정
 		lessonCreationLimitService.checkAndSetCreationLimit(userId);
 
+		// Point 객체 생성
+		Point point = geometryFactory.createPoint(
+			new Coordinate(requestDto.longitude(), requestDto.latitude()));
+
 		// 레슨 생성 및 저장
-		Lesson lesson = LessonMapper.toEntity(requestDto, user);
+		Lesson lesson = LessonMapper.toEntity(requestDto, user, point);
 		Lesson savedLesson = lessonRepository.save(lesson);
 
 		// 이미지 저장
@@ -395,7 +404,15 @@ public class AdminLessonService {
 		lesson.updateOpenTime(requestDto.openTime());
 		lesson.updateOpenRun(requestDto.openRun());
 		lesson.updateLocation(requestDto.city(), requestDto.district(), requestDto.dong(), requestDto.ri());
+		lesson.updateAddress(requestDto.address());
 		lesson.updateAddressDetail(requestDto.addressDetail());
+
+		// 좌표 정보 업데이트
+		if (requestDto.latitude() != null && requestDto.longitude() != null) {
+			Point point = geometryFactory.createPoint(
+				new Coordinate(requestDto.longitude(), requestDto.latitude()));
+			lesson.updateLocationPoint(point);
+		}
 	}
 
 	//시간 변경 검증

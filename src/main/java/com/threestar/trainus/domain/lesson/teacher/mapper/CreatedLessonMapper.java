@@ -11,6 +11,9 @@ public class CreatedLessonMapper {
 
 	// Lesson 엔티티를 CreatedLessonDto로 변환
 	public static CreatedLessonDto toCreatedLessonDto(Lesson lesson) {
+		Double latitude = lesson.getLocationPoint() != null ? lesson.getLocationPoint().getY() : null;
+		Double longitude = lesson.getLocationPoint() != null ? lesson.getLocationPoint().getX() : null;
+
 		return CreatedLessonDto.builder()
 			.id(lesson.getId())
 			.lessonName(lesson.getLessonName())
@@ -22,7 +25,10 @@ public class CreatedLessonMapper {
 			.endAt(lesson.getEndAt())
 			.openTime(lesson.getOpenTime())
 			.openRun(lesson.getOpenRun())
+			.address(lesson.getAddress())
 			.addressDetail(lesson.getAddressDetail())
+			.latitude(latitude)
+			.longitude(longitude)
 			.build();
 	}
 

@@ -33,7 +33,10 @@ public record LessonDetailResponseDto(
 	String district,
 	String dong,
 	String ri,
+	String address,
 	String addressDetail,
+	Double latitude,
+	Double longitude,
 	LocalDateTime createdAt,
 	LocalDateTime updatedAt,
 	List<String> lessonImages

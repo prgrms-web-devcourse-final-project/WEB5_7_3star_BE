@@ -21,6 +21,9 @@ public class LessonSearchMapper {
 		ProfileMetadataResponseDto metadata,
 		List<String> lessonImageUrls
 	) {
+		Double latitude = lesson.getLocationPoint() != null ? lesson.getLocationPoint().getY() : null;
+		Double longitude = lesson.getLocationPoint() != null ? lesson.getLocationPoint().getX() : null;
+
 		return new LessonSearchResponseDto(
 			lesson.getId(),
 			lesson.getLessonName(),
@@ -41,6 +44,9 @@ public class LessonSearchMapper {
 			lesson.getDistrict(),
 			lesson.getDong(),
 			lesson.getRi(),
+			lesson.getAddress(),
+			latitude,
+			longitude,
 			lesson.getCreatedAt(),
 			lessonImageUrls
 		);
