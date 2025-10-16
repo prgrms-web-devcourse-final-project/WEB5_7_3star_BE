@@ -35,8 +35,9 @@ dependencies {
     implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
     implementation 'io.awspring.cloud:spring-cloud-starter-aws-secrets-manager-config:2.4.4'
     implementation 'com.opencsv:opencsv:5.11.2'
+    implementation 'org.hibernate.orm:hibernate-spatial:6.6.18.Final'
     compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
 
     testImplementation 'com.h2database:h2'
