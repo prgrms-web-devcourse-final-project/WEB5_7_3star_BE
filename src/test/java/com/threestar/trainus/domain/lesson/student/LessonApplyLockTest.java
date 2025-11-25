@@ -46,7 +46,7 @@ public class LessonApplyLockTest {
 
 	private Long lessonId;
 	private static final int MAX_PARTICIPANTS = 300;
-	private static final int CONCURRENT_USERS = 3000;
+	private static final int CONCURRENT_USERS = 10000;
 
 	@BeforeEach
 	void setUp() {
@@ -149,7 +149,7 @@ public class LessonApplyLockTest {
 	@Test
 	@DisplayName("동시 요청 시 - 락 적용: 인원 수 초과 없이 정상 처리")
 	void applyToLessonWithLock_동시요청_락적용_최대참가자수를초과하지않음() throws InterruptedException {
-		ExecutorService executor = Executors.newFixedThreadPool(300); // 병렬 쓰레드 수 조절
+		ExecutorService executor = Executors.newFixedThreadPool(100); // 병렬 쓰레드 수 조절
 		CountDownLatch latch = new CountDownLatch(CONCURRENT_USERS);
 
 		AtomicInteger successCount = new AtomicInteger();

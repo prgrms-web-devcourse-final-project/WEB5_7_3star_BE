@@ -96,6 +96,8 @@ public enum ErrorCode {
 
 	// 409
 	ALREADY_APPLIED(HttpStatus.CONFLICT, "이미 신청한 레슨입니다."),
+	LOCK_ACQUISITION_FAILED(HttpStatus.CONFLICT, "요청 처리 중 충돌이 발생했습니다. 잠시 후 다시 시도해주세요."),
+
 	/*
 	 * Review : 리뷰 관련 예외처리
 	 */
@@ -126,6 +128,9 @@ public enum ErrorCode {
 	INSTRUCTOR_HAS_LESSONS(HttpStatus.BAD_REQUEST, "등록된 레슨이 있는 강사는 탈퇴할 수 없습니다. 먼저 모든 레슨을 삭제해주세요."),
 
 	USER_HAS_ACTIVE_APPLICATIONS(HttpStatus.BAD_REQUEST, "참여 중인 레슨이 있어 탈퇴할 수 없습니다."),
+
+	LOCK_INTERRUPTED(HttpStatus.INTERNAL_SERVER_ERROR, "락을 대기하던 중 오류가 발생했습니다."),
+
 	/*
 	 * Profile : 프로필 관련 예외처리
 	 */

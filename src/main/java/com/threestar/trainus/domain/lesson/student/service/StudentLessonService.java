@@ -40,6 +40,7 @@ import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
+import com.threestar.trainus.global.annotation.DistributedLock;
 import com.threestar.trainus.global.utils.PageLimitCalculator;
 
 import lombok.RequiredArgsConstructor;
@@ -212,26 +213,42 @@ public class StudentLessonService {
 	}
 
 	@Transactional
+	@DistributedLock(key = "'lesson_apply:' + #lessonId")
 	public LessonApplicationResponseDto applyToLessonWithLock(Long lessonId, Long userId) {
-		Lesson lesson = adminLessonService.findLessonByIdWithLock(lessonId); // 락적용 find 메서드
+		// 레슨 조회
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
+		// 유저 조회
 		User user = userService.getUserById(userId);
 
+		// 개설자 신청 불가 체크
 		if (lesson.getLessonLeader().equals(userId)) {
 			throw new BusinessException(ErrorCode.LESSON_CREATOR_CANNOT_APPLY);
 		}
 
+		// 중복 체크
 		boolean alreadyParticipated = lessonParticipantRepository.existsByLessonIdAndUserId(lessonId, userId);
 		boolean alreadyApplied = lessonApplicationRepository.existsByLessonIdAndUserId(lessonId, userId);
 		if (alreadyParticipated || alreadyApplied) {
 			throw new BusinessException(ErrorCode.ALREADY_APPLIED);
 		}
 
+		// 레슨 상태 체크
 		if (lesson.getStatus() != LessonStatus.RECRUITING) {
 			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
 		}
 
+		// 선착순 여부에 따라 저장 처리 분기
 		if (lesson.getOpenRun()) {
+			// 락 내부에서 정원 체크
+			if (lesson.getParticipantCount() >= lesson.getMaxParticipants()) {
+				throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+			}
+			// 신청 시간 체크
+			if (java.time.LocalDateTime.now().isBefore(lesson.getOpenTime())) {
+				throw new BusinessException(ErrorCode.LESSON_NOT_YET_OPEN);
+			}
+
 			LessonParticipant participant = LessonParticipant.builder()
 				.lesson(lesson)
 				.user(user)
@@ -246,6 +263,7 @@ public class StudentLessonService {
 				participant.getJoinAt()
 			);
 		} else {
+			// 신청만 등록
 			LessonApplication application = LessonApplication.builder()
 				.lesson(lesson)
 				.user(user)

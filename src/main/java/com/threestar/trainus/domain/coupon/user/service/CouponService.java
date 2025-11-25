@@ -20,7 +20,7 @@ import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
-import com.threestar.trainus.global.annotation.RedissonLock;
+import com.threestar.trainus.global.annotation.DistributedLock;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -35,7 +35,7 @@ public class CouponService {
 	private final UserService userService;
 
 	@Transactional
-	@RedissonLock(value = "#couponId")
+	@DistributedLock(key = "'coupon:' + #couponId")
 	public CreateUserCouponResponseDto createUserCoupon(Long userId, Long couponId) {
 		User user = userService.getUserById(userId);
 		// Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
