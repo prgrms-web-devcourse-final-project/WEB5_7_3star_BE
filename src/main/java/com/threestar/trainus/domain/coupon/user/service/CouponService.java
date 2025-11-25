@@ -20,6 +20,7 @@ import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
+import com.threestar.trainus.global.annotation.RedissonLock;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -34,12 +35,14 @@ public class CouponService {
 	private final UserService userService;
 
 	@Transactional
+	@RedissonLock(value = "#couponId")
 	public CreateUserCouponResponseDto createUserCoupon(Long userId, Long couponId) {
 		User user = userService.getUserById(userId);
-		Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
+		// Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
+		// 	.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+		Coupon coupon = couponRepository.findById(couponId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
-
-		//쿠폰 발급 종료시각이 지났으면 예외처리
+		// 쿠폰 발급 종료시각이 지났으면 예외처리
 		if (LocalDateTime.now().isAfter(coupon.getCloseAt())) {
 			throw new BusinessException(ErrorCode.COUPON_EXPIRED);
 		}
