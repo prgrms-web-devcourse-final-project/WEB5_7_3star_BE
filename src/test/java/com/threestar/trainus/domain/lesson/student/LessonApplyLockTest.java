@@ -116,7 +116,7 @@ public class LessonApplyLockTest {
 				try {
 					Lesson updatedLesson = lessonRepository.findById(lessonId).orElseThrow();
 					User user = userRepository.findByEmail(email).orElseThrow();
-					lessonService.applyToLesson(lessonId, user.getId());
+					lessonService.applyToLessonWithoutLock(lessonId, user.getId());
 					log.info("신청 성공 - email: {} | participantCount: {}", email, updatedLesson.getParticipantCount());
 					successCount.incrementAndGet();
 				} catch (Exception e) {
@@ -147,8 +147,8 @@ public class LessonApplyLockTest {
 	}
 
 	@Test
-	@DisplayName("동시 요청 시 - 락 적용: 인원 수 초과 없이 정상 처리")
-	void applyToLessonWithLock_동시요청_락적용_최대참가자수를초과하지않음() throws InterruptedException {
+	@DisplayName("동시 요청 시 - 비관락 적용: 인원 수 초과 없이 정상 처리")
+	void applyToLessonWithLock_동시요청_비관락적용_최대참가자수를초과하지않음() throws InterruptedException {
 		ExecutorService executor = Executors.newFixedThreadPool(100); // 병렬 쓰레드 수 조절
 		CountDownLatch latch = new CountDownLatch(CONCURRENT_USERS);
 
@@ -165,7 +165,7 @@ public class LessonApplyLockTest {
 				try {
 					Lesson updatedLesson = lessonRepository.findById(lessonId).orElseThrow();
 					User user = userRepository.findByEmail(email).orElseThrow();
-					lessonService.applyToLessonWithLock(lessonId, user.getId());
+					lessonService.applyToLessonWithPessimisticLock(lessonId, user.getId());
 					log.info("신청 성공 - email: {} | participantCount: {}", email, updatedLesson.getParticipantCount());
 					successCount.incrementAndGet();
 				} catch (Exception e) {

@@ -81,7 +81,7 @@ public class StudentLessonController {
 		@LoginUser Long userId
 	) {
 		// 잔여 좌석 확인 메서드
-		LessonApplicationResponseDto response = studentLessonService.applyToLesson(lessonId, userId);
+		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithDistributedLock(lessonId, userId);
 		return BaseResponse.ok("레슨 신청 완료", response, HttpStatus.OK);
 	}
 
