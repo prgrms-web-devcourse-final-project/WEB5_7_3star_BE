@@ -20,7 +20,7 @@ import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
-import com.threestar.trainus.global.annotation.RedissonLock;
+import com.threestar.trainus.global.annotation.DistributedLock;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
@@ -35,8 +35,80 @@ public class CouponService {
 	private final UserService userService;
 
 	@Transactional
-	@RedissonLock(value = "#couponId")
-	public CreateUserCouponResponseDto createUserCoupon(Long userId, Long couponId) {
+	public CreateUserCouponResponseDto createUserCouponWithoutLock(Long userId, Long couponId) {
+		User user = userService.getUserById(userId);
+		Coupon coupon = couponRepository.findById(couponId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+		// 쿠폰 발급 종료시각이 지났으면 예외처리
+		if (LocalDateTime.now().isAfter(coupon.getCloseAt())) {
+			throw new BusinessException(ErrorCode.COUPON_EXPIRED);
+		}
+		//중복 발급 방지
+		boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(userId, couponId);
+		if (alreadyIssued) {
+			throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
+		}
+
+		//쿠폰 오픈 시간 전이라면 예외 처리(모든 쿠폰 공통)
+		if (LocalDateTime.now().isBefore(coupon.getOpenAt())) {
+			throw new BusinessException(ErrorCode.COUPON_NOT_YET_OPEN);
+		}
+
+		if (coupon.getCategory() == CouponCategory.OPEN_RUN) {
+			//선착순 쿠폰 발급 시 수량이 소진되면 예외처리
+			if (coupon.getQuantity() <= 0) {
+				throw new BusinessException(ErrorCode.COUPON_BE_EXHAUSTED);
+			}
+			coupon.decreaseQuantity();
+		}
+
+		LocalDateTime expirationDate = coupon.getExpirationDate();
+
+		UserCoupon userCoupon = new UserCoupon(user, coupon, expirationDate);
+		userCouponRepository.save(userCoupon);
+
+		return UserCouponMapper.toCreateUserCouponResponseDto(userCoupon);
+	}
+
+	@Transactional
+	public CreateUserCouponResponseDto createUserCouponWithPessimisticLock(Long userId, Long couponId) {
+		User user = userService.getUserById(userId);
+		Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+		// 쿠폰 발급 종료시각이 지났으면 예외처리
+		if (LocalDateTime.now().isAfter(coupon.getCloseAt())) {
+			throw new BusinessException(ErrorCode.COUPON_EXPIRED);
+		}
+		//중복 발급 방지
+		boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(userId, couponId);
+		if (alreadyIssued) {
+			throw new BusinessException(ErrorCode.COUPON_ALREADY_ISSUED);
+		}
+
+		//쿠폰 오픈 시간 전이라면 예외 처리(모든 쿠폰 공통)
+		if (LocalDateTime.now().isBefore(coupon.getOpenAt())) {
+			throw new BusinessException(ErrorCode.COUPON_NOT_YET_OPEN);
+		}
+
+		if (coupon.getCategory() == CouponCategory.OPEN_RUN) {
+			//선착순 쿠폰 발급 시 수량이 소진되면 예외처리
+			if (coupon.getQuantity() <= 0) {
+				throw new BusinessException(ErrorCode.COUPON_BE_EXHAUSTED);
+			}
+			coupon.decreaseQuantity();
+		}
+
+		LocalDateTime expirationDate = coupon.getExpirationDate();
+
+		UserCoupon userCoupon = new UserCoupon(user, coupon, expirationDate);
+		userCouponRepository.save(userCoupon);
+
+		return UserCouponMapper.toCreateUserCouponResponseDto(userCoupon);
+	}
+
+	@Transactional
+	@DistributedLock(key = "'coupon:' + #couponId")
+	public CreateUserCouponResponseDto createUserCouponWithDistributedLock(Long userId, Long couponId) {
 		User user = userService.getUserById(userId);
 		// Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
 		// 	.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));

@@ -27,25 +27,71 @@ public class TestConcurrencyController {
 	private final StudentLessonService studentLessonService;
 	private final TestUserService testUserService;
 
-	@PostMapping("/coupons/{couponId}")
-	@Operation(summary = "쿠폰 발급 동시성 테스트", description = "쿠폰을 발급받는 테스트 API")
-	public ResponseEntity<BaseResponse<CreateUserCouponResponseDto>> issueCouponForTest(
+	// 쿠폰 동시성 테스트
+	@PostMapping("/coupons/{couponId}/no-lock")
+	@Operation(summary = "쿠폰 발급 동시성 테스트 (락 미적용)", description = "쿠폰을 발급받는 테스트 API (락 미적용)")
+	public ResponseEntity<BaseResponse<CreateUserCouponResponseDto>> issueCouponNoLock(
 		@PathVariable Long couponId,
 		@RequestBody TestRequestDto testRequestDto
 	) {
 		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
-		CreateUserCouponResponseDto responseDto = couponService.createUserCoupon(user.getId(), couponId);
-		return BaseResponse.ok("쿠폰 발급 완료", responseDto, HttpStatus.CREATED);
+		CreateUserCouponResponseDto responseDto = couponService.createUserCouponWithoutLock(user.getId(), couponId);
+		return BaseResponse.ok("쿠폰 발급 완료 (락 미적용)", responseDto, HttpStatus.CREATED);
 	}
 
-	@PostMapping("/lessons/{lessonId}/application")
-	@Operation(summary = "레슨 신청 동시성 테스트", description = "레슨을 신청하는 테스트 API")
-	public ResponseEntity<BaseResponse<LessonApplicationResponseDto>> applyToLessonForTest(
+	@PostMapping("/coupons/{couponId}/pessimistic-lock")
+	@Operation(summary = "쿠폰 발급 동시성 테스트 (비관적 락)", description = "쿠폰을 발급받는 테스트 API (비관적 락)")
+	public ResponseEntity<BaseResponse<CreateUserCouponResponseDto>> issueCouponPessimisticLock(
+		@PathVariable Long couponId,
+		@RequestBody TestRequestDto testRequestDto
+	) {
+		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
+		CreateUserCouponResponseDto responseDto = couponService.createUserCouponWithPessimisticLock(user.getId(), couponId);
+		return BaseResponse.ok("쿠폰 발급 완료 (비관적 락)", responseDto, HttpStatus.CREATED);
+	}
+
+	@PostMapping("/coupons/{couponId}/distributed-lock")
+	@Operation(summary = "쿠폰 발급 동시성 테스트 (분산 락)", description = "쿠폰을 발급받는 테스트 API (분산 락)")
+	public ResponseEntity<BaseResponse<CreateUserCouponResponseDto>> issueCouponDistributedLock(
+		@PathVariable Long couponId,
+		@RequestBody TestRequestDto testRequestDto
+	) {
+		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
+		CreateUserCouponResponseDto responseDto = couponService.createUserCouponWithDistributedLock(user.getId(), couponId);
+		return BaseResponse.ok("쿠폰 발급 완료 (분산 락)", responseDto, HttpStatus.CREATED);
+	}
+
+	// 레슨 신청 동시성 테스트
+	@PostMapping("/lessons/{lessonId}/application/no-lock")
+	@Operation(summary = "레슨 신청 동시성 테스트 (락 미적용)", description = "레슨을 신청하는 테스트 API (락 미적용)")
+	public ResponseEntity<BaseResponse<LessonApplicationResponseDto>> applyToLessonNoLock(
 		@PathVariable Long lessonId,
 		@RequestBody TestRequestDto testRequestDto
 	) {
 		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
-		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithLock(lessonId, user.getId());
-		return BaseResponse.ok("레슨 신청 완료", response, HttpStatus.OK);
+		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithoutLock(lessonId, user.getId());
+		return BaseResponse.ok("레슨 신청 완료 (락 미적용)", response, HttpStatus.OK);
+	}
+
+	@PostMapping("/lessons/{lessonId}/application/pessimistic-lock")
+	@Operation(summary = "레슨 신청 동시성 테스트 (비관적 락)", description = "레슨을 신청하는 테스트 API (비관적 락)")
+	public ResponseEntity<BaseResponse<LessonApplicationResponseDto>> applyToLessonPessimisticLock(
+		@PathVariable Long lessonId,
+		@RequestBody TestRequestDto testRequestDto
+	) {
+		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
+		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithPessimisticLock(lessonId, user.getId());
+		return BaseResponse.ok("레슨 신청 완료 (비관적 락)", response, HttpStatus.OK);
+	}
+
+	@PostMapping("/lessons/{lessonId}/application/distributed-lock")
+	@Operation(summary = "레슨 신청 동시성 테스트 (분산 락)", description = "레슨을 신청하는 테스트 API (분산 락)")
+	public ResponseEntity<BaseResponse<LessonApplicationResponseDto>> applyToLessonDistributedLock(
+		@PathVariable Long lessonId,
+		@RequestBody TestRequestDto testRequestDto
+	) {
+		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
+		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithDistributedLock(lessonId, user.getId());
+		return BaseResponse.ok("레슨 신청 완료 (분산 락)", response, HttpStatus.OK);
 	}
 }
