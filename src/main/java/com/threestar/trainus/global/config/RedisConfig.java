@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -21,18 +22,33 @@ public class RedisConfig {
 	@Value("${spring.data.redis.port}")
 	private int port;
 
-	private static final String REDISSON_HOST_PREFIX = "redis://";
+	@Value("${spring.data.redis.username}")
+	private String username;
+
+	@Value("${spring.data.redis.password}")
+	private String password;
+
+	private static final String REDISSON_HOST_PREFIX = "rediss://";
 
 	@Bean
 	public RedissonClient redissonClient() {
 		Config config = new Config();
-		config.useSingleServer().setAddress(REDISSON_HOST_PREFIX + host + ":" + port);
+
+		config.useSingleServer()
+			.setAddress(REDISSON_HOST_PREFIX + host + ":" + port)
+			.setUsername(username)
+			.setPassword(password);
 		return Redisson.create(config);
 	}
 
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
-		return new LettuceConnectionFactory(host, port);
+		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+		redisStandaloneConfiguration.setHostName(host);
+		redisStandaloneConfiguration.setPort(port);
+		redisStandaloneConfiguration.setUsername(username);
+		redisStandaloneConfiguration.setPassword(password);
+		return new LettuceConnectionFactory(redisStandaloneConfiguration);
 	}
 
 	@Bean
