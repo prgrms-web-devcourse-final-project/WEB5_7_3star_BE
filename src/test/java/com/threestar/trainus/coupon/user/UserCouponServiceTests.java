@@ -49,7 +49,7 @@ public class UserCouponServiceTests {
 	private CouponService couponService;
 
 	@Test
-	void createUserCoupon_정상_발급() {
+	void createUserCouponWithDistributedLock_정상_발급() {
 		Long userId = 1L;
 		Long couponId = 2L;
 
@@ -70,7 +70,7 @@ public class UserCouponServiceTests {
 		given(userCouponRepository.existsByUserIdAndCouponId(userId, couponId))
 			.willReturn(false);
 
-		CreateUserCouponResponseDto responseDto = couponService.createUserCoupon(userId, couponId);
+		CreateUserCouponResponseDto responseDto = couponService.createUserCouponWithDistributedLock(userId, couponId);
 
 		assertThat(responseDto).isNotNull();
 		assertThat(responseDto.couponId()).isEqualTo(couponId);
@@ -79,7 +79,7 @@ public class UserCouponServiceTests {
 	}
 
 	@Test
-	void createUserCoupon_종료시각_지나면_예외처리() {
+	void createUserCouponWithDistributedLock_종료시각_지나면_예외처리() {
 		Long userId = 1L;
 		Long couponId = 2L;
 
@@ -97,13 +97,13 @@ public class UserCouponServiceTests {
 		given(couponRepository.findByIdWithPessimisticLock(couponId))
 			.willReturn(Optional.of(coupon));
 
-		assertThatThrownBy(() -> couponService.createUserCoupon(userId, couponId))
+		assertThatThrownBy(() -> couponService.createUserCouponWithDistributedLock(userId, couponId))
 			.isInstanceOf(BusinessException.class)
 			.hasMessageContaining(ErrorCode.COUPON_EXPIRED.getMessage());
 	}
 
 	@Test
-	void createUserCoupon_중복발급_예외처리() {
+	void createUserCouponWithDistributedLock_중복발급_예외처리() {
 		Long userId = 1L;
 		Long couponId = 2L;
 
@@ -123,14 +123,14 @@ public class UserCouponServiceTests {
 		given(userCouponRepository.existsByUserIdAndCouponId(userId, couponId))
 			.willReturn(true);
 
-		assertThatThrownBy(() -> couponService.createUserCoupon(userId, couponId))
+		assertThatThrownBy(() -> couponService.createUserCouponWithDistributedLock(userId, couponId))
 			.isInstanceOf(BusinessException.class)
 			.hasMessageContaining(ErrorCode.COUPON_ALREADY_ISSUED.getMessage());
 
 	}
 
 	@Test
-	void createUserCoupon_선착순쿠폰_오픈전_예외처리() {
+	void createUserCouponWithDistributedLock_선착순쿠폰_오픈전_예외처리() {
 		Long userId = 1L;
 		Long couponId = 2L;
 
@@ -149,13 +149,13 @@ public class UserCouponServiceTests {
 		given(couponRepository.findByIdWithPessimisticLock(couponId))
 			.willReturn(Optional.of(coupon));
 
-		assertThatThrownBy(() -> couponService.createUserCoupon(userId, couponId))
+		assertThatThrownBy(() -> couponService.createUserCouponWithDistributedLock(userId, couponId))
 			.isInstanceOf(BusinessException.class)
 			.hasMessageContaining(ErrorCode.COUPON_NOT_YET_OPEN.getMessage());
 	}
 
 	@Test
-	void createUserCoupon_수량소진_예외() {
+	void createUserCouponWithDistributedLock_수량소진_예외() {
 		Long userId = 1L;
 		Long couponId = 2L;
 
@@ -174,7 +174,7 @@ public class UserCouponServiceTests {
 			.willReturn(user);
 		given(couponRepository.findByIdWithPessimisticLock(couponId))
 			.willReturn(Optional.of(coupon));
-		assertThatThrownBy(() -> couponService.createUserCoupon(userId, couponId))
+		assertThatThrownBy(() -> couponService.createUserCouponWithDistributedLock(userId, couponId))
 			.isInstanceOf(BusinessException.class)
 			.hasMessageContaining(ErrorCode.COUPON_BE_EXHAUSTED.getMessage());
 	}

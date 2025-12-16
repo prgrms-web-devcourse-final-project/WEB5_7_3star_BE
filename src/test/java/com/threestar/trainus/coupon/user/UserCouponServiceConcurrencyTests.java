@@ -111,7 +111,7 @@ class UserCouponServiceConcurrencyTests {
 			executor.submit(() -> {
 				try {
 
-					couponService.createUserCoupon(users.get(idx).getId(), coupon.getId());
+					couponService.createUserCouponWithDistributedLock(users.get(idx).getId(), coupon.getId());
 					log.info("발급 성공 - id: {} | 발급된 쿠폰 수량: {}", idx,
 						userCouponRepository.countByCouponId(coupon.getId()));
 					successCount.incrementAndGet();
@@ -157,7 +157,7 @@ class UserCouponServiceConcurrencyTests {
 
 			executorService.submit(() -> {
 				try {
-					couponService.createUserCoupon(testUser.getId(), coupon.getId());
+					couponService.createUserCouponWithDistributedLock(testUser.getId(), coupon.getId());
 					System.out.println("Thread " + idx + " - 발급 성공");
 
 				} catch (BusinessException e) {

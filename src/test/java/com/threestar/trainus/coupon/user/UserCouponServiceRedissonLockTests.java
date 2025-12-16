@@ -106,7 +106,7 @@ public class UserCouponServiceRedissonLockTests {
 
 			executor.submit(() -> {
 				try {
-					couponService.createUserCoupon(users.get(idx).getId(), coupon.getId());
+					couponService.createUserCouponWithDistributedLock(users.get(idx).getId(), coupon.getId());
 					log.info("[성공] userId: {} | 현재 발급 수: {}", idx,
 						userCouponRepository.countByCouponId(coupon.getId()));
 					successCount.incrementAndGet();
