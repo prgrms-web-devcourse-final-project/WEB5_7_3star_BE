@@ -80,7 +80,8 @@ public class StudentLessonController {
 		@PathVariable Long lessonId,
 		@LoginUser Long userId
 	) {
-		LessonApplicationResponseDto response = studentLessonService.applyToLesson(lessonId, userId);
+		// 잔여 좌석 확인 메서드
+		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithDistributedLock(lessonId, userId);
 		return BaseResponse.ok("레슨 신청 완료", response, HttpStatus.OK);
 	}
 

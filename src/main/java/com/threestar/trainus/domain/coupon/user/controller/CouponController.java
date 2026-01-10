@@ -35,7 +35,7 @@ public class CouponController {
 		@PathVariable Long couponId,
 		@LoginUser Long userId
 	) {
-		CreateUserCouponResponseDto dto = couponService.createUserCoupon(userId, couponId);
+		CreateUserCouponResponseDto dto = couponService.createUserCouponWithDistributedLock(userId, couponId);
 
 		return BaseResponse.ok("쿠폰 발급 완료", dto, HttpStatus.CREATED);
 	}

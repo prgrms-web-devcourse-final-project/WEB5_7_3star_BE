@@ -22,7 +22,7 @@ public class ProfileMetadataScheduler {
 	private final ProfileMetadataService profileMetadataService;
 	private final UserRepository userRepository;
 
-	@Scheduled(fixedRate = 180000) // 3분마다 실행
+	@Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul") // 매일 자정 실행
 	public void updateAllProfileMetadata() {
 		try {
 			List<User> instructors = userRepository.findByRole(UserRole.USER);
