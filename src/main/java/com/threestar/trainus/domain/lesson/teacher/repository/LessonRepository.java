@@ -218,7 +218,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		      AND (:district IS NULL OR l.district = :district)
 		      AND (:dong IS NULL OR l.dong = :dong)
 		      AND (:ri IS NULL OR l.ri = :ri)
-		      AND to_tsvector('korean', l.lesson_name) @@ websearch_to_tsquery('korean', :search)
+		      AND LOWER(l.lesson_name) LIKE LOWER(CONCAT('%', :search, '%'))
 		    ORDER BY 
 		      CASE WHEN :sort = 'LATEST' THEN l.created_at END DESC,
 		      CASE WHEN :sort = 'OLDEST' THEN l.created_at END ASC,
@@ -248,7 +248,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		          AND (:district IS NULL OR l.district = :district)
 		          AND (:dong IS NULL OR l.dong = :dong)
 		          AND (:ri IS NULL OR l.ri = :ri)
-		          AND to_tsvector('korean', l.lesson_name) @@ websearch_to_tsquery('korean', :search)
+		          AND LOWER(l.lesson_name) LIKE LOWER(CONCAT('%', :search, '%'))
 		        LIMIT :limit
 		    ) t
 		""", nativeQuery = true)
