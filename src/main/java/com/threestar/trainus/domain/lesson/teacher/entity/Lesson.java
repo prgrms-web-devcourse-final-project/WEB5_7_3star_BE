@@ -85,9 +85,11 @@ public class Lesson extends BaseDateEntity {
 	@Column(length = 10)
 	private String ri;
 
+	// 좌표 변환을 위한 주소
 	@Column(nullable = false, length = 255)
 	private String address;
 
+	// 식별을 위한 상세 주소(ex: 201호)
 	@Column(length = 25)
 	private String addressDetail;
 
