@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.coupon.admin.controller;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +24,7 @@ import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateRequestDto;
 import com.threestar.trainus.domain.coupon.admin.dto.CouponUpdateResponseDto;
 import com.threestar.trainus.domain.coupon.admin.mapper.AdminCouponMapper;
 import com.threestar.trainus.domain.coupon.admin.service.AdminCouponService;
+import com.threestar.trainus.domain.coupon.user.entity.Coupon;
 import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.global.annotation.LoginUser;
@@ -42,6 +44,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminCouponController {
 
 	private final AdminCouponService adminCouponService;
+	private final StringRedisTemplate redisTemplate;
 
 	@PostMapping
 	@Operation(summary = "쿠폰 생성", description = "관리자가 새로운 쿠폰을 생성")
@@ -51,6 +54,25 @@ public class AdminCouponController {
 	) {
 		CouponCreateResponseDto response = adminCouponService.createCoupon(request, loginUserId);
 		return BaseResponse.ok("쿠폰 생성이 완료되었습니다.", response, HttpStatus.OK);
+	}
+
+	/**
+	 레디스 재고 세팅용 테스트 컨트롤러
+	 Todo:실제 쿠폰생성 로직에 병합
+	 */
+	@PostMapping("/setting/redis/{couponId}")
+	public ResponseEntity<Void> settingRedisStock(
+		@PathVariable Long couponId
+	) {
+
+		Coupon coupon = adminCouponService.findCouponById(couponId);
+
+		redisTemplate.opsForValue().set(
+			"coupon:stock:" + couponId,
+			coupon.getQuantity().toString()
+		);
+
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping

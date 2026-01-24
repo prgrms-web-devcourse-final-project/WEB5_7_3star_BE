@@ -12,6 +12,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -28,7 +29,9 @@ public class RedisConfig {
 
 	@Value("${spring.data.redis.password:}")
 	private String password;
-
+	/**
+	 * 로컬 테스트용 프리픽스 -> spring.data.redis.key.prefix:redis://
+	 * */
 	@Value("${spring.data.redis.key.prefix}")
 	private String prefix;
 
@@ -67,5 +70,11 @@ public class RedisConfig {
 		redisTemplate.setValueSerializer(new StringRedisSerializer());
 		redisTemplate.setConnectionFactory(redisConnectionFactory());
 		return redisTemplate;
+	}
+
+	@Bean
+	public StringRedisTemplate stringRedisTemplate(
+		RedisConnectionFactory redisConnectionFactory) {
+		return new StringRedisTemplate(redisConnectionFactory);
 	}
 }

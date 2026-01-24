@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.coupon.issue.CouponIssueConsumer;
+import com.threestar.trainus.domain.coupon.issue.CouponIssueProducer;
 import com.threestar.trainus.domain.coupon.user.dto.CouponPageResponseDto;
 import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.user.dto.UserCouponPageResponseDto;
@@ -28,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 public class CouponController {
 
 	private final CouponService couponService;
+	private final CouponIssueProducer couponIssueProducer;
+	private final CouponIssueConsumer couponIssueConsumer;
 
 	@PostMapping("/{couponId}")
 	@Operation(summary = "쿠폰 발급 API", description = "couponId에 맞는 쿠폰을 유저에게 발급하는 API입니다.")
@@ -57,5 +61,29 @@ public class CouponController {
 		CouponPageResponseDto dto = couponService.getCoupons(userId);
 
 		return BaseResponse.ok("발급가능한 쿠폰 조회 성공", dto, HttpStatus.OK);
+	}
+
+	/**
+	 * 임시 테스트용 메서드
+	 * Todo: 불필요한 컨트롤러. 삭제해도 무방
+	 * */
+	@PostMapping("/{couponId}/issue")
+	public ResponseEntity<Void> issueCoupon(
+		@RequestParam Long userId,
+		@PathVariable Long couponId
+	) {
+		couponIssueProducer.send(couponId, userId);
+
+		return ResponseEntity.accepted().build(); // 202
+	}
+
+	/**
+	 * 임시 테스트용 메서드
+	 * Todo: 불필요한 컨트롤러. 삭제해도 무방
+	 * */
+	@PostMapping("/consume")
+	public ResponseEntity<String> manualConsume() {
+		couponIssueConsumer.testConsumeOnce();
+		return ResponseEntity.ok("Manual consume executed");
 	}
 }
