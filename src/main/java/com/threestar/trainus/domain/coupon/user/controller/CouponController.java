@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +17,7 @@ import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.user.dto.UserCouponPageResponseDto;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
+import com.threestar.trainus.domain.test.dto.TestRequestDto;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 
@@ -69,10 +71,10 @@ public class CouponController {
 	 * */
 	@PostMapping("/{couponId}/issue")
 	public ResponseEntity<Void> issueCoupon(
-		@RequestParam Long userId,
+		@RequestBody TestRequestDto testRequestDto,
 		@PathVariable Long couponId
 	) {
-		couponIssueProducer.send(couponId, userId);
+		couponIssueProducer.send(couponId, testRequestDto.getUserId());
 
 		return ResponseEntity.accepted().build(); // 202
 	}
