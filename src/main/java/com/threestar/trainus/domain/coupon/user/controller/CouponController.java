@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.coupon.user.controller;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,6 +70,7 @@ public class CouponController {
 	 * 임시 테스트용 메서드
 	 * Todo: 불필요한 컨트롤러. 삭제해도 무방
 	 * */
+	@Profile("producer")
 	@PostMapping("/{couponId}/issue")
 	public ResponseEntity<Void> issueCoupon(
 		@RequestBody TestRequestDto testRequestDto,
