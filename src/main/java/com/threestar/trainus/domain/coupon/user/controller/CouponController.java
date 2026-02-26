@@ -1,5 +1,7 @@
 package com.threestar.trainus.domain.coupon.user.controller;
 
+import com.threestar.trainus.domain.coupon.user.service.CouponIssueFacade;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +35,10 @@ import lombok.RequiredArgsConstructor;
 public class CouponController {
 
 	private final CouponService couponService;
+	private final CouponIssueFacade couponIssueFacade;
 	private final CouponIssueProducer couponIssueProducer;
-	private final CouponIssueConsumer couponIssueConsumer;
+	@Autowired(required = false)
+	private CouponIssueConsumer couponIssueConsumer;
 
 	@PostMapping("/{couponId}")
 	@Operation(summary = "쿠폰 발급 API", description = "couponId에 맞는 쿠폰을 유저에게 발급하는 API입니다.")
@@ -42,7 +46,7 @@ public class CouponController {
 		@PathVariable Long couponId,
 		@LoginUser Long userId
 	) {
-		CreateUserCouponResponseDto dto = couponService.createUserCouponWithDistributedLock(userId, couponId);
+		CreateUserCouponResponseDto dto = couponIssueFacade.issueCoupon(userId, couponId);
 
 		return BaseResponse.ok("쿠폰 발급 완료", dto, HttpStatus.CREATED);
 	}
@@ -87,6 +91,9 @@ public class CouponController {
 	 * */
 	@PostMapping("/consume")
 	public ResponseEntity<String> manualConsume() {
+		if (couponIssueConsumer == null) {
+			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Consumer is not active.");
+		}
 		couponIssueConsumer.testConsumeOnce();
 		return ResponseEntity.ok("Manual consume executed");
 	}
