@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.threestar.trainus.domain.coupon.issue.CouponIssueProducer;
 import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
+import com.threestar.trainus.domain.coupon.user.service.CouponIssueFacade;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
@@ -33,6 +34,7 @@ public class TestConcurrencyController {
 	private final StudentLessonService studentLessonService;
 	private final TestUserService testUserService;
 	private final CouponIssueProducer couponIssueProducer;
+	private final CouponIssueFacade couponIssueFacade;
 
 	// 쿠폰 동시성 테스트
 	@PostMapping("/coupons/{couponId}/no-lock")
@@ -65,7 +67,7 @@ public class TestConcurrencyController {
 		@RequestBody TestRequestDto testRequestDto
 	) {
 		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
-		CreateUserCouponResponseDto responseDto = couponService.createUserCouponWithDistributedLock(user.getId(),
+		CreateUserCouponResponseDto responseDto = couponIssueFacade.issueCoupon(user.getId(),
 			couponId);
 		return BaseResponse.ok("쿠폰 발급 완료 (분산 락)", responseDto, HttpStatus.CREATED);
 	}

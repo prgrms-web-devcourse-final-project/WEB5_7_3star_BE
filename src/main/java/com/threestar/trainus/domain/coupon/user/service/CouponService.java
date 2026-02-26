@@ -106,13 +106,8 @@ public class CouponService {
 		return UserCouponMapper.toCreateUserCouponResponseDto(userCoupon);
 	}
 
-	@DistributedLock(key = "'coupon:' + #couponId")
-	public CreateUserCouponResponseDto createUserCouponWithDistributedLock(Long userId, Long couponId) {
-		return issueCouponInternal(userId, couponId);
-	}
-
 	@Transactional
-	public CreateUserCouponResponseDto issueCouponInternal(Long userId, Long couponId) {
+	public CreateUserCouponResponseDto issueCoupon(Long userId, Long couponId) {
 		User user = userService.getUserById(userId);
 		Coupon coupon = couponRepository.findById(couponId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
