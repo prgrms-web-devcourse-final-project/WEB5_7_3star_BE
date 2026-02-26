@@ -41,6 +41,10 @@ public class User extends BaseDateEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	//테스트용
+	@Column(unique = true, nullable = true)
+	private Long testUserId;
+
 	@Column(length = 100, nullable = false, unique = true)
 	private String email;
 

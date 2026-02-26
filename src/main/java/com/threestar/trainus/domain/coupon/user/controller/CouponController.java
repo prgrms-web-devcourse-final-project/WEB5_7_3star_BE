@@ -1,19 +1,26 @@
 package com.threestar.trainus.domain.coupon.user.controller;
 
+import com.threestar.trainus.domain.coupon.user.service.CouponIssueFacade;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.threestar.trainus.domain.coupon.issue.CouponIssueConsumer;
+import com.threestar.trainus.domain.coupon.issue.CouponIssueProducer;
 import com.threestar.trainus.domain.coupon.user.dto.CouponPageResponseDto;
 import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.user.dto.UserCouponPageResponseDto;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
+import com.threestar.trainus.domain.test.dto.TestRequestDto;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 
@@ -28,6 +35,10 @@ import lombok.RequiredArgsConstructor;
 public class CouponController {
 
 	private final CouponService couponService;
+	private final CouponIssueFacade couponIssueFacade;
+	private final CouponIssueProducer couponIssueProducer;
+	@Autowired(required = false)
+	private CouponIssueConsumer couponIssueConsumer;
 
 	@PostMapping("/{couponId}")
 	@Operation(summary = "쿠폰 발급 API", description = "couponId에 맞는 쿠폰을 유저에게 발급하는 API입니다.")
@@ -35,7 +46,7 @@ public class CouponController {
 		@PathVariable Long couponId,
 		@LoginUser Long userId
 	) {
-		CreateUserCouponResponseDto dto = couponService.createUserCouponWithDistributedLock(userId, couponId);
+		CreateUserCouponResponseDto dto = couponIssueFacade.issueCoupon(userId, couponId);
 
 		return BaseResponse.ok("쿠폰 발급 완료", dto, HttpStatus.CREATED);
 	}
@@ -57,5 +68,33 @@ public class CouponController {
 		CouponPageResponseDto dto = couponService.getCoupons(userId);
 
 		return BaseResponse.ok("발급가능한 쿠폰 조회 성공", dto, HttpStatus.OK);
+	}
+
+	/**
+	 * 임시 테스트용 메서드
+	 * Todo: 불필요한 컨트롤러. 삭제해도 무방
+	 * */
+	@Profile("producer")
+	@PostMapping("/{couponId}/issue")
+	public ResponseEntity<Void> issueCoupon(
+		@RequestBody TestRequestDto testRequestDto,
+		@PathVariable Long couponId
+	) {
+		couponIssueProducer.send(couponId, testRequestDto.getUserId());
+
+		return ResponseEntity.accepted().build(); // 202
+	}
+
+	/**
+	 * 임시 테스트용 메서드
+	 * Todo: 불필요한 컨트롤러. 삭제해도 무방
+	 * */
+	@PostMapping("/consume")
+	public ResponseEntity<String> manualConsume() {
+		if (couponIssueConsumer == null) {
+			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Consumer is not active.");
+		}
+		couponIssueConsumer.testConsumeOnce();
+		return ResponseEntity.ok("Manual consume executed");
 	}
 }

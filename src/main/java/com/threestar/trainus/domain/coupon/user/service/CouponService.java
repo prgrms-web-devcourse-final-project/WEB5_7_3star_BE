@@ -107,11 +107,8 @@ public class CouponService {
 	}
 
 	@Transactional
-	@DistributedLock(key = "'coupon:' + #couponId")
-	public CreateUserCouponResponseDto createUserCouponWithDistributedLock(Long userId, Long couponId) {
+	public CreateUserCouponResponseDto issueCoupon(Long userId, Long couponId) {
 		User user = userService.getUserById(userId);
-		// Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
-		// 	.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
 		Coupon coupon = couponRepository.findById(couponId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
 		// 쿠폰 발급 종료시각이 지났으면 예외처리
