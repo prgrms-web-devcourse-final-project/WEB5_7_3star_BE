@@ -1,6 +1,7 @@
 package com.threestar.trainus.global.config.security;
 
 import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,7 +31,8 @@ public class SecurityConfig {
 		http
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/api/v1/users/**", "/api/lessons/test-auth", "/swagger-ui/**", "/v3/api-docs/**",
-					"/api/v1/profiles/**", "/api/v1/lessons/**", "/api/v1/comments/**", "/api/v1/reviews/**",
+					"/api/v1/profiles/**", "/api/v1/lessons/**", "api/v1/coupons/**", "/api/v1/comments/**",
+					"/api/v1/reviews/**", "/api/v1/admin/**",
 					"/api/v1/rankings/**", "/api/v1/payments/**", "/test/**", "/health")
 				.permitAll()
 				.requestMatchers("/api/v1/admin/**")
