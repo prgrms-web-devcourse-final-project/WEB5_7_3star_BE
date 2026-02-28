@@ -65,12 +65,12 @@ public class UserCouponServiceTests {
 
 		given(userService.getUserById(userId))
 			.willReturn(user);
-		given(couponRepository.findByIdWithPessimisticLock(couponId))
+		given(couponRepository.findById(couponId))
 			.willReturn(Optional.of(coupon));
 		given(userCouponRepository.existsByUserIdAndCouponId(userId, couponId))
 			.willReturn(false);
 
-		CreateUserCouponResponseDto responseDto = couponService.createUserCouponWithDistributedLock(userId, couponId);
+		CreateUserCouponResponseDto responseDto = couponService.issueCoupon(userId, couponId);
 
 		assertThat(responseDto).isNotNull();
 		assertThat(responseDto.couponId()).isEqualTo(couponId);
@@ -94,10 +94,10 @@ public class UserCouponServiceTests {
 
 		given(userService.getUserById(userId))
 			.willReturn(user);
-		given(couponRepository.findByIdWithPessimisticLock(couponId))
+		given(couponRepository.findById(couponId))
 			.willReturn(Optional.of(coupon));
 
-		assertThatThrownBy(() -> couponService.createUserCouponWithDistributedLock(userId, couponId))
+		assertThatThrownBy(() -> couponService.issueCoupon(userId, couponId))
 			.isInstanceOf(BusinessException.class)
 			.hasMessageContaining(ErrorCode.COUPON_EXPIRED.getMessage());
 	}
@@ -118,12 +118,12 @@ public class UserCouponServiceTests {
 
 		given(userService.getUserById(userId))
 			.willReturn(user);
-		given(couponRepository.findByIdWithPessimisticLock(couponId))
+		given(couponRepository.findById(couponId))
 			.willReturn(Optional.of(coupon));
 		given(userCouponRepository.existsByUserIdAndCouponId(userId, couponId))
 			.willReturn(true);
 
-		assertThatThrownBy(() -> couponService.createUserCouponWithDistributedLock(userId, couponId))
+		assertThatThrownBy(() -> couponService.issueCoupon(userId, couponId))
 			.isInstanceOf(BusinessException.class)
 			.hasMessageContaining(ErrorCode.COUPON_ALREADY_ISSUED.getMessage());
 
@@ -146,10 +146,10 @@ public class UserCouponServiceTests {
 
 		given(userService.getUserById(userId))
 			.willReturn(user);
-		given(couponRepository.findByIdWithPessimisticLock(couponId))
+		given(couponRepository.findById(couponId))
 			.willReturn(Optional.of(coupon));
 
-		assertThatThrownBy(() -> couponService.createUserCouponWithDistributedLock(userId, couponId))
+		assertThatThrownBy(() -> couponService.issueCoupon(userId, couponId))
 			.isInstanceOf(BusinessException.class)
 			.hasMessageContaining(ErrorCode.COUPON_NOT_YET_OPEN.getMessage());
 	}
@@ -172,9 +172,9 @@ public class UserCouponServiceTests {
 
 		given(userService.getUserById(userId))
 			.willReturn(user);
-		given(couponRepository.findByIdWithPessimisticLock(couponId))
+		given(couponRepository.findById(couponId))
 			.willReturn(Optional.of(coupon));
-		assertThatThrownBy(() -> couponService.createUserCouponWithDistributedLock(userId, couponId))
+		assertThatThrownBy(() -> couponService.issueCoupon(userId, couponId))
 			.isInstanceOf(BusinessException.class)
 			.hasMessageContaining(ErrorCode.COUPON_BE_EXHAUSTED.getMessage());
 	}
