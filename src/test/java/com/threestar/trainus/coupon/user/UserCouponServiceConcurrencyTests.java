@@ -24,6 +24,7 @@ import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
+import com.threestar.trainus.domain.coupon.user.service.CouponIssueFacade;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
@@ -35,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 class UserCouponServiceConcurrencyTests {
+
+	@Autowired
+	CouponIssueFacade couponIssueFacade;
 
 	@Autowired
 	CouponService couponService;
@@ -111,7 +115,7 @@ class UserCouponServiceConcurrencyTests {
 			executor.submit(() -> {
 				try {
 
-					couponService.createUserCouponWithDistributedLock(users.get(idx).getId(), coupon.getId());
+					couponIssueFacade.issueCoupon(users.get(idx).getId(), coupon.getId());
 					log.info("발급 성공 - id: {} | 발급된 쿠폰 수량: {}", idx,
 						userCouponRepository.countByCouponId(coupon.getId()));
 					successCount.incrementAndGet();
@@ -157,7 +161,7 @@ class UserCouponServiceConcurrencyTests {
 
 			executorService.submit(() -> {
 				try {
-					couponService.createUserCouponWithDistributedLock(testUser.getId(), coupon.getId());
+					couponIssueFacade.issueCoupon(testUser.getId(), coupon.getId());
 					System.out.println("Thread " + idx + " - 발급 성공");
 
 				} catch (BusinessException e) {
