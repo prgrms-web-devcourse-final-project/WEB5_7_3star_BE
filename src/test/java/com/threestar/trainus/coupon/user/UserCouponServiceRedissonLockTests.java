@@ -22,6 +22,7 @@ import com.threestar.trainus.domain.coupon.user.entity.CouponCategory;
 import com.threestar.trainus.domain.coupon.user.entity.CouponStatus;
 import com.threestar.trainus.domain.coupon.user.repository.CouponRepository;
 import com.threestar.trainus.domain.coupon.user.repository.UserCouponRepository;
+import com.threestar.trainus.domain.coupon.user.service.CouponIssueFacade;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
@@ -34,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserCouponServiceRedissonLockTests {
 
 	@Autowired
-	CouponService couponService;
+	CouponIssueFacade couponIssueFacade;
 
 	@Autowired
 	CouponRepository couponRepository;
@@ -106,7 +107,7 @@ public class UserCouponServiceRedissonLockTests {
 
 			executor.submit(() -> {
 				try {
-					couponService.createUserCouponWithDistributedLock(users.get(idx).getId(), coupon.getId());
+					couponIssueFacade.issueCoupon(users.get(idx).getId(), coupon.getId());
 					log.info("[성공] userId: {} | 현재 발급 수: {}", idx,
 						userCouponRepository.countByCouponId(coupon.getId()));
 					successCount.incrementAndGet();
