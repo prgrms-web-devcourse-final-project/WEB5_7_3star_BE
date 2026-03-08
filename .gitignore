@@ -39,3 +39,16 @@ out/
 application.yml
 application-test.yml
 .env
+
+# Custom Ignore Rules
+logs/
+*.log
+*.gz
+*.pem
+postgres-data/
+redis-data/
+*.sql
+*.jpg
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/dataSources.xml
