@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.locationtech.jts.geom.Point;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -308,6 +310,91 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("dong") String dong,
 		@Param("ri") String ri,
 		@Param("limit") int limit
+	);
+
+	// ----------------------------------------------------------------------
+	// 위치 기반 검색 (공간 쿼리) 메서드
+	// ----------------------------------------------------------------------
+	@Query(value = """
+		    SELECT l.*
+		    FROM lessons l
+		    WHERE ST_Dwithin(l.location_point, :point, :distance)
+		      AND (:category IS NULL OR l.category = :category)
+		    ORDER BY
+		      CASE WHEN :sortBy = 'DISTANCE' THEN l.location_point <-> :point END ASC,
+		      CASE WHEN :sortBy = 'LATEST' THEN l.created_at END DESC,
+		      CASE WHEN :sortBy = 'OLDEST' THEN l.created_at END ASC,
+		      CASE WHEN :sortBy = 'PRICE_HIGH' THEN l.price END DESC,
+		      CASE WHEN :sortBy = 'PRICE_LOW' THEN l.price END ASC,
+		      l.created_at DESC
+		    LIMIT :limit OFFSET :offset
+		""", nativeQuery = true)
+	List<Lesson> findLessonsByLocationWithoutKeyword(
+		@Param("category") String category,
+		@Param("point") Point point,
+		@Param("distance") int distance,
+		@Param("sortBy") String sortBy,
+		@Param("offset") int offset,
+		@Param("limit") int limit
+	);
+
+	@Query(value = """
+		    SELECT COUNT(*) FROM (
+		        SELECT l.id
+		        FROM lessons l
+		        WHERE ST_Dwithin(l.location_point, :point, :distance)
+		          AND (:category IS NULL OR l.category = :category)
+		        LIMIT :countLimit
+		    ) t
+		""", nativeQuery = true)
+	int countLessonsByLocationWithoutKeyword(
+		@Param("category") String category,
+		@Param("point") Point point,
+		@Param("distance") int distance,
+		@Param("countLimit") int countLimit
+	);
+
+	@Query(value = """
+		    SELECT l.*
+		    FROM lessons l
+		    WHERE ST_Dwithin(l.location_point, :point, :distance)
+		      AND (:category IS NULL OR l.category = :category)
+		      AND LOWER(l.lesson_name) LIKE LOWER(CONCAT('%', :search, '%')) 
+		    ORDER BY
+		      CASE WHEN :sortBy = 'DISTANCE' THEN l.location_point <-> :point END ASC,
+		      CASE WHEN :sortBy = 'LATEST' THEN l.created_at END DESC,
+		      CASE WHEN :sortBy = 'OLDEST' THEN l.created_at END ASC,
+		      CASE WHEN :sortBy = 'PRICE_HIGH' THEN l.price END DESC,
+		      CASE WHEN :sortBy = 'PRICE_LOW' THEN l.price END ASC,
+		      l.created_at DESC 
+		    LIMIT :limit OFFSET :offset
+		""", nativeQuery = true)
+	List<Lesson> findLessonsByLocationWithKeyword(
+		@Param("category") String category,
+		@Param("point") Point point,
+		@Param("distance") int distance,
+		@Param("search") String search,
+		@Param("sortBy") String sortBy,
+		@Param("offset") int offset,
+		@Param("limit") int limit
+	);
+
+	@Query(value = """
+		    SELECT COUNT(*) FROM (
+		        SELECT l.id
+		        FROM lessons l
+		        WHERE ST_Dwithin(l.location_point, :point, :distance)
+		          AND (:category IS NULL OR l.category = :category)
+		          AND LOWER(l.lesson_name) LIKE LOWER(CONCAT('%', :search, '%'))
+		        LIMIT :countLimit
+		    ) t
+		""", nativeQuery = true)
+	int countLessonsByLocationWithKeyword(
+		@Param("category") String category,
+		@Param("point") Point point,
+		@Param("distance") int distance,
+		@Param("search") String search,
+		@Param("countLimit") int countLimit
 	);
 
 	// 상태 필터 없는 전체 조회

@@ -65,6 +65,27 @@ public class StudentLessonController {
 		return PagedResponse.ok("레슨 검색 조회 완료.", response, serviceResponse.count(), HttpStatus.OK);
 	}
 
+	@GetMapping("/search/nearby")
+	@Operation(summary = "위치 기반 레슨 검색 api", description = "category(선택(null 가능)) / search(선택) "
+		+ "/ 정렬 선택 필수 / 좌표 필수")
+	public ResponseEntity<PagedResponse<LessonSearchListWrapperDto>> searchLessonsByLocation(
+		@Valid @ModelAttribute PageRequestDto pageRequestDto,
+		@RequestParam int distance,
+		@RequestParam(required = false) Category category,
+		@RequestParam(required = false) String search,
+		@RequestParam Double latitude,
+		@RequestParam Double longitude,
+		@RequestParam LessonSortType sortBy
+	) {
+
+		LessonSearchListResponseDto serviceResponse = studentLessonService.searchLessonsByLocation(
+			pageRequestDto.getPage(), pageRequestDto.getLimit(), distance, category, search, latitude, longitude, sortBy
+		); // Todo 응답 불필요한 요소 체크 필요
+		LessonSearchListWrapperDto response = new LessonSearchListWrapperDto(serviceResponse.lessons());
+
+		return PagedResponse.ok("레슨 검색 조회 완료.", response, serviceResponse.count(), HttpStatus.OK);
+	}
+
 	@GetMapping("/{lessonId}")
 	@Operation(summary = "레슨 상세조회", description = "레슨 ID로 상세 정보를 조회합니다.")
 	public ResponseEntity<BaseResponse<LessonDetailResponseDto>> getLessonDetail(
