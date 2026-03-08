@@ -1,0 +1,49 @@
+name: Deploy to Amazon EC2
+
+on:
+  push:
+    branches: [ "develop" ]
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  S3_BUCKET_NAME: ${{ secrets.DEPLOY_S3_BUCKET_NAME }}
+  CODE_DEPLOY_APPLICATION_NAME: trainus-codedeploy-app
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: trainus-deploy-group
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew build -x test
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Upload to S3
+      run: |
+        zip -r deploy.zip .
+        aws s3 cp deploy.zip s3://$S3_BUCKET_NAME/deploy.zip
+
+    - name: CodeDeploy Deploy
+      run: |
+        aws deploy create-deployment 
+          --application-name $CODE_DEPLOY_APPLICATION_NAME 
+          --deployment-config-name CodeDeployDefault.OneAtTime 
+          --deployment-group-name $CODE_DEPLOY_DEPLOYMENT_GROUP_NAME 
+          --s3-location bucket=$S3_BUCKET_NAME,bundleType=zip,key=deploy.zip
