@@ -77,6 +77,9 @@ public class AdminLessonServiceTest {
 			"역삼동",
 			"",
 			"테스트 주소",
+			"상세 주소",
+			37.5665,
+			126.9780,
 			List.of()
 		);
 
@@ -143,6 +146,9 @@ public class AdminLessonServiceTest {
 			"역삼동",
 			"",
 			"테스트 주소",
+			"상세 주소",
+			37.5665,
+			126.9780,
 			List.of()
 		);
 
@@ -181,6 +187,9 @@ public class AdminLessonServiceTest {
 			"역삼동",
 			"",
 			"테스트 주소",
+			"상세 주소",
+			37.5665,
+			126.9780,
 			List.of()
 		);
 

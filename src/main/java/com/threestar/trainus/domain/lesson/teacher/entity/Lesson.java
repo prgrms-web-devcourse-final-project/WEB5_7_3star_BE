@@ -2,6 +2,8 @@ package com.threestar.trainus.domain.lesson.teacher.entity;
 
 import java.time.LocalDateTime;
 
+import org.locationtech.jts.geom.Point;
+
 import com.threestar.trainus.global.entity.BaseDateEntity;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
@@ -83,8 +85,16 @@ public class Lesson extends BaseDateEntity {
 	@Column(length = 10)
 	private String ri;
 
-	@Column(nullable = false, length = 25)
+	// 좌표 변환을 위한 주소
+	@Column(nullable = false, length = 255)
+	private String address;
+
+	// 식별을 위한 상세 주소(ex: 201호)
+	@Column(length = 25)
 	private String addressDetail;
+
+	@Column(columnDefinition = "geography(Point, 4326)")
+	private Point locationPoint;
 
 	@Column(nullable = true)
 	private Integer participantCount;
@@ -95,7 +105,8 @@ public class Lesson extends BaseDateEntity {
 		Integer price, Category category, LocalDateTime openTime,
 		Boolean openRun, String city, String district, String dong,
 		String ri,
-		String addressDetail) {
+		String addressDetail, String address,
+		Point locationPoint) {
 		this.lessonLeader = lessonLeader;
 		this.lessonName = lessonName;
 		this.description = description;
@@ -111,6 +122,8 @@ public class Lesson extends BaseDateEntity {
 		this.dong = dong;
 		this.ri = ri;
 		this.addressDetail = addressDetail;
+		this.address = address;
+		this.locationPoint = locationPoint;
 		//새로 생성된 레슨은 항상 모집중 상태로 초기값 설정
 		this.status = LessonStatus.RECRUITING;
 		//새로 생성된 참가자 수도 0명으로 시작하도록 설정
@@ -225,6 +238,20 @@ public class Lesson extends BaseDateEntity {
 	public void updateAddressDetail(String addressDetail) {
 		if (addressDetail != null && !addressDetail.trim().isEmpty()) {
 			this.addressDetail = addressDetail;
+		}
+	}
+
+	//주소 수정
+	public void updateAddress(String address) {
+		if (address != null && !address.trim().isEmpty()) {
+			this.address = address;
+		}
+	}
+
+	//좌표 정보 수정
+	public void updateLocationPoint(Point locationPoint) {
+		if (locationPoint != null) {
+			this.locationPoint = locationPoint;
 		}
 	}
 

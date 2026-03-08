@@ -8,6 +8,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
@@ -33,103 +37,7 @@ public class LessonSearchPerformanceTest {
     @Autowired
     private LessonRepository lessonRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    //초기 데이터 생성용
-    private static final int DATA_SIZE = 200000;
     private static final String SEARCH_KEYWORD = "요가";
-    private static final int INIT_MODE = 2;
-
-    @BeforeAll
-    void setUp() {
-        if (INIT_MODE == 0) {
-            // 동일 주소 데이터 생성
-            log.info("테스트 데이터 생성을 시작 (총 {}건)", DATA_SIZE);
-            List<Lesson> lessons = new ArrayList<>();
-            Random random = new Random();
-            String[] cities = {"서울특별시"};
-            String[] districts = {"강남구"};
-            String[] dongs = {"역삼동"};
-            String[] lessonNames = new String[100];
-            for (int j = 0; j < 100; j++) {
-                if (j == 0) {
-                    lessonNames[j] = "강력한 요가";
-                } else {
-                    lessonNames[j] = "일반 레슨 " + j;
-                }
-            }
-            for (int i = 0; i < DATA_SIZE; i++) {
-                lessons.add(Lesson.builder()
-                        .lessonLeader(1L)
-                        .lessonName(lessonNames[i % lessonNames.length] + " " + i)
-                        .description("테스트 설명 " + i)
-                        .maxParticipants(20)
-                        .startAt(LocalDateTime.now().plusDays(10))
-                        .endAt(LocalDateTime.now().plusDays(20))
-                        .price(50000)
-                        .category(Category.values()[random.nextInt(Category.values().length)])
-                        .openTime(LocalDateTime.now())
-                        .openRun(true)
-                        .city(cities[0])
-                        .district(districts[0])
-                        .dong(dongs[0])
-                        .addressDetail("상세 주소 " + i)
-                        .build());
-            }
-            lessonRepository.saveAll(lessons);
-            log.info("테스트 데이터 생성이 완료");
-        } else if (INIT_MODE == 1) {
-            // 다른 주소 데이터 생성
-            log.info("테스트 데이터 생성을 시작 (총 {}건)", DATA_SIZE);
-            List<Lesson> lessons = new ArrayList<>();
-            Random random = new Random();
-
-            String[] cities = new String[10];
-            String[] districts = new String[10];
-            String[] dongs = new String[10];
-            String[] ris = new String[10];
-            for (int i = 0; i < 10; i++) {
-                cities[i] = "도시" + i;
-                districts[i] = "구" + i;
-                dongs[i] = "동" + i;
-                ris[i] = "리" + i;
-            }
-
-            String[] lessonNames = new String[100];
-            for (int j = 0; j < 100; j++) {
-                if (j == 0) {
-                    lessonNames[j] = "강력한 요가";
-                } else {
-                    lessonNames[j] = "일반 레슨 " + j;
-                }
-            }
-
-            for (int i = 0; i < DATA_SIZE; i++) {
-                lessons.add(Lesson.builder()
-                        .lessonLeader(1L)
-                        .lessonName(lessonNames[i % lessonNames.length] + " " + i)
-                        .description("테스트 설명 " + i)
-                        .maxParticipants(20)
-                        .startAt(LocalDateTime.now().plusDays(10))
-                        .endAt(LocalDateTime.now().plusDays(20))
-                        .price(50000)
-                        .category(Category.values()[random.nextInt(Category.values().length)])
-                        .openTime(LocalDateTime.now())
-                        .openRun(true)
-                        .city(cities[random.nextInt(cities.length)])
-                        .district(districts[random.nextInt(districts.length)])
-                        .dong(dongs[random.nextInt(dongs.length)])
-                        .ri(ris[random.nextInt(ris.length)])
-                        .addressDetail("상세 주소 " + i)
-                        .build());
-            }
-            lessonRepository.saveAll(lessons);
-            log.info("테스트 데이터 생성이 완료");
-        } else {
-            log.info("데이터를 생성하지 않습니다.");
-        }
-    }
 
     @Test
     @DisplayName("성능 측정: LIKE 검색")
@@ -164,7 +72,7 @@ public class LessonSearchPerformanceTest {
     }
 
     @Test
-    @DisplayName("성능 측정: 지역으로만 검색")
+    @DisplayName("성능 측정: 법정동으로만 검색")
     void searchByLocation() {
 
         StopWatch stopWatch = new StopWatch();
@@ -177,5 +85,42 @@ public class LessonSearchPerformanceTest {
         stopWatch.stop();
         log.info("[지역으로만 검색] 총 {}건 조회, 실행 시간: {} ms", result.getTotalElements(),
                 stopWatch.getTotalTimeMillis());
+    }
+
+    @Test
+    @DisplayName("성능 측정: 거리 기반 검색 (ST_DWithin)")
+    void searchByDistance() {
+        // 서울시 강남구 역삼동 기준 좌표
+        final double CENTER_LON = 127.0368861;
+        final double CENTER_LAT = 37.5007861;
+        final int DISTANCE_METER = 400; // 검색 반경 (미터 단위)
+
+        final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        final Point searchPoint = geometryFactory.createPoint(new Coordinate(CENTER_LON, CENTER_LAT));
+        final PageRequest pageRequest = PageRequest.of(0, 10);
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        // 실제 레슨 목록 조회 (페이지 제한 적용)
+        List<Lesson> lessons = lessonRepository.findLessonsByLocationWithoutKeyword(
+                null,
+                searchPoint,
+                DISTANCE_METER,
+                "DISTANCE",
+                (int)pageRequest.getOffset(),
+                pageRequest.getPageSize()
+        );
+
+        int totalCount = lessonRepository.countLessonsByLocationWithoutKeyword(
+                null,
+                searchPoint,
+                DISTANCE_METER,
+                Integer.MAX_VALUE // 전체 카운트를 위해 충분히 큰 값 사용
+        );
+        
+        stopWatch.stop();
+        log.info("[거리 기반 검색] 반경: {}m, 조회된 레슨 수 (현재 페이지): {}, 총 검색 결과: {}, 실행 시간: {} ms", 
+                DISTANCE_METER, lessons.size(), totalCount, stopWatch.getTotalTimeMillis());
     }
 }

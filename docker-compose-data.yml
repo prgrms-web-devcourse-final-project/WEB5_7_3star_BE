@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:17-3.5-alpine
+    container_name: data-postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - data-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: data-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ./redis-data:/data
+    networks:
+      - data-network
+
+networks:
+  data-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:

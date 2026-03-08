@@ -4,8 +4,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
@@ -57,6 +62,7 @@ public class StudentLessonService {
 	private final ProfileMetadataService profileMetadataService;
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
+	private final GeometryFactory geometryFactory;
 
 	@Transactional(readOnly = true)
 	public LessonSearchListResponseDto searchLessons(
@@ -93,6 +99,66 @@ public class StudentLessonService {
 		)
 			: lessonRepository.countLessonsWithoutFullText(
 			categoryValue, city, district, dong, ri, countLimit
+		);
+
+		// DTO 매핑
+		List<LessonSearchResponseDto> lessonDtos = lessons.stream()
+			.map(lesson -> {
+				User leader = userService.getUserById(lesson.getLessonLeader());
+				Profile profile = profileRepository.findByUserId(leader.getId())
+					.orElseThrow(() -> new BusinessException(ErrorCode.PROFILE_NOT_FOUND));
+				ProfileMetadataResponseDto metadata = profileMetadataService.getMetadata(leader.getId());
+
+				List<String> imageUrls = lessonImageRepository.findAllByLessonId(lesson.getId()).stream()
+					.map(LessonImage::getImageUrl)
+					.toList();
+
+				return LessonSearchMapper.toLessonSearchResponseDto(lesson, leader, profile, metadata, imageUrls);
+			})
+			.toList();
+
+		return new LessonSearchListResponseDto(lessonDtos, total);
+	}
+
+	@Transactional(readOnly = true) // todo 구현하기
+	public LessonSearchListResponseDto searchLessonsByLocation(
+		int page, int pageSize,
+		int distance, // meter 단위
+		Category category, String search,
+		Double latitude, Double longitude,
+		LessonSortType sortBy
+	) {
+		if (sortBy == null) {
+			throw new BusinessException(ErrorCode.INVALID_SORT);
+		}
+
+		// offset/limit 계산
+		int offset = (page - 1) * pageSize;
+		int countLimit = PageLimitCalculator.calculatePageLimit(page, pageSize, 5);
+
+		// Point 객체 생성
+		Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+
+		// 카테고리 ALL 처리
+		String categoryValue = (category != null && !category.name().equalsIgnoreCase("ALL"))
+			? category.name() : null;
+
+		// Lesson 목록 조회 (검색어 여부에 따라 분기)
+		List<Lesson> lessons = (search != null && !search.isEmpty())
+			? lessonRepository.findLessonsByLocationWithKeyword(
+			categoryValue, point, distance, search, sortBy.name(), offset, pageSize
+		)
+			: lessonRepository.findLessonsByLocationWithoutKeyword(
+			categoryValue, point, distance, sortBy.name(), offset, pageSize
+		);
+
+		// count 조회 (검색어 여부에 따라 분기)
+		int total = (search != null && !search.isEmpty())
+			? lessonRepository.countLessonsByLocationWithKeyword(
+			categoryValue, point, distance, search, countLimit
+		)
+			: lessonRepository.countLessonsByLocationWithoutKeyword(
+			categoryValue, point, distance, countLimit
 		);
 
 		// DTO 매핑

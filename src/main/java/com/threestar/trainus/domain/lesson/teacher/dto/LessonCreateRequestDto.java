@@ -62,9 +62,19 @@ public record LessonCreateRequestDto(
 	@Size(max = 10, message = "리는 10자 이하여야 합니다.") // ri 추가, NotBlank 제거
 	String ri,
 
+	@NotBlank(message = "주소는 필수입니다.")
+	@Size(max = 255, message = "주소는 255자 이하여야 합니다.")
+	String address,
+
 	@NotBlank(message = "상세주소는 필수입니다.")
 	@Size(max = 25, message = "상세주소는 25자 이하여야 합니다.")
 	String addressDetail,
+
+	@NotNull(message = "위도는 필수입니다.")
+	Double latitude,
+
+	@NotNull(message = "경도는 필수입니다.")
+	Double longitude,
 
 	@Size(max = 5, message = "이미지는 최대 5장까지 첨부 가능합니다.")
 	List<String> lessonImages

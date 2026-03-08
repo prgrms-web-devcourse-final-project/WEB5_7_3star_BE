@@ -21,6 +21,9 @@ public record CreatedLessonDto(
 	LocalDateTime endAt,
 	LocalDateTime openTime,
 	Boolean openRun,
-	String addressDetail
+	String address,
+	String addressDetail,
+	Double latitude,
+	Double longitude
 ) {
 }

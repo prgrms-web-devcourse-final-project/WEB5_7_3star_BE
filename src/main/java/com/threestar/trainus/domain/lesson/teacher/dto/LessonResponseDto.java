@@ -25,7 +25,10 @@ public record LessonResponseDto(
 	String district,
 	String dong,
 	String ri,
+	String address,
 	String addressDetail,
+	Double latitude,
+	Double longitude,
 	LessonStatus status,
 	LocalDateTime createdAt,
 	List<String> lessonImages
