@@ -13,6 +13,10 @@ permissions:
     mode: 755
 
 hooks:
+  BeforeInstall:
+    - location: scripts/setup.sh
+      timeout: 60
+      runas: root
   ApplicationStop:
     - location: scripts/stop.sh
       timeout: 300
