@@ -3,6 +3,8 @@ name: Deploy to Amazon EC2
 on:
   push:
     branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -29,6 +31,7 @@ jobs:
       run: ./gradlew build -x test
 
     - name: Configure AWS credentials
+      if: github.event_name == 'push'
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -36,11 +39,13 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Upload to S3
+      if: github.event_name == 'push'
       run: |
         zip -r deploy.zip .
         aws s3 cp deploy.zip s3://$S3_BUCKET_NAME/deploy.zip
 
     - name: CodeDeploy Deploy
+      if: github.event_name == 'push'
       run: |
         aws deploy create-deployment \
           --application-name $CODE_DEPLOY_APPLICATION_NAME \
