@@ -2,7 +2,7 @@ name: Deploy to Amazon EC2
 
 on:
   push:
-    branches: [ "infra/#194/cicd-asg-setup" ]
+    branches: [ "develop" ]
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
