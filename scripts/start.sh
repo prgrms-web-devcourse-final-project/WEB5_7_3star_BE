@@ -4,10 +4,16 @@ JAR_NAME="train-us-0.0.1-SNAPSHOT.jar"
 APP_LOG="$PROJECT_ROOT/application.log"
 DEPLOY_LOG="$PROJECT_ROOT/deploy.log"
 
-# .env 파일이 있으면 환경 변수로 로드
+echo "> .env 파일을 로드합니다." >> $DEPLOY_LOG
 if [ -f "$PROJECT_ROOT/.env" ]; then
-    echo "> .env 파일을 로드합니다." >> $DEPLOY_LOG
-    export $(grep -v '^#' $PROJECT_ROOT/.env | xargs)
+    while read -r line || [ -n "$line" ]; do
+        [[ -z "$line" || "$line" =~ ^# ]] && continue
+        clean_line=$(echo "$line" | tr -d '\r')
+        export "$clean_line"
+    done < "$PROJECT_ROOT/.env"
+    echo "> .env 로드 완료" >> $DEPLOY_LOG
+else
+    echo "> .env 파일이 존재하지 않습니다." >> $DEPLOY_LOG
 fi
 
 echo "> Build 파일 복사" >> $DEPLOY_LOG
