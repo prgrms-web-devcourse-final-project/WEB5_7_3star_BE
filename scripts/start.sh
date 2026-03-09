@@ -4,9 +4,15 @@ JAR_NAME="train-us-0.0.1-SNAPSHOT.jar"
 APP_LOG="$PROJECT_ROOT/application.log"
 DEPLOY_LOG="$PROJECT_ROOT/deploy.log"
 
-echo "> .env 파일을 로드합니다." >> $DEPLOY_LOG
+# 1. 시스템 전역 변수 파일 로드
+if [ -f "/etc/profile.d/server_role.sh" ]; then
+    echo "> 시스템 전역 SERVER_ROLE 설정을 로드합니다." >> $DEPLOY_LOG
+    source /etc/profile.d/server_role.sh
+fi
+
+# 2. .env 파일 로드
 if [ -f "$PROJECT_ROOT/.env" ]; then
-    # 주석을 제외하고 윈도우 개행문자(\r)를 제거한 뒤 export
+    echo "> .env 파일을 로드합니다." >> $DEPLOY_LOG
     while read -r line || [ -n "$line" ]; do
         [[ -z "$line" || "$line" =~ ^# ]] && continue
         clean_line=$(echo "$line" | tr -d '\r')
@@ -15,11 +21,9 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
     echo "> .env 로드 완료" >> $DEPLOY_LOG
 fi
 
-echo "> Build 파일 복사" >> $DEPLOY_LOG
-cp $PROJECT_ROOT/build/libs/$JAR_NAME $PROJECT_ROOT/
-
-echo "> 애플리케이션 실행" >> $DEPLOY_LOG
+# 3. 설정값이 없을 때 기본값 api 적용
 if [ -z "$SERVER_ROLE" ]; then
+    echo "> SERVER_ROLE이 설정되지 않아 기본값 api를 사용합니다." >> $DEPLOY_LOG
     export SERVER_ROLE="api"
 fi
 
