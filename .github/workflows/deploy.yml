@@ -2,7 +2,7 @@ name: Deploy to Amazon EC2
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "infra/#194/cicd-asg-setup" ]
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -42,8 +42,8 @@ jobs:
 
     - name: CodeDeploy Deploy
       run: |
-        aws deploy create-deployment 
-          --application-name $CODE_DEPLOY_APPLICATION_NAME 
-          --deployment-config-name CodeDeployDefault.OneAtTime 
-          --deployment-group-name $CODE_DEPLOY_DEPLOYMENT_GROUP_NAME 
+        aws deploy create-deployment \
+          --application-name $CODE_DEPLOY_APPLICATION_NAME \
+          --deployment-config-name CodeDeployDefault.OneAtTime \
+          --deployment-group-name $CODE_DEPLOY_DEPLOYMENT_GROUP_NAME \
           --s3-location bucket=$S3_BUCKET_NAME,bundleType=zip,key=deploy.zip
