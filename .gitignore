@@ -36,8 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-application.yml
-application-test.yml
 .env
 
 # Custom Ignore Rules
