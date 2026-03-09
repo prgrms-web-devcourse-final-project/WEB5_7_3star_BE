@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e # 명령어 실패 시 즉시 중단
+
 # 배포 폴더 생성
 sudo mkdir -p /home/ec2-user/app
 
