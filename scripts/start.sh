@@ -4,6 +4,12 @@ JAR_NAME="train-us-0.0.1-SNAPSHOT.jar"
 APP_LOG="$PROJECT_ROOT/application.log"
 DEPLOY_LOG="$PROJECT_ROOT/deploy.log"
 
+# .env 파일이 있으면 환경 변수로 로드
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    echo "> .env 파일을 로드합니다." >> $DEPLOY_LOG
+    export $(grep -v '^#' $PROJECT_ROOT/.env | xargs)
+fi
+
 echo "> Build 파일 복사" >> $DEPLOY_LOG
 cp $PROJECT_ROOT/build/libs/$JAR_NAME $PROJECT_ROOT/
 
