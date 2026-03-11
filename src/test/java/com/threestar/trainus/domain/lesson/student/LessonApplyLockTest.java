@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.StopWatch;
 
+import com.threestar.trainus.domain.lesson.student.service.StudentLessonFacade;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
@@ -34,6 +35,9 @@ public class LessonApplyLockTest {
 
 	@Autowired
 	private StudentLessonService lessonService;
+
+	@Autowired
+	private StudentLessonFacade lessonFacade;
 
 	@Autowired
 	private LessonParticipantRepository lessonParticipantRepository;
@@ -65,6 +69,7 @@ public class LessonApplyLockTest {
 			.city("경기도")
 			.district("고양시")
 			.dong("고양동")
+			.address("경기도 고양시 고양동")
 			.addressDetail("고양이 아파트")
 			.build();
 		lessonRepository.save(lesson);
@@ -193,5 +198,52 @@ public class LessonApplyLockTest {
 		log.info("실패 요청 수: {}", failCount.get());
 
 		Assertions.assertTrue(approvedCount == MAX_PARTICIPANTS, "정원 일치");
+	}
+
+	@Test
+	@DisplayName("동시 요청 시 - 분산락(Redis) 적용: 인원 수 초과 없이 정상 처리")
+	void applyToLessonWithDistributedLock_동시요청_분산락적용_최대참가자수를초과하지않음() throws InterruptedException {
+		ExecutorService executor = Executors.newFixedThreadPool(100); // 병렬 쓰레드 수 조절
+		CountDownLatch latch = new CountDownLatch(CONCURRENT_USERS);
+
+		AtomicInteger successCount = new AtomicInteger();
+		AtomicInteger failCount = new AtomicInteger();
+
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+
+		for (int i = 0; i < CONCURRENT_USERS; i++) {
+			final String email = "user" + i + "@test.com";
+
+			executor.submit(() -> {
+				try {
+					User user = userRepository.findByEmail(email).orElseThrow();
+					lessonFacade.applyToLessonWithDistributedLock(lessonId, user.getId());
+					successCount.incrementAndGet();
+				} catch (Exception e) {
+					failCount.incrementAndGet();
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+
+		latch.await();
+		stopWatch.stop();
+		executor.shutdown();
+
+		// 결과 출력
+		long approvedCount = lessonParticipantRepository.countByLessonId(lessonId);
+		Lesson latestLesson = lessonRepository.findById(lessonId).orElseThrow();
+		long appliedCount = latestLesson.getParticipantCount();
+
+		log.info("[분산락 테스트 결과]");
+		log.info("총 소요 시간(ms): {}", stopWatch.getTotalTimeMillis());
+		log.info("참가자 수 Count (엔티티 기준): {}", appliedCount);
+		log.info("실제 승인된 참가자 수 Count (DB 기준): {}", approvedCount);
+		log.info("성공 요청 수: {}", successCount.get());
+		log.info("실패 요청 수: {}", failCount.get());
+
+		Assertions.assertEquals(MAX_PARTICIPANTS, approvedCount, "정원이 정확히 일치해야 함");
 	}
 }

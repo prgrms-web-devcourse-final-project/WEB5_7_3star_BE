@@ -14,6 +14,7 @@ import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.user.service.CouponIssueFacade;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.student.service.StudentLessonFacade;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.test.dto.TestRequestDto;
 import com.threestar.trainus.domain.test.service.TestUserService;
@@ -32,6 +33,7 @@ public class TestConcurrencyController {
 
 	private final CouponService couponService;
 	private final StudentLessonService studentLessonService;
+	private final StudentLessonFacade studentLessonFacade;
 	private final TestUserService testUserService;
 	private final CouponIssueProducer couponIssueProducer;
 	private final CouponIssueFacade couponIssueFacade;
@@ -118,7 +120,7 @@ public class TestConcurrencyController {
 		@RequestBody TestRequestDto testRequestDto
 	) {
 		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
-		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithDistributedLock(lessonId,
+		LessonApplicationResponseDto response = studentLessonFacade.applyToLessonWithDistributedLock(lessonId,
 			user.getId());
 		return BaseResponse.ok("레슨 신청 완료 (분산 락)", response, HttpStatus.OK);
 	}
