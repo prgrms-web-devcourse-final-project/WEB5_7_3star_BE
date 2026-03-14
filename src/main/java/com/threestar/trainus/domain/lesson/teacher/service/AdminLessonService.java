@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.threestar.trainus.domain.lesson.issue.LessonApplyProducer;
 import com.threestar.trainus.domain.lesson.teacher.constants.LessonConstants.Participants;
 import com.threestar.trainus.domain.lesson.teacher.constants.LessonConstants.Time;
 import com.threestar.trainus.domain.lesson.teacher.dto.ApplicationProcessResponseDto;
@@ -57,9 +58,11 @@ public class AdminLessonService {
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final UserService userService;
 	private final LessonCreationLimitService lessonCreationLimitService;
+	private final LessonApplyProducer lessonApplyProducer;
 	private final GeometryFactory geometryFactory;
 
 	//레슨 생성
+	@Transactional
 	public LessonResponseDto createLesson(LessonCreateRequestDto requestDto, Long userId) {
 		User user = userService.getUserById(userId);
 
@@ -79,6 +82,9 @@ public class AdminLessonService {
 
 		// 이미지 저장
 		List<LessonImage> savedImages = saveLessonImages(savedLesson, requestDto.lessonImages());
+
+		// Redis 재고 동기화
+		syncRedisStock(savedLesson);
 
 		return LessonMapper.toResponseDto(savedLesson, savedImages);
 	}
@@ -112,6 +118,9 @@ public class AdminLessonService {
 		// 저장 및 응답
 		Lesson savedLesson = lessonRepository.save(lesson);
 		List<LessonImage> updatedImages = updateLessonImages(savedLesson, requestDto.lessonImages());
+
+		// Redis 재고 동기화
+		syncRedisStock(savedLesson);
 
 		return LessonMapper.toUpdateResponseDto(savedLesson, updatedImages);
 	}
@@ -441,7 +450,7 @@ public class AdminLessonService {
 			LessonParticipant participant = LessonParticipant.builder()
 				.lesson(lesson)
 				.user(application.getUser())
-				.build(); //
+				.build();
 			lessonParticipantRepository.save(participant);
 
 			lesson.incrementParticipantCount();
@@ -519,5 +528,20 @@ public class AdminLessonService {
 	public LessonApplication findApplicationById(Long applicationId) {
 		return lessonApplicationRepository.findById(applicationId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.LESSON_APPLICATION_NOT_FOUND));
+	}
+
+	// 수동으로 레슨 재고를 Redis와 동기화
+	@Transactional(readOnly = true)
+	public void syncLessonStockToRedis(Long lessonId) {
+		Lesson lesson = findLessonById(lessonId);
+		syncRedisStock(lesson);
+	}
+
+	// 레슨의 정원, 참여 방식 체크 후 Redis 재고 업데이트
+	private void syncRedisStock(Lesson lesson) {
+		if (lesson.getOpenRun()) {
+			int stock = lesson.getMaxParticipants() - lesson.getParticipantCount();
+			lessonApplyProducer.setStock(lesson.getId(), stock);
+		}
 	}
 }

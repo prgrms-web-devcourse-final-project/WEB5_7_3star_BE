@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.coupon.issue;
+package com.threestar.trainus.domain.lesson.issue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,12 +10,12 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class CouponIssueProducer {
+public class LessonApplyProducer {
 
 	private final StringRedisTemplate stringRedisTemplate;
 
-	public boolean send(Long couponId, Long userId) {
-		String stockKey = CouponIssueStreamConstant.STOCK_PREFIX + couponId;
+	public boolean send(Long lessonId, Long userId) {
+		String stockKey = LessonApplyStreamConstant.STOCK_PREFIX + lessonId;
 
 		// Redis 원자 연산으로 재고 차감
 		Long stock = stringRedisTemplate.opsForValue().decrement(stockKey);
@@ -32,12 +32,16 @@ public class CouponIssueProducer {
 
 		// Stream 메시지 생성 및 전송
 		Map<String, String> content = new HashMap<>();
-		content.put("couponId", String.valueOf(couponId));
+		content.put("lessonId", String.valueOf(lessonId));
 		content.put("userId", String.valueOf(userId));
 
-		stringRedisTemplate.opsForStream()
-			.add(CouponIssueStreamConstant.STREAM_KEY, content);
-
+		stringRedisTemplate.opsForStream().add(LessonApplyStreamConstant.STREAM_KEY, content);
 		return true;
+	}
+
+	//레슨 잔여 재고 Redis에 초기 세팅
+	public void setStock(Long lessonId, int stock) {
+		String stockKey = LessonApplyStreamConstant.STOCK_PREFIX + lessonId;
+		stringRedisTemplate.opsForValue().set(stockKey, String.valueOf(stock));
 	}
 }

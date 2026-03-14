@@ -45,7 +45,6 @@ import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
-import com.threestar.trainus.global.annotation.DistributedLock;
 import com.threestar.trainus.global.utils.PageLimitCalculator;
 
 import lombok.RequiredArgsConstructor;
@@ -279,7 +278,6 @@ public class StudentLessonService {
 	}
 
 	@Transactional
-	@DistributedLock(key = "'lesson_apply:' + #lessonId")
 	public LessonApplicationResponseDto applyToLessonWithDistributedLock(Long lessonId, Long userId) {
 		// 레슨 조회
 		Lesson lesson = adminLessonService.findLessonById(lessonId);

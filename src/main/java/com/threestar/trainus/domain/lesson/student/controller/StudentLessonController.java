@@ -19,6 +19,7 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListWrapperDto;
 import com.threestar.trainus.domain.lesson.student.entity.LessonSortType;
+import com.threestar.trainus.domain.lesson.student.service.StudentLessonFacade;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.global.annotation.LoginUser;
@@ -42,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StudentLessonController {
 	private final StudentLessonService studentLessonService;
+	private final StudentLessonFacade studentLessonFacade;
 
 	@GetMapping
 	@Operation(summary = "레슨 검색 api", description = "category(선택(null 가능)) / search(선택) "
@@ -102,7 +104,7 @@ public class StudentLessonController {
 		@LoginUser Long userId
 	) {
 		// 잔여 좌석 확인 메서드
-		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithDistributedLock(lessonId, userId);
+		LessonApplicationResponseDto response = studentLessonFacade.applyToLessonWithDistributedLock(lessonId, userId);
 		return BaseResponse.ok("레슨 신청 완료", response, HttpStatus.OK);
 	}
 

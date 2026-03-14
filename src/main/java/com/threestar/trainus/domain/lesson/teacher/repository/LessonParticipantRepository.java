@@ -3,17 +3,17 @@ package com.threestar.trainus.domain.lesson.teacher.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
 import com.threestar.trainus.domain.lesson.teacher.entity.LessonParticipant;
 import com.threestar.trainus.domain.lesson.teacher.entity.ParticipantStatus;
 
-import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.transaction.Transactional;
 
-public interface LessonParticipantRepository extends CrudRepository<LessonParticipant, Long> {
+public interface LessonParticipantRepository extends JpaRepository<LessonParticipant, Long> {
 
 	boolean existsByLessonIdAndUserId(Long lessonId, Long userId);
 

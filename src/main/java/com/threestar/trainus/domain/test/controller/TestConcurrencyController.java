@@ -13,8 +13,12 @@ import com.threestar.trainus.domain.coupon.issue.CouponIssueProducer;
 import com.threestar.trainus.domain.coupon.user.dto.CreateUserCouponResponseDto;
 import com.threestar.trainus.domain.coupon.user.service.CouponIssueFacade;
 import com.threestar.trainus.domain.coupon.user.service.CouponService;
+import com.threestar.trainus.domain.lesson.issue.LessonApplyProducer;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.student.service.StudentLessonFacade;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
+import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
+import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
 import com.threestar.trainus.domain.test.dto.TestRequestDto;
 import com.threestar.trainus.domain.test.service.TestUserService;
 import com.threestar.trainus.domain.user.entity.User;
@@ -32,8 +36,11 @@ public class TestConcurrencyController {
 
 	private final CouponService couponService;
 	private final StudentLessonService studentLessonService;
+	private final StudentLessonFacade studentLessonFacade;
+	private final AdminLessonService adminLessonService;
 	private final TestUserService testUserService;
 	private final CouponIssueProducer couponIssueProducer;
+	private final LessonApplyProducer lessonApplyProducer;
 	private final CouponIssueFacade couponIssueFacade;
 
 	// 쿠폰 동시성 테스트
@@ -118,9 +125,30 @@ public class TestConcurrencyController {
 		@RequestBody TestRequestDto testRequestDto
 	) {
 		User user = testUserService.findOrCreateUser(testRequestDto.getUserId());
-		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithDistributedLock(lessonId,
+		LessonApplicationResponseDto response = studentLessonFacade.applyToLessonWithDistributedLock(lessonId,
 			user.getId());
 		return BaseResponse.ok("레슨 신청 완료 (분산 락)", response, HttpStatus.OK);
+	}
+
+	@PostMapping("/lessons/{lessonId}/application/redis-stream")
+	@Operation(summary = "레슨 신청 동시성 테스트 (메시지 큐)", description = "레슨을 신청하는 테스트 API (메시지 큐)")
+	public ResponseEntity<?> applyToLessonRedisStream(
+		@PathVariable Long lessonId,
+		@RequestBody TestRequestDto testRequestDto
+	) {
+		User user = testUserService.findOrCreateUser2(testRequestDto.getUserId());
+		boolean ok = lessonApplyProducer.send(lessonId, user.getId());
+		if (!ok) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body("sold out");
+		}
+		return ResponseEntity.accepted().build();
+	}
+
+	@PostMapping("/lessons/{lessonId}/stock/redis")
+	@Operation(summary = "레슨 Redis 재고 세팅", description = "DB의 잔여 인원 정보를 Redis로 동기화합니다.")
+	public ResponseEntity<Void> settingLessonRedisStock(@PathVariable Long lessonId) {
+		adminLessonService.syncLessonStockToRedis(lessonId);
+		return ResponseEntity.ok().build();
 	}
 
 }
