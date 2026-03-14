@@ -79,7 +79,6 @@ public class TestConcurrencyController {
 		return BaseResponse.ok("쿠폰 발급 완료 (분산 락)", responseDto, HttpStatus.CREATED);
 	}
 
-	@Profile("producer")
 	@PostMapping("/coupons/{couponId}/redis-stream")
 	@Operation(summary = "쿠폰 발급 동시성 테스트 (메시지 큐)", description = "쿠폰을 발급받는 테스트 API (메시지 큐)")
 	public ResponseEntity<?> issueCouponRedisStream(
