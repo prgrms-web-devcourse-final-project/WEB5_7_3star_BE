@@ -4,25 +4,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class CouponIssueProducer {
-
-	private static final String STREAM_KEY = CouponIssueStreamConstant.STREAM_KEY;
-	private static final String STOCK_KEY_PREFIX = "coupon:stock:";
 
 	private final StringRedisTemplate stringRedisTemplate;
 
-	public CouponIssueProducer(StringRedisTemplate stringRedisTemplate) {
-		this.stringRedisTemplate = stringRedisTemplate;
-	}
-
 	public boolean send(Long couponId, Long userId) {
-		String stockKey = STOCK_KEY_PREFIX + couponId;
+		String stockKey = CouponIssueStreamConstant.STOCK_PREFIX + couponId;
 
+		// Redis 원자 연산으로 재고 차감
 		Long stock = stringRedisTemplate.opsForValue().decrement(stockKey);
 
+		// 예외 및 재고 소진 처리
 		if (stock == null) {
 			return false;
 		}
@@ -31,12 +29,15 @@ public class CouponIssueProducer {
 			stringRedisTemplate.opsForValue().increment(stockKey);
 			return false;
 		}
-		Map<String, String> message = new HashMap<>();
-		message.put("couponId", couponId.toString());
-		message.put("userId", userId.toString());
+
+		// Stream 메시지 생성 및 전송
+		Map<String, String> content = new HashMap<>();
+		content.put("couponId", String.valueOf(couponId));
+		content.put("userId", String.valueOf(userId));
 
 		stringRedisTemplate.opsForStream()
-			.add(STREAM_KEY, message);
+			.add(CouponIssueStreamConstant.STREAM_KEY, content);
+
 		return true;
 	}
 }
