@@ -1,6 +1,5 @@
 package com.threestar.trainus.domain.test.controller;
 
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +16,6 @@ import com.threestar.trainus.domain.lesson.issue.LessonApplyProducer;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonFacade;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
-import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
 import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
 import com.threestar.trainus.domain.test.dto.TestRequestDto;
 import com.threestar.trainus.domain.test.service.TestUserService;

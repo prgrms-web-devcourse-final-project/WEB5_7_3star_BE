@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -226,7 +225,6 @@ public class LessonApplyLockTest {
 	}
 
 	@Test
-	@Disabled
 	@DisplayName("동시 요청 시 - 분산락(Redis) 적용: 인원 수 초과 없이 정상 처리")
 	void applyToLessonWithDistributedLock_동시요청_분산락적용_최대참가자수를초과하지않음() throws InterruptedException {
 		ExecutorService executor = Executors.newFixedThreadPool(100); // 병렬 쓰레드 수 조절
@@ -332,8 +330,11 @@ public class LessonApplyLockTest {
 		long appliedCount = latestLesson.getParticipantCount();
 
 		log.info("[MQ 테스트 최종 결과]");
-		log.info("실제 승인된 참가자 수 (DB 기준): {}", finalApprovedCount);
-		log.info("엔티티 카운트: {}", appliedCount);
+		log.info("총 소요 시간(ms): {}", stopWatch.getTotalTimeMillis());
+		log.info("참가자 수 Count (엔티티 기준): {}", appliedCount);
+		log.info("실제 승인된 참가자 수 Count (DB 기준): {}", finalApprovedCount);
+		log.info("성공 요청 수: {}", producerSuccessCount.get());
+		log.info("실패 요청 수: {}", producerFailCount.get());
 
 		Assertions.assertEquals(MAX_PARTICIPANTS, finalApprovedCount, "정원이 정확히 일치해야 함");
 	}
