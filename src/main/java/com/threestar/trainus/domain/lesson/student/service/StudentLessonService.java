@@ -8,6 +8,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,6 +18,7 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
+import com.threestar.trainus.domain.lesson.issue.LessonApplyStreamConstant;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.entity.LessonSortType;
 import com.threestar.trainus.domain.lesson.student.mapper.LessonApplicationMapper;
@@ -62,6 +64,7 @@ public class StudentLessonService {
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
 	private final GeometryFactory geometryFactory;
+	private final StringRedisTemplate redisTemplate;
 
 	@Transactional(readOnly = true)
 	public LessonSearchListResponseDto searchLessons(
@@ -482,6 +485,17 @@ public class StudentLessonService {
 		Lesson lesson = adminLessonService.findLessonById(lessonId);
 
 		return LessonSimpleMapper.toLessonSimpleDto(lesson);
+	}
+
+	// 비동기 레슨 신청 상태 조회
+	public String getAsyncApplyStatus(String requestId) {
+		String status = redisTemplate.opsForValue().get(LessonApplyStreamConstant.STATUS_PREFIX + requestId);
+
+		if (status == null) {
+			throw new BusinessException(ErrorCode.REQUEST_NOT_FOUND);
+		}
+
+		return status;
 	}
 
 	@Transactional

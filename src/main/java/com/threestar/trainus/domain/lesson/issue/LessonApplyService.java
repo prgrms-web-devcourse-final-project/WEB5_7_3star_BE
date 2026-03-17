@@ -1,7 +1,9 @@
 package com.threestar.trainus.domain.lesson.issue;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,13 +27,16 @@ public class LessonApplyService {
 	private final LessonRepository lessonRepository;
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final UserService userService;
+	private final StringRedisTemplate stringRedisTemplate;
 
 	@Transactional
-	public boolean apply(Long lessonId, Long userId) {
+	public boolean apply(Long lessonId, Long userId, String requestId, Long produceTime) {
+		String statusKey = LessonApplyStreamConstant.STATUS_PREFIX + requestId;
 		try {
 			// 멱등성 검증 (중복 신청 확인)
 			if (lessonParticipantRepository.existsByLessonIdAndUserId(lessonId, userId)) {
 				log.warn("Lesson apply already exists. lessonId={}, userId={}", lessonId, userId);
+				updateStatus(statusKey, "SUCCESS");
 				return true;
 			}
 
@@ -42,6 +47,7 @@ public class LessonApplyService {
 			// 시간 검증
 			if (LocalDateTime.now().isAfter(lesson.getEndAt())) {
 				log.warn("Lesson apply failed: Already closed. lessonId={}", lessonId);
+				updateStatus(statusKey, "FAIL:CLOSED");
 				return false;
 			}
 
@@ -53,10 +59,20 @@ public class LessonApplyService {
 			lessonParticipantRepository.save(participant);
 			lesson.incrementParticipantCount();
 
+			// 처리 성공 결과 저장 및 지연 시간 측정
+			long latency = System.currentTimeMillis() - produceTime;
+			log.info("Lesson apply success. requestId={}, latency={}ms", requestId, latency);
+			updateStatus(statusKey, "SUCCESS");
+
 			return true;
 		} catch (Exception e) {
 			log.error("Failed to apply lesson in consumer: {}", e.getMessage());
+			updateStatus(statusKey, "FAIL:ERROR");
 			return false;
 		}
+	}
+
+	private void updateStatus(String key, String status) {
+		stringRedisTemplate.opsForValue().set(key, status, Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
 	}
 }

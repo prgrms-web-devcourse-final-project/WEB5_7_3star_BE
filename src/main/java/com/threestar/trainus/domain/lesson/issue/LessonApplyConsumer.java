@@ -88,13 +88,17 @@ public class LessonApplyConsumer {
 	private void process(MapRecord<String, Object, Object> message) {
 		Long lessonId = null;
 		Long userId = null;
+		String requestId = null;
+		Long timestamp = null;
 		try {
 			lessonId = Long.valueOf(message.getValue().get("lessonId").toString());
 			userId = Long.valueOf(message.getValue().get("userId").toString());
+			requestId = message.getValue().get("requestId").toString();
+			timestamp = Long.valueOf(message.getValue().get("timestamp").toString());
 
-			log.info("CONSUME lesson={} user={}", lessonId, userId);
+			log.info("CONSUME lesson={} user={} requestId={}", lessonId, userId, requestId);
 
-			boolean applied = lessonApplyService.apply(lessonId, userId);
+			boolean applied = lessonApplyService.apply(lessonId, userId, requestId, timestamp);
 
 			if (applied) {
 				redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, message.getId());
