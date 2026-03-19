@@ -2,6 +2,9 @@ package com.threestar.trainus.domain.lesson.issue;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
+
+import io.micrometer.core.instrument.Metrics;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -62,6 +65,10 @@ public class LessonApplyService {
 			// 처리 성공 결과 저장 및 지연 시간 측정
 			long latency = System.currentTimeMillis() - produceTime;
 			log.info("Lesson apply success. requestId={}, latency={}ms", requestId, latency);
+
+			// Micrometer 지표 기록
+			Metrics.timer("lesson.apply.latency").record(latency, TimeUnit.MILLISECONDS);
+
 			updateStatus(statusKey, "SUCCESS");
 
 			return true;
@@ -73,6 +80,7 @@ public class LessonApplyService {
 	}
 
 	private void updateStatus(String key, String status) {
-		stringRedisTemplate.opsForValue().set(key, status, Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
+		stringRedisTemplate.opsForValue()
+			.set(key, status, Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
 	}
 }
