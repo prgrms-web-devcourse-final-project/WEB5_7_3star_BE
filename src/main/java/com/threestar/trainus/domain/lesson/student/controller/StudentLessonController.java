@@ -42,8 +42,17 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/lessons")
 @RequiredArgsConstructor
 public class StudentLessonController {
+
 	private final StudentLessonService studentLessonService;
 	private final StudentLessonFacade studentLessonFacade;
+
+	// 비동기 선착순 신청 결과 폴링
+	@GetMapping("/apply/status/{requestId}")
+	@Operation(summary = "비동기 선착순 신청 결과 폴링", description = "비동기 선착순 신청의 처리 진행 상태(PENDING, SUCCESS, FAIL)를 실시간으로 확인하기 위한 폴링 API입니다.")
+	public ResponseEntity<BaseResponse<String>> getAsyncApplyStatus(@PathVariable String requestId) {
+		String status = studentLessonService.getAsyncApplyStatus(requestId);
+		return BaseResponse.ok("비동기 신청 상태 조회 완료", status, HttpStatus.OK);
+	}
 
 	@GetMapping
 	@Operation(summary = "레슨 검색 api", description = "category(선택(null 가능)) / search(선택) "

@@ -1,7 +1,9 @@
 package com.threestar.trainus.domain.lesson.issue;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -14,7 +16,7 @@ public class LessonApplyProducer {
 
 	private final StringRedisTemplate stringRedisTemplate;
 
-	public boolean send(Long lessonId, Long userId) {
+	public String send(Long lessonId, Long userId) {
 		String stockKey = LessonApplyStreamConstant.STOCK_PREFIX + lessonId;
 
 		// Redis 원자 연산으로 재고 차감
@@ -22,21 +24,28 @@ public class LessonApplyProducer {
 
 		// 예외 및 재고 소진 처리
 		if (stock == null) {
-			return false;
+			return null;
 		}
 
 		if (stock < 0) {
 			stringRedisTemplate.opsForValue().increment(stockKey);
-			return false;
+			return null;
 		}
+
+		// requestId 생성 및 초기 상태 저장
+		String requestId = UUID.randomUUID().toString();
+		String statusKey = LessonApplyStreamConstant.STATUS_PREFIX + requestId;
+		stringRedisTemplate.opsForValue().set(statusKey, "PENDING", Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
 
 		// Stream 메시지 생성 및 전송
 		Map<String, String> content = new HashMap<>();
 		content.put("lessonId", String.valueOf(lessonId));
 		content.put("userId", String.valueOf(userId));
+		content.put("requestId", requestId);
+		content.put("timestamp", String.valueOf(System.currentTimeMillis()));
 
 		stringRedisTemplate.opsForStream().add(LessonApplyStreamConstant.STREAM_KEY, content);
-		return true;
+		return requestId;
 	}
 
 	//레슨 잔여 재고 Redis에 초기 세팅

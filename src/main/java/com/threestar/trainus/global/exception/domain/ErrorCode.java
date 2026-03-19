@@ -24,6 +24,7 @@ public enum ErrorCode {
 	// 404
 	LESSON_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 레슨을 찾을 수 없습니다."),
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다."),
+	REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 요청 정보를 찾을 수 없습니다."),
 
 	// 500
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "예기치 못한 오류가 발생했습니다."),

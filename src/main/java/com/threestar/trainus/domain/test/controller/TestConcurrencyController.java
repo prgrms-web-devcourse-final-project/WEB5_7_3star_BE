@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.threestar.trainus.domain.coupon.issue.CouponIssueProducer;
@@ -40,6 +41,13 @@ public class TestConcurrencyController {
 	private final CouponIssueProducer couponIssueProducer;
 	private final LessonApplyProducer lessonApplyProducer;
 	private final CouponIssueFacade couponIssueFacade;
+
+	@PostMapping("/users/create")
+	@Operation(summary = "테스트 유저 대량 생성", description = "지정된 수만큼 테스트 유저를 미리 생성합니다.")
+	public ResponseEntity<String> createUsers(@RequestParam int count) {
+		testUserService.createUsers(count); // Todo setup 메서드로 전환
+		return ResponseEntity.ok(count + "명의 테스트 유저 생성 완료");
+	}
 
 	// 쿠폰 동시성 테스트
 	@PostMapping("/coupons/{couponId}/no-lock")
@@ -133,12 +141,11 @@ public class TestConcurrencyController {
 		@PathVariable Long lessonId,
 		@RequestBody TestRequestDto testRequestDto
 	) {
-		User user = testUserService.findOrCreateUser2(testRequestDto.getUserId());
-		boolean ok = lessonApplyProducer.send(lessonId, user.getId());
-		if (!ok) {
+		String requestId = lessonApplyProducer.send(lessonId, testRequestDto.getUserId());
+		if (requestId == null) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body("sold out");
 		}
-		return ResponseEntity.accepted().build();
+		return ResponseEntity.accepted().body(requestId);
 	}
 
 	@PostMapping("/lessons/{lessonId}/stock/redis")
@@ -146,6 +153,13 @@ public class TestConcurrencyController {
 	public ResponseEntity<Void> settingLessonRedisStock(@PathVariable Long lessonId) {
 		adminLessonService.syncLessonStockToRedis(lessonId);
 		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/reset")
+	@Operation(summary = "모든 테스트 데이터 초기화", description = "DB와 Redis의 모든 테스트 데이터를 비우고 ID 시퀀스를 1로 리셋합니다.")
+	public ResponseEntity<String> resetData() {
+		testUserService.clearAllData();
+		return ResponseEntity.ok("모든 테스트 데이터가 초기화되었습니다.");
 	}
 
 }
