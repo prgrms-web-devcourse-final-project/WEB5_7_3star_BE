@@ -4,6 +4,9 @@ spring:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      connection-timeout: 30000
 
   data:
     redis:
@@ -66,3 +69,9 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-validity: 3600000 # 1H
   refresh-token-validity: 604800000 # 7D
+
+server:
+  tomcat:
+    max-connections: 5000
+    accept-count: 500
+    connection-timeout: 30000
