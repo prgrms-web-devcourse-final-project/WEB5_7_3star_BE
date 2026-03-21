@@ -67,8 +67,8 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-token-validity: 3600000
-  refresh-token-validity: 604800000
+  access-token-validity: 3600000 # 1H
+  refresh-token-validity: 604800000 # 7D
 
 server:
   tomcat:
