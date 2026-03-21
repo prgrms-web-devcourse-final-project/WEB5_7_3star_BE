@@ -1,6 +1,8 @@
 package com.threestar.trainus.global.resolver;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -11,9 +13,6 @@ import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-
 @Component
 public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -23,23 +22,21 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
 	}
 
 	@Override
-	public Object resolveArgument(MethodParameter parameter,
-		ModelAndViewContainer mavContainer,
-		NativeWebRequest webRequest,
-		WebDataBinderFactory binderFactory) throws Exception {
+	public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+		NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-		HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
-		HttpSession session = request.getSession(false);
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (session == null) {
+		if (authentication == null || !authentication.isAuthenticated()) {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
+		Object principal = authentication.getPrincipal();
+
+		if (principal instanceof Long) {
+			return (Long)principal;
 		}
 
-		return userId;
+		throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 	}
 }

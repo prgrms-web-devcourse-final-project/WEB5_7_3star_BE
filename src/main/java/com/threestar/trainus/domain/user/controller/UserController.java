@@ -27,7 +27,6 @@ import com.threestar.trainus.global.unit.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -53,17 +52,16 @@ public class UserController {
 	@PostMapping("/login")
 	@Operation(summary = "로그인 api")
 	public ResponseEntity<BaseResponse<LoginResponseDto>> login(
-		@Valid @RequestBody LoginRequestDto request,
-		HttpSession session
+		@Valid @RequestBody LoginRequestDto request
 	) {
-		LoginResponseDto response = userService.login(request, session);
+		LoginResponseDto response = userService.login(request);
 		return BaseResponse.ok("로그인이 완료되었습니다", response, HttpStatus.OK);
 	}
 
 	@PostMapping("/logout")
 	@Operation(summary = "로그아웃 api")
-	public ResponseEntity<BaseResponse<Void>> logout(HttpSession session) {
-		userService.logout(session);
+	public ResponseEntity<BaseResponse<Void>> logout() {
+		userService.logout();
 		return BaseResponse.ok("로그아웃이 완료되었습니다.", null, HttpStatus.OK);
 	}
 
@@ -116,10 +114,9 @@ public class UserController {
 	@DeleteMapping("/withdraw")
 	@Operation(summary = "회원탈퇴 api", description = "회원탈퇴 처리 및 관련 데이터 정리")
 	public ResponseEntity<BaseResponse<Void>> withdraw(
-		@LoginUser Long loginUserId,
-		HttpSession session
+		@LoginUser Long loginUserId
 	) {
-		userService.withdraw(loginUserId, session);
+		userService.withdraw(loginUserId);
 		return BaseResponse.okOnlyStatus(HttpStatus.NO_CONTENT);
 	}
 }

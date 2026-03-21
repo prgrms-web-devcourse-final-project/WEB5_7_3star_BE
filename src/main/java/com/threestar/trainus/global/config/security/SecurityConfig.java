@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-	private final SessionAuthenticationFilter sessionAuthenticationFilter;
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -40,11 +40,11 @@ public class SecurityConfig {
 				.anyRequest()
 				.authenticated()
 			)
-			.addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-			.formLogin(form -> form.disable())        // 폼 로그인 비활성화
-			.httpBasic(basic -> basic.disable())      // HTTP Basic 비활성화
+			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+			.formLogin(form -> form.disable())
+			.httpBasic(basic -> basic.disable())
 			.sessionManagement(session -> session
-				.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
+				.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS)
 			)
 			.csrf(csrf -> csrf.disable())
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()));

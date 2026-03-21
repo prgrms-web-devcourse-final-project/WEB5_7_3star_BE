@@ -32,12 +32,14 @@ public class UserMapper {
 		);
 	}
 
-	public static LoginResponseDto toLoginResponseDto(User user) {
+	public static LoginResponseDto toLoginResponseDto(User user, String accessToken, String refreshToken) {
 		return new LoginResponseDto(
 			user.getId(),
 			user.getEmail(),
 			user.getNickname(),
-			user.getRole()
+			user.getRole(),
+			accessToken,
+			refreshToken
 		);
 	}
 
