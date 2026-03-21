@@ -6,6 +6,8 @@ public record LoginResponseDto(
 	Long id,
 	String email,
 	String nickname,
-	UserRole role
+	UserRole role,
+	String accessToken,
+	String refreshToken
 ) {
 }
