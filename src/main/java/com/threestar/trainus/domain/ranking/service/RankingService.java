@@ -97,7 +97,7 @@ public class RankingService {
 	}
 
 	//매 10분마다 랭킹 업데이트
-	@Scheduled(cron = "0 */10 * * * *")
+	// @Scheduled(cron = "0 */10 * * * *")
 	public void updateRankings() {
 		log.info("랭킹 업데이트 시작");
 

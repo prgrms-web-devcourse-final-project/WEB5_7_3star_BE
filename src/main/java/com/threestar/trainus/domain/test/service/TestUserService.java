@@ -1,10 +1,10 @@
 package com.threestar.trainus.domain.test.service;
 
 import com.threestar.trainus.domain.lesson.issue.LessonApplyStreamConstant;
+import com.threestar.trainus.global.config.security.JwtProvider;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.Optional;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -32,12 +32,14 @@ public class TestUserService {
 	private final ProfileFacadeService profileFacadeService;
 	private final JdbcTemplate jdbcTemplate;
 	private final StringRedisTemplate stringRedisTemplate;
+	private final JwtProvider jwtProvider;
 
 	@Transactional
 	public void createUsers(int count) {
 		log.info("Starting bulk user creation: {} users", count);
 
-		// 유저 대량 생성 (ON CONFLICT로 중복 무시)
+		// 유저 대량 생성
+		// ON CONFLICT로 중복 생성 방지
 		String userSql = "INSERT INTO users (email, password, nickname, role, test_user_id, created_at, updated_at) "
 			+ "VALUES (?, ?, ?, ?, ?, NOW(), NOW()) " + "ON CONFLICT (email) DO NOTHING";
 
@@ -73,20 +75,22 @@ public class TestUserService {
 				+ "WHERE u.email LIKE 'testuser%@example.com' AND pm.id IS NULL";
 		jdbcTemplate.execute(metadataSql);
 
-		// Redis 세션 워밍업 (세션 주입)
-		warmUpSessions(count);
-
-		log.info("Bulk creation completed: Users, Profiles, Metadata, and Redis Sessions are ready.");
+		log.info("Bulk creation completed: Users, Profiles, and Metadata are ready.");
 	}
 
-	private void warmUpSessions(int count) {
-		log.info("Warming up {} sessions in Redis...", count);
-		// 생성된 id 리스트를 가져와서 세션 주입
-		jdbcTemplate.query("SELECT id FROM users WHERE email LIKE 'testuser%@example.com'", rs -> {
-			String userId = String.valueOf(rs.getLong("id"));
-			// 세션 키 형식: "test:session:{num}" -> value: userId
-			stringRedisTemplate.opsForValue().set("test:session:" + userId, userId, Duration.ofHours(24));
+	@Transactional(readOnly = true)
+	public String generateTokenCsvForTestUsers() {
+		log.info("Generating JWT Token CSV for test users...");
+		StringBuilder csv = new StringBuilder("userId,accessToken\n");
+
+		jdbcTemplate.query("SELECT id FROM users WHERE email LIKE 'testuser%@example.com' ORDER BY id ASC", rs -> {
+			Long userId = rs.getLong("id");
+			// 기본 USER 역할 부여
+			String accessToken = jwtProvider.createAccessToken(userId, "USER");
+			csv.append(userId).append(",").append(accessToken).append("\n");
 		});
+
+		return csv.toString();
 	}
 
 	@Transactional
