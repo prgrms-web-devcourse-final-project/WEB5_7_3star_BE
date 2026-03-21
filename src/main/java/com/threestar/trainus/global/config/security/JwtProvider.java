@@ -37,12 +37,12 @@ public class JwtProvider {
 		this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds;
 	}
 
-	// 1. Access Token 생성
+	// Access Token 생성
 	public String createAccessToken(Long userId, String role) {
 		return createToken(userId, role, accessTokenValidityInMilliseconds);
 	}
 
-	// 2. Refresh Token 생성
+	// Refresh Token 생성
 	public String createRefreshToken(Long userId, String role) {
 		return createToken(userId, role, refreshTokenValidityInMilliseconds);
 	}
@@ -61,7 +61,7 @@ public class JwtProvider {
 			.compact();
 	}
 
-	// 3. 토큰에서 인증 정보(Authentication) 추출
+	// 토큰에서 Authentication 추출
 	public Authentication getAuthentication(String token) {
 		Claims claims = parseClaims(token);
 
@@ -72,7 +72,7 @@ public class JwtProvider {
 		return new UsernamePasswordAuthenticationToken(userId, null, authorities);
 	}
 
-	// 4. 토큰 유효성 검증
+	// 토큰 유효성 검증
 	public boolean validateToken(String token) {
 		try {
 			Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
