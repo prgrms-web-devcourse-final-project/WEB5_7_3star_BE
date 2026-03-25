@@ -22,7 +22,6 @@ import com.threestar.trainus.domain.lesson.teacher.service.AdminLessonService;
 import com.threestar.trainus.domain.test.service.TestUserService;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -122,6 +121,14 @@ public class TestConcurrencyController {
 		return BaseResponse.ok("레슨 신청 완료 (분산 락)", response, HttpStatus.OK);
 	}
 
+	@PostMapping("/lessons/{lessonId}/application/distributed-lock-coupled")
+	@Operation(summary = "레슨 신청 동시성 테스트 (분산 락 - 결합 구조)", description = "락과 트랜잭션이 결합되어 병목을 유발하는 테스트 API")
+	public ResponseEntity<BaseResponse<LessonApplicationResponseDto>> applyToLessonWithCoupledLock(
+		@PathVariable Long lessonId, @LoginUser Long userId) {
+		LessonApplicationResponseDto response = studentLessonService.applyToLessonWithCoupledLock(lessonId, userId);
+		return BaseResponse.ok("레슨 신청 완료 (Coupled Lock)", response, HttpStatus.OK);
+	}
+
 	@PostMapping("/lessons/{lessonId}/application/redis-stream")
 	@Operation(summary = "레슨 신청 동시성 테스트 (메시지 큐)", description = "레슨을 신청하는 테스트 API (메시지 큐)")
 	public ResponseEntity<?> applyToLessonRedisStream(@PathVariable Long lessonId, @LoginUser Long userId) {
@@ -139,10 +146,18 @@ public class TestConcurrencyController {
 		return ResponseEntity.ok().build();
 	}
 
+	@PostMapping("/redis/reset")
+	@Operation(summary = "Redis 동시성 관련 데이터 초기화", description = "레슨 신청 관련 Redis Stream, 재고, 상태 데이터를 모두 초기화합니다.")
+	public ResponseEntity<String> resetRedisData() {
+		testUserService.clearRedisData();
+		return ResponseEntity.ok("레슨 관련 Redis 데이터 초기화 완료");
+	}
+
 	@PostMapping("/reset")
 	@Operation(summary = "모든 테스트 데이터 초기화", description = "DB와 Redis의 모든 테스트 데이터를 비우고 ID 시퀀스를 1로 리셋합니다.")
 	public ResponseEntity<String> resetData() {
 		testUserService.clearAllData();
+		resetRedisData();
 		return ResponseEntity.ok("모든 테스트 데이터가 초기화되었습니다.");
 	}
 
