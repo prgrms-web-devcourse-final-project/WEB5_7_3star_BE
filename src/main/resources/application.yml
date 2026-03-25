@@ -72,6 +72,20 @@ jwt:
 
 server:
   tomcat:
+    mbeanregistry:
+      enabled: true
     max-connections: 5000
     accept-count: 500
     connection-timeout: 30000
+
+management:
+  server:
+    port: 8082
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info
+  metrics:
+    tags:
+      application: trainus
+      role: api
