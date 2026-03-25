@@ -45,6 +45,7 @@ import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.profile.repository.ProfileRepository;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.service.UserService;
+import com.threestar.trainus.global.annotation.DistributedLock;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.utils.PageLimitCalculator;
@@ -241,8 +242,6 @@ public class StudentLessonService {
 			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
 		}
 
-
-
 		// 선착순 여부에 따라 저장 처리 분기
 		if (lesson.getOpenRun()) {
 			// 신청 시간 체크
@@ -413,6 +412,64 @@ public class StudentLessonService {
 		}
 	}
 
+	// facade 패턴 적용 이전 분산락 메서드 (병목 재현)
+	@Transactional
+	@DistributedLock(key = "'lesson_apply:' + #lessonId")
+	public LessonApplicationResponseDto applyToLessonWithCoupledLock(Long lessonId, Long userId) {
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
+		User user = userService.getUserById(userId);
+
+		if (lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_CREATOR_CANNOT_APPLY);
+		}
+
+		boolean alreadyParticipated = lessonParticipantRepository.existsByLessonIdAndUserId(lessonId, userId);
+		boolean alreadyApplied = lessonApplicationRepository.existsByLessonIdAndUserId(lessonId, userId);
+		if (alreadyParticipated || alreadyApplied) {
+			throw new BusinessException(ErrorCode.ALREADY_APPLIED);
+		}
+
+		if (lesson.getStatus() != LessonStatus.RECRUITING) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+		}
+
+		if (lesson.getOpenRun()) {
+			if (lesson.getParticipantCount() >= lesson.getMaxParticipants()) {
+				throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+			}
+			if (java.time.LocalDateTime.now().isBefore(lesson.getOpenTime())) {
+				throw new BusinessException(ErrorCode.LESSON_NOT_YET_OPEN);
+			}
+
+			LessonParticipant participant = LessonParticipant.builder()
+				.lesson(lesson)
+				.user(user)
+				.build();
+			lessonParticipantRepository.save(participant);
+			lesson.incrementParticipantCount();
+
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.APPROVED,
+				participant.getJoinAt()
+			);
+		} else {
+			LessonApplication application = LessonApplication.builder()
+				.lesson(lesson)
+				.user(user)
+				.build();
+			lessonApplicationRepository.save(application);
+
+			return LessonApplyMapper.toLessonApplicationResponseDto(
+				lesson.getId(),
+				user.getId(),
+				ApplicationStatus.PENDING,
+				application.getCreatedAt()
+			);
+		}
+	}
+
 	@Transactional
 	public void cancelLessonApplication(Long lessonId, Long userId) {
 		// 레슨 조회
@@ -486,8 +543,8 @@ public class StudentLessonService {
 
 		return LessonSimpleMapper.toLessonSimpleDto(lesson);
 	}
-
 	// 비동기 레슨 신청 상태 조회
+
 	public String getAsyncApplyStatus(String requestId) {
 		String status = redisTemplate.opsForValue().get(LessonApplyStreamConstant.STATUS_PREFIX + requestId);
 
