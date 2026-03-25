@@ -1,26 +1,46 @@
 global:
   scrape_interval: 15s
-  scrape_timeout: 15s
-  evaluation_interval: 2m
+  scrape_timeout: 10s
+  evaluation_interval: 1m
   external_labels:
-    monitor: 'monitor'
-  query_log_file: query_log_file.log
-rule_files:
-  - "rule.yml"
+    monitor: 'trainus-monitor'
+
 scrape_configs:
+  # 프로메테우스 모니터링
   - job_name: 'prometheus'
-    scrape_interval: 10s
-    scrape_timeout: 10s
-    metrics_path: '/metrics'
-    honor_labels: false
-    honor_timestamps: false
-    scheme: 'http'
     static_configs:
-      - targets: [ '43.202.206.47:9090' ]
-        #      - targets: [ 'localhost:9090' ]
+      - targets: ['localhost:9090']
+
+  # 로컬 개발 환경
+  - job_name: 'spring-boot-app-local'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8082', 'host.docker.internal:8081']
         labels:
-          service: 'monitor-1'
-  - job_name: 'node'
-    static_configs:
-      #      - targets: [ 'localhost:9100' ]
-      - targets: [ '43.202.206.47:9100' ]
+          env: 'local'
+
+  # AWS 오토스케일링 환경 (오토스케일링 그룹 내 자동 수집)
+  - job_name: 'spring-boot-app-aws'
+    metrics_path: '/actuator/prometheus'
+    
+    # AWS EC2 Service Discovery 설정
+    ec2_sd_configs:
+      - region: ap-northeast-2
+        port: 8082
+      - region: ap-northeast-2
+        port: 8081
+    
+    # 필터링 및 라벨 재구성
+    relabel_configs:
+      # 'Name' 태그가 'TrainUs-App'으로 시작하는 인스턴스만 수집
+      - source_labels: [__meta_ec2_tag_Name]
+        regex: TrainUs-App.*
+        action: keep
+      
+      # 그라파나 대시보드용 라벨 추가
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance_id
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: private_ip
+      - target_label: env
+        replacement: 'production'

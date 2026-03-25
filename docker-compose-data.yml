@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgis/postgis:17-3.5-alpine
+    image: postgis/postgis:17-3.5
     container_name: data-postgres
     restart: always
     env_file:
@@ -30,6 +28,36 @@ services:
     networks:
       - data-network
 
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: data-prometheus
+    restart: always
+    volumes:
+      - ./prometheus-grafana/prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - data-network
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: data-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - data-network
+
 networks:
   data-network:
     driver: bridge
@@ -37,3 +65,5 @@ networks:
 volumes:
   postgres-data:
   redis-data:
+  prometheus-data:
+  grafana-data:

@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import io.micrometer.core.instrument.Metrics;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -28,6 +29,7 @@ public class LessonApplyProducer {
 		}
 
 		if (stock < 0) {
+			Metrics.counter("lesson_apply_total", "version", "mq", "result", "pre_filter_reject").increment();
 			stringRedisTemplate.opsForValue().increment(stockKey);
 			return null;
 		}
@@ -35,7 +37,8 @@ public class LessonApplyProducer {
 		// requestId 생성 및 초기 상태 저장
 		String requestId = UUID.randomUUID().toString();
 		String statusKey = LessonApplyStreamConstant.STATUS_PREFIX + requestId;
-		stringRedisTemplate.opsForValue().set(statusKey, "PENDING", Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
+		stringRedisTemplate.opsForValue()
+			.set(statusKey, "PENDING", Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
 
 		// Stream 메시지 생성 및 전송
 		Map<String, String> content = new HashMap<>();

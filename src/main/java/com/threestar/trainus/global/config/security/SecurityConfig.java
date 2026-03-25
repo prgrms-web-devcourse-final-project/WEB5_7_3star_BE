@@ -28,24 +28,21 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http
-			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/api/v1/users/**", "/api/lessons/test-auth", "/swagger-ui/**", "/v3/api-docs/**",
-					"/api/v1/profiles/**", "/api/v1/lessons/**", "api/v1/coupons/**", "/api/v1/comments/**",
-					"/api/v1/reviews/**", "/api/v1/admin/**",
-					"/api/v1/rankings/**", "/api/v1/payments/**", "/test/**", "/health")
-				.permitAll()
-				.requestMatchers("/api/v1/admin/**")
-				.hasRole("ADMIN")
-				.anyRequest()
-				.authenticated()
-			)
+		http.authorizeHttpRequests(
+				auth -> auth.requestMatchers("/api/v1/users/**", "/api/lessons/test-auth", "/swagger-ui/**",
+						"/v3/api-docs/**", "/api/v1/profiles/**", "/api/v1/lessons/**", "api/v1/coupons/**",
+						"/api/v1/comments/**", "/api/v1/reviews/**", "/api/v1/admin/**", "/api/v1/rankings/**",
+						"/api/v1/payments/**", "/test/**", "/health", "/actuator/**")
+					.permitAll()
+					.requestMatchers("/api/v1/admin/**")
+					.hasRole("ADMIN")
+					.anyRequest()
+					.authenticated())
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.formLogin(form -> form.disable())
 			.httpBasic(basic -> basic.disable())
-			.sessionManagement(session -> session
-				.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS)
-			)
+			.sessionManagement(session -> session.sessionCreationPolicy(
+				org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
 			.csrf(csrf -> csrf.disable())
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
@@ -56,9 +53,8 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOrigins(
-			List.of("http://localhost:3000", "http://localhost:8080", "http://localhost:8031",
-				"http://localhost:5173", "http://15.165.184.145:8080", "http://15.165.184.145:3000",
-				"http://15.165.184.145:8031",
+			List.of("http://localhost:3000", "http://localhost:8080", "http://localhost:8031", "http://localhost:5173",
+				"http://15.165.184.145:8080", "http://15.165.184.145:3000", "http://15.165.184.145:8031",
 				"http://trainus-alb-1227831319.ap-northeast-2.elb.amazonaws.com"));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));

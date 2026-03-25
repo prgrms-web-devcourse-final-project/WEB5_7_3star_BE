@@ -146,19 +146,37 @@ public class TestUserService {
 		jdbcTemplate.execute(
 			"TRUNCATE TABLE lesson_participants, lesson_applications, lesson_images, lessons, profile, profile_metadata, users RESTART IDENTITY CASCADE");
 
-		// Redis 초기화 (Stream 비우기 및 관련 키 삭제)
-		stringRedisTemplate.opsForStream().trim(LessonApplyStreamConstant.STREAM_KEY, 0);
-
-		// 레슨 재고, 상태값, 테스트 세션 키 패턴 삭제
-		java.util.Set<String> keys = stringRedisTemplate.keys("lesson:*");
-		if (keys != null && !keys.isEmpty())
-			stringRedisTemplate.delete(keys);
-
-		java.util.Set<String> sessionKeys = stringRedisTemplate.keys("test:session:*");
-		if (sessionKeys != null && !sessionKeys.isEmpty())
-			stringRedisTemplate.delete(sessionKeys);
+		// Redis 초기화
+		clearRedisData();
 
 		log.info("Hard reset completed successfully.");
+	}
+
+	public void clearRedisData() {
+		log.info("Clearing lesson-related Redis data...");
+
+		// 레슨 신청 Stream 삭제
+		stringRedisTemplate.delete(LessonApplyStreamConstant.STREAM_KEY);
+
+		// 레슨 재고 데이터 삭제 (lesson:stock:*)
+		java.util.Set<String> stockKeys = stringRedisTemplate.keys(LessonApplyStreamConstant.STOCK_PREFIX + "*");
+		if (stockKeys != null && !stockKeys.isEmpty()) {
+			stringRedisTemplate.delete(stockKeys);
+		}
+
+		// 신청 상태 데이터 삭제 (lesson:apply:status:*)
+		java.util.Set<String> statusKeys = stringRedisTemplate.keys(LessonApplyStreamConstant.STATUS_PREFIX + "*");
+		if (statusKeys != null && !statusKeys.isEmpty()) {
+			stringRedisTemplate.delete(statusKeys);
+		}
+
+		// 기타 테스트 세션 등 정리
+		java.util.Set<String> sessionKeys = stringRedisTemplate.keys("test:session:*");
+		if (sessionKeys != null && !sessionKeys.isEmpty()) {
+			stringRedisTemplate.delete(sessionKeys);
+		}
+
+		log.info("Redis data cleared.");
 	}
 
 }
