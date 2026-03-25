@@ -17,11 +17,9 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.core.annotation.Order;
 
 @Aspect
 @Component
-@Order(1)
 @RequiredArgsConstructor
 @Slf4j
 public class DistributedLockAspect {
