@@ -54,13 +54,13 @@ public class LessonApplyService {
 				return false;
 			}
 
-			// 실제 DB 저장 및 카운트 증가
+			// 실제 DB 저장 및 카운트 증가 (원자적 연산 적용)
 			LessonParticipant participant = LessonParticipant.builder()
 				.lesson(lesson)
 				.user(user)
 				.build();
 			lessonParticipantRepository.save(participant);
-			lesson.incrementParticipantCount();
+			lessonRepository.incrementParticipantCount(lessonId);
 
 			// 처리 성공 결과 저장 및 지연 시간 측정
 			long latency = System.currentTimeMillis() - produceTime;

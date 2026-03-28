@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.Metrics;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class LessonApplyProducer {
@@ -18,7 +20,18 @@ public class LessonApplyProducer {
 	private final StringRedisTemplate stringRedisTemplate;
 
 	public String send(Long lessonId, Long userId) {
+		String duplicateKey = LessonApplyStreamConstant.DUPLICATE_PREFIX + lessonId;
 		String stockKey = LessonApplyStreamConstant.STOCK_PREFIX + lessonId;
+
+		// 중복 신청 방지 (Redis Set 원자 연산)
+		Long addedCount = stringRedisTemplate.opsForSet().add(duplicateKey, String.valueOf(userId));
+		if (addedCount == null || addedCount == 0L) {
+			Metrics.counter("lesson_apply_total", "version", "mq", "result", "duplicate_reject").increment();
+			return "ALREADY_APPLIED";
+		}
+
+		// 최초 신청 시에만 TTL 설정
+		stringRedisTemplate.expire(duplicateKey, Duration.ofMinutes(LessonApplyStreamConstant.DUPLICATE_TTL_MINUTE));
 
 		// Redis 원자 연산으로 재고 차감
 		Long stock = stringRedisTemplate.opsForValue().decrement(stockKey);
