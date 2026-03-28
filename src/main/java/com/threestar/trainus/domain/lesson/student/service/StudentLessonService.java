@@ -254,7 +254,7 @@ public class StudentLessonService {
 				.user(user)
 				.build();
 			lessonParticipantRepository.save(participant);
-			lesson.incrementParticipantCount();
+			lessonRepository.incrementParticipantCount(lesson.getId());
 
 			return LessonApplyMapper.toLessonApplicationResponseDto(
 				lesson.getId(),
@@ -320,7 +320,7 @@ public class StudentLessonService {
 				.user(user)
 				.build();
 			lessonParticipantRepository.save(participant);
-			lesson.incrementParticipantCount();
+			lessonRepository.incrementParticipantCount(lesson.getId());
 
 			return LessonApplyMapper.toLessonApplicationResponseDto(
 				lesson.getId(),
@@ -387,7 +387,7 @@ public class StudentLessonService {
 				.user(user)
 				.build();
 			lessonParticipantRepository.save(participant);
-			lesson.incrementParticipantCount();
+			lessonRepository.incrementParticipantCount(lesson.getId());
 
 			return LessonApplyMapper.toLessonApplicationResponseDto(
 				lesson.getId(),
@@ -446,7 +446,7 @@ public class StudentLessonService {
 				.user(user)
 				.build();
 			lessonParticipantRepository.save(participant);
-			lesson.incrementParticipantCount();
+			lessonRepository.incrementParticipantCount(lesson.getId());
 
 			return LessonApplyMapper.toLessonApplicationResponseDto(
 				lesson.getId(),
@@ -557,9 +557,7 @@ public class StudentLessonService {
 
 	@Transactional
 	public void cancelPayment(Long lessonId, Long userId) {
-		Lesson lesson = adminLessonService.findLessonById(lessonId);
-		lesson.decrementParticipantCount();
-		lessonRepository.save(lesson);
+		lessonRepository.decrementParticipantCount(lessonId);
 
 		LessonParticipant lessonParticipant = lessonParticipantRepository.findByLessonIdAndUserId(lessonId, userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LESSON_PARTICIPANT));

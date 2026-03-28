@@ -19,7 +19,49 @@ import com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus;
 
 import jakarta.persistence.LockModeType;
 
+import org.springframework.data.jpa.repository.Modifying;
+
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
+
+	// 내부용 원자적 증가 쿼리
+	@Modifying(clearAutomatically = true)
+	@Query("""
+		UPDATE Lesson l
+		SET l.participantCount = l.participantCount + 1,
+		    l.status = CASE WHEN (l.participantCount + 1) >= l.maxParticipants 
+		                    THEN :completedStatus 
+		                    ELSE l.status END
+		WHERE l.id = :lessonId
+		""")
+	int updateIncrementInternal(
+		@Param("lessonId") Long lessonId,
+		@Param("completedStatus") LessonStatus completedStatus
+	);
+
+	// 서비스 호출 공용 메서드
+	default void incrementParticipantCount(Long lessonId) {
+		updateIncrementInternal(lessonId, LessonStatus.RECRUITMENT_COMPLETED);
+	}
+
+	// 내부용 원자적 감소 쿼리
+	@Modifying(clearAutomatically = true)
+	@Query("""
+		UPDATE Lesson l
+		SET l.participantCount = l.participantCount - 1,
+		    l.status = CASE WHEN (l.participantCount - 1) < l.maxParticipants 
+		                    THEN :recruitingStatus 
+		                    ELSE l.status END
+		WHERE l.id = :lessonId
+		""")
+	int updateDecrementInternal(
+		@Param("lessonId") Long lessonId,
+		@Param("recruitingStatus") LessonStatus recruitingStatus
+	);
+
+	// 서비스 호출 공용 메서드
+	default void decrementParticipantCount(Long lessonId) {
+		updateDecrementInternal(lessonId, LessonStatus.RECRUITING);
+	}
 
 	// 중복 레슨 검증(같은 강사가 같은 이름과 시작시간으로 레슨 생성했는지 체크)
 	@Query("""

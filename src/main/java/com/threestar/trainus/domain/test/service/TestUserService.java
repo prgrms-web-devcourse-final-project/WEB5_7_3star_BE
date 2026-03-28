@@ -7,6 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
+import org.springframework.data.redis.connection.stream.ReadOffset;
+import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -144,7 +146,7 @@ public class TestUserService {
 
 		// DB 초기화
 		jdbcTemplate.execute(
-			"TRUNCATE TABLE lesson_participants, lesson_applications, lesson_images, lessons, profile, profile_metadata, users RESTART IDENTITY CASCADE");
+			"TRUNCATE TABLE lesson_participants, lesson_applications, lesson_images, profile, profile_metadata, users RESTART IDENTITY CASCADE");
 
 		// Redis 초기화
 		clearRedisData();
@@ -153,10 +155,28 @@ public class TestUserService {
 	}
 
 	public void clearRedisData() {
-		log.info("Clearing lesson-related Redis data...");
+		log.info("Clearing lesson-related Redis data (Nuclear Soft Reset)...");
+		String streamKey = LessonApplyStreamConstant.STREAM_KEY;
+		String groupName = LessonApplyStreamConstant.GROUP;
 
-		// 레슨 신청 Stream 삭제
-		stringRedisTemplate.delete(LessonApplyStreamConstant.STREAM_KEY);
+		// 데이터만 비우고 그룹은 유지
+		try {
+			stringRedisTemplate.opsForStream().trim(streamKey, 0);
+			log.info("Redis Stream [{}] trimmed to 0", streamKey);
+
+			// 그룹 오프셋 최신($)으로 리셋
+			stringRedisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Object>) connection -> {
+				connection.execute("XGROUP", "SETID".getBytes(), streamKey.getBytes(), groupName.getBytes(), "$".getBytes());
+				return null;
+			});
+			log.info("Consumer Group [{}] offset reset to $ (Latest)", groupName);
+
+			// Dirty Set 초기화
+			stringRedisTemplate.delete(LessonApplyStreamConstant.DIRTY_SET_KEY);
+			log.info("Dirty Set [{}] cleared", LessonApplyStreamConstant.DIRTY_SET_KEY);
+		} catch (Exception e) {
+			log.warn("Stream/Group reset info: {}", e.getMessage());
+		}
 
 		// 레슨 재고 데이터 삭제 (lesson:stock:*)
 		java.util.Set<String> stockKeys = stringRedisTemplate.keys(LessonApplyStreamConstant.STOCK_PREFIX + "*");

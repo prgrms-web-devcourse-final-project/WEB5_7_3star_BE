@@ -453,7 +453,7 @@ public class AdminLessonService {
 				.build();
 			lessonParticipantRepository.save(participant);
 
-			lesson.incrementParticipantCount();
+			lessonRepository.incrementParticipantCount(lesson.getId());
 		} else if (action == ApplicationAction.DENIED) {
 			application.deny();
 		}

@@ -140,26 +140,6 @@ public class Lesson extends BaseDateEntity {
 		return this.deletedAt != null;
 	}
 
-	// 참가자 수 증가
-	public void incrementParticipantCount() {
-		this.participantCount++;
-
-		// 정원 달성 시 -> 모집완료로 상태 변경
-		if (this.participantCount >= this.maxParticipants) {
-			this.status = LessonStatus.RECRUITMENT_COMPLETED;
-		}
-	}
-
-	// 참가자 수 감소
-	public void decrementParticipantCount() {
-		this.participantCount--;
-
-		// 정원 달성 시 -> 모집완료로 상태 변경
-		if (this.participantCount < this.maxParticipants) {
-			this.status = LessonStatus.RECRUITING;
-		}
-	}
-
 	//레슨 이름 수정
 	public void updateLessonName(String lessonName) {
 		if (lessonName != null && !lessonName.trim().isEmpty()) {
