@@ -2,6 +2,16 @@ server:
   port: 8081
 
 management:
+  server:
+    port: 8083
+
+spring:
+  data:
+    redis:
+      stream:
+        threads:
+          core: 15
+          max: 20
   endpoints:
     web:
       exposure:

@@ -1,128 +1,112 @@
 package com.threestar.trainus.domain.lesson.issue;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.data.redis.connection.stream.Consumer;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
-import org.springframework.data.redis.connection.stream.ReadOffset;
-import org.springframework.data.redis.connection.stream.StreamOffset;
-import org.springframework.data.redis.connection.stream.StreamReadOptions;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.RecordId;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.stream.StreamListener;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 @Profile("consumer")
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LessonApplyConsumer {
+public class LessonApplyConsumer implements StreamListener<String, MapRecord<String, String, String>> {
 
 	private final StringRedisTemplate redisTemplate;
 	private final LessonApplyService lessonApplyService;
 
+	private final ConcurrentLinkedQueue<MapRecord<String, String, String>> buffer = new ConcurrentLinkedQueue<>();
+	private static final int BATCH_SIZE = 1000;
 	private static final String STREAM_KEY = LessonApplyStreamConstant.STREAM_KEY;
 	private static final String GROUP = LessonApplyStreamConstant.GROUP;
-	private static final String CONSUMER = "lesson-consumer-" + UUID.randomUUID();
-	private static final String STOCK_PREFIX = LessonApplyStreamConstant.STOCK_PREFIX;
 
-	@PostConstruct
-	public void init() {
-		createGroupIfNotExists();
-		startConsumerThread();
+	@Override
+	public void onMessage(MapRecord<String, String, String> message) {
+		buffer.add(message);
+
+		// 버퍼가 차면 즉시 처리 시도
+		if (buffer.size() >= BATCH_SIZE) {
+			processBuffer();
+		}
 	}
 
-	private void startConsumerThread() {
-		Thread consumerThread = new Thread(() -> {
-			while (true) {
+	// 주기적으로 버퍼에 남은 메시지 처리
+	@Scheduled(fixedRate = 1000)
+	public void scheduledProcess() {
+		if (!buffer.isEmpty()) {
+			processBuffer();
+		}
+	}
+
+	private void processBuffer() {
+		if (buffer.isEmpty()) {
+			return;
+		}
+		List<MapRecord<String, String, String>> records = new ArrayList<>();
+		while (records.size() < BATCH_SIZE) {
+			MapRecord<String, String, String> record = buffer.poll();
+			if (record == null) {
+				break;
+			}
+			records.add(record);
+		}
+
+		if (records.isEmpty()) {
+			return;
+		}
+		List<ApplyMessage> messages = records.stream().map(record -> {
+			Map<String, String> value = record.getValue();
+			return new ApplyMessage(Long.parseLong(value.get("lessonId")), Long.parseLong(value.get("userId")),
+				value.get("requestId"), Long.parseLong(value.get("timestamp")));
+		}).collect(Collectors.toList());
+
+		try {
+			// 서비스 레이어 배치 처리 호출
+			lessonApplyService.applyBatch(messages);
+
+			// 처리 성공 시 ACK 및 메시지 삭제
+			RecordId[] ids = records.stream().map(MapRecord::getId).toArray(RecordId[]::new);
+			redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, ids);
+			redisTemplate.opsForStream().delete(STREAM_KEY, ids);
+
+			log.info("Batch processed {} messages successfully", messages.size());
+		} catch (Exception e) {
+			log.error("Batch failed due to: {}. Falling back to individual processing to isolate the error.",
+				e.getMessage());
+
+			// 배치 실패 시 한 건씩 개별 처리
+			for (int i = 0; i < records.size(); i++) {
+				MapRecord<String, String, String> record = records.get(i);
+				ApplyMessage msg = messages.get(i);
+
 				try {
-					consumeNewMessages();
-					handlePendingMessages();
-				} catch (Exception e) {
-					log.error("Consumer thread error: {}", e.getMessage());
+					// 개별 처리 호출
+					lessonApplyService.apply(msg.lessonId(), msg.userId(), msg.requestId(), msg.timestamp());
+
+					// 개별 성공 시 즉시 ACK 및 삭제
+					redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, record.getId());
+					redisTemplate.opsForStream().delete(STREAM_KEY, record.getId());
+				} catch (Exception ex) {
+					// 위반 발생 시 메시지 버림
+					log.error("Failed to process individual message: LessonId={}, UserId={}, Error={}",
+						msg.lessonId(), msg.userId(), ex.getMessage());
+
+					// 스트림에서 제거
+					redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, record.getId());
+					redisTemplate.opsForStream().delete(STREAM_KEY, record.getId());
 				}
 			}
-		});
-
-		consumerThread.setName("lesson-stream-consumer-thread");
-		consumerThread.start();
-	}
-
-	private void consumeNewMessages() {
-		List<MapRecord<String, Object, Object>> messages = redisTemplate.opsForStream()
-			.read(Consumer.from(GROUP, CONSUMER), StreamReadOptions.empty().count(10).block(Duration.ofSeconds(2)),
-				StreamOffset.create(STREAM_KEY, ReadOffset.lastConsumed()));
-
-		if (messages == null || messages.isEmpty())
-			return;
-
-		for (MapRecord<String, Object, Object> message : messages) {
-			process(message);
-		}
-	}
-
-	private void handlePendingMessages() {
-		PendingMessagesSummary pending = redisTemplate.opsForStream().pending(STREAM_KEY, GROUP);
-
-		if (pending == null || pending.getTotalPendingMessages() == 0)
-			return;
-
-		List<MapRecord<String, Object, Object>> pendingList = redisTemplate.opsForStream()
-			.read(Consumer.from(GROUP, CONSUMER), StreamReadOptions.empty().count(10),
-				StreamOffset.create(STREAM_KEY, ReadOffset.from("0")));
-
-		if (pendingList == null)
-			return;
-
-		for (MapRecord<String, Object, Object> message : pendingList) {
-			process(message);
-		}
-	}
-
-	private void process(MapRecord<String, Object, Object> message) {
-		Long lessonId = null;
-		Long userId = null;
-		String requestId = null;
-		Long timestamp = null;
-		try {
-			lessonId = Long.valueOf(message.getValue().get("lessonId").toString());
-			userId = Long.valueOf(message.getValue().get("userId").toString());
-			requestId = message.getValue().get("requestId").toString();
-			timestamp = Long.valueOf(message.getValue().get("timestamp").toString());
-
-			log.info("CONSUME lesson={} user={} requestId={}", lessonId, userId, requestId);
-
-			boolean applied = lessonApplyService.apply(lessonId, userId, requestId, timestamp);
-
-			if (applied) {
-				redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, message.getId());
-				return;
-			}
-
-			rollbackStock(lessonId);
-			redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, message.getId());
-		} catch (Exception e) {
-			log.error("Lesson apply failed: {}, message stays in PENDING", e.getMessage());
-		}
-	}
-
-	private void rollbackStock(Long lessonId) {
-		String stockKey = STOCK_PREFIX + lessonId;
-		redisTemplate.opsForValue().increment(stockKey);
-	}
-
-	private void createGroupIfNotExists() {
-		try {
-			redisTemplate.opsForStream().createGroup(STREAM_KEY, GROUP);
-			log.info("Lesson apply stream group created");
-		} catch (Exception e) {
-			log.info("Lesson apply stream group already exists");
 		}
 	}
 }

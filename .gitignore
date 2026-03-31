@@ -45,6 +45,8 @@ logs/
 *.pem
 postgres-data/
 redis-data/
+grafana-data/
+prometheus-data/
 *.sql
 *.jpg
 .idea/dataSources/

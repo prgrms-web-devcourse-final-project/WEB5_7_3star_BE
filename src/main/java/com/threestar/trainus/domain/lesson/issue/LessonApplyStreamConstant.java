@@ -5,5 +5,8 @@ public class LessonApplyStreamConstant {
 	public static final String GROUP = "lesson-apply-group";
 	public static final String STOCK_PREFIX = "lesson:stock:";
 	public static final String STATUS_PREFIX = "lesson:apply:status:";
-	public static final long STATUS_TTL_MINUTE = 10L; // 상태값 유지 시간
+	public static final String DUPLICATE_PREFIX = "lesson:apply:duplicate:";
+	public static final String DIRTY_SET_KEY = "lesson:apply:dirty-set";
+	public static final long STATUS_TTL_MINUTE = 10L; // 비동기 처리 상태
+	public static final long DUPLICATE_TTL_MINUTE = 1L; // 중복 신청 방지
 }
