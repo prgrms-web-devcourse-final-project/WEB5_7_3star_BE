@@ -7,7 +7,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
-import org.springframework.data.redis.connection.stream.ReadOffset;
+import org.springframework.data.domain.Range;
+import org.springframework.data.redis.connection.stream.PendingMessage;
+import org.springframework.data.redis.connection.stream.PendingMessages;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -87,7 +89,6 @@ public class TestUserService {
 
 		jdbcTemplate.query("SELECT id FROM users WHERE email LIKE 'testuser%@example.com' ORDER BY id ASC", rs -> {
 			Long userId = rs.getLong("id");
-			// 기본 USER 역할 부여
 			String accessToken = jwtProvider.createAccessToken(userId, "USER");
 			csv.append(userId).append(",").append(accessToken).append("\n");
 		});
@@ -144,18 +145,16 @@ public class TestUserService {
 	public void clearAllData() {
 		log.info("Starting hard reset of all test data...");
 
-		// DB 초기화
 		jdbcTemplate.execute(
 			"TRUNCATE TABLE lesson_participants, lesson_applications, lesson_images, profile, profile_metadata, users RESTART IDENTITY CASCADE");
 
-		// Redis 초기화
 		clearRedisData();
 
 		log.info("Hard reset completed successfully.");
 	}
 
 	public void clearRedisData() {
-		log.info("Clearing lesson-related Redis data (Nuclear Soft Reset)...");
+		log.info("Clearing lesson-related Redis data...");
 		String streamKey = LessonApplyStreamConstant.STREAM_KEY;
 		String groupName = LessonApplyStreamConstant.GROUP;
 
@@ -164,18 +163,45 @@ public class TestUserService {
 			stringRedisTemplate.opsForStream().trim(streamKey, 0);
 			log.info("Redis Stream [{}] trimmed to 0", streamKey);
 
-			// 그룹 오프셋 최신($)으로 리셋
-			stringRedisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Object>) connection -> {
-				connection.execute("XGROUP", "SETID".getBytes(), streamKey.getBytes(), groupName.getBytes(), "$".getBytes());
+			// Pending 메세지 정리
+			try {
+				PendingMessages pendingMessages = stringRedisTemplate.opsForStream()
+					.pending(streamKey, groupName, Range.unbounded(), 10000L);
+				
+				if (pendingMessages != null && !pendingMessages.isEmpty()) {
+					RecordId[] ids = pendingMessages.stream()
+						.map(PendingMessage::getId)
+						.toArray(RecordId[]::new);
+					stringRedisTemplate.opsForStream().acknowledge(streamKey, groupName, ids);
+					log.info("PEL cleared: {} messages ACKed", ids.length);
+				}
+			} catch (Exception e) {
+				log.warn("Failed to clear PEL: {}", e.getMessage());
+			}
+
+			// 그룹 오프셋 처음으로 리셋
+			stringRedisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Object>)connection -> {
+				try {
+					connection.execute("XGROUP", "SETID".getBytes(), streamKey.getBytes(), groupName.getBytes(), "0-0".getBytes());
+					log.info("Consumer Group [{}] offset reset to 0-0", groupName);
+				} catch (Exception e) {
+					log.warn("Failed to reset group offset: {}", e.getMessage());
+				}
 				return null;
 			});
-			log.info("Consumer Group [{}] offset reset to $ (Latest)", groupName);
 
 			// Dirty Set 초기화
 			stringRedisTemplate.delete(LessonApplyStreamConstant.DIRTY_SET_KEY);
 			log.info("Dirty Set [{}] cleared", LessonApplyStreamConstant.DIRTY_SET_KEY);
 		} catch (Exception e) {
-			log.warn("Stream/Group reset info: {}", e.getMessage());
+			log.warn("Redis reset failed: {}", e.getMessage());
+		}
+
+		// 중복 신청 방지 데이터 삭제 (lesson:apply:duplicate:*)
+		java.util.Set<String> duplicateKeys = stringRedisTemplate.keys(LessonApplyStreamConstant.DUPLICATE_PREFIX + "*");
+		if (duplicateKeys != null && !duplicateKeys.isEmpty()) {
+			stringRedisTemplate.delete(duplicateKeys);
+			log.info("Duplicate Filter keys [{}] cleared", duplicateKeys.size());
 		}
 
 		// 레슨 재고 데이터 삭제 (lesson:stock:*)

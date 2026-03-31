@@ -41,8 +41,8 @@ public class RedisStreamConfig {
 		StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
 			StreamMessageListenerContainer.StreamMessageListenerContainerOptions
 				.builder()
-				.pollTimeout(Duration.ofSeconds(1))
-				.batchSize(100)
+				.pollTimeout(Duration.ofMillis(500))
+				.batchSize(1000)
 				.executor(executor) // 동적 스레드 풀 적용
 				.errorHandler(t -> log.warn("Redis Stream error: {}", t.getMessage()))
 				.build();
