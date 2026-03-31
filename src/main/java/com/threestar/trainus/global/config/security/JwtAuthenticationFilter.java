@@ -35,12 +35,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if (StringUtils.hasText(jwt) && jwtProvider.validateToken(jwt)) {
 			Authentication authentication = jwtProvider.getAuthentication(jwt);
 			SecurityContextHolder.getContext().setAuthentication(authentication);
-			log.info("[JWT AUTH] Success - Authenticating userId={}, uri={}", authentication.getPrincipal(),
-				requestUri);
 		} else if (StringUtils.hasText(jwt)) {
 			log.warn("[JWT AUTH] Invalid Token - uri={}", requestUri);
 		}
-
 		filterChain.doFilter(request, response);
 	}
 
