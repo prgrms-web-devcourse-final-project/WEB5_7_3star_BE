@@ -38,6 +38,23 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		@Param("completedStatus") LessonStatus completedStatus
 	);
 
+	// 배치용 원자적 증가 쿼리
+	@Modifying(clearAutomatically = true)
+	@Query("""
+		UPDATE Lesson l
+		SET l.participantCount = l.participantCount + :amount,
+		    l.status = CASE WHEN (l.participantCount + :amount) >= l.maxParticipants 
+		                    THEN :completedStatus 
+		                    ELSE l.status END
+		WHERE l.id = :lessonId 
+		  AND (l.participantCount + :amount) <= l.maxParticipants
+		""")
+	int incrementParticipantCountBatch(
+		@Param("lessonId") Long lessonId,
+		@Param("amount") int amount,
+		@Param("completedStatus") LessonStatus completedStatus
+	);
+
 	// 서비스 호출 공용 메서드
 	default void incrementParticipantCount(Long lessonId) {
 		updateIncrementInternal(lessonId, LessonStatus.RECRUITMENT_COMPLETED);

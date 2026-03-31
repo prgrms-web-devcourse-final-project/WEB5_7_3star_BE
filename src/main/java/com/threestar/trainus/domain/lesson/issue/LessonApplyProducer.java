@@ -25,7 +25,13 @@ public class LessonApplyProducer {
 
 		// 중복 신청 방지 (Redis Set 원자 연산)
 		Long addedCount = stringRedisTemplate.opsForSet().add(duplicateKey, String.valueOf(userId));
-		if (addedCount == null || addedCount == 0L) {
+
+		if (addedCount == null) {
+			Metrics.counter("lesson_apply_total", "version", "mq", "result", "system_error").increment();
+			return null;
+		}
+
+		if (addedCount == 0L) {
 			Metrics.counter("lesson_apply_total", "version", "mq", "result", "duplicate_reject").increment();
 			return "ALREADY_APPLIED";
 		}
@@ -38,12 +44,15 @@ public class LessonApplyProducer {
 
 		// 예외 및 재고 소진 처리
 		if (stock == null) {
+			stringRedisTemplate.opsForSet().remove(duplicateKey, String.valueOf(userId));
+			Metrics.counter("lesson_apply_total", "version", "mq", "result", "system_error").increment();
 			return null;
 		}
 
 		if (stock < 0) {
 			Metrics.counter("lesson_apply_total", "version", "mq", "result", "pre_filter_reject").increment();
 			stringRedisTemplate.opsForValue().increment(stockKey);
+			stringRedisTemplate.opsForSet().remove(duplicateKey, String.valueOf(userId));
 			return null;
 		}
 
@@ -61,6 +70,7 @@ public class LessonApplyProducer {
 		content.put("timestamp", String.valueOf(System.currentTimeMillis()));
 
 		stringRedisTemplate.opsForStream().add(LessonApplyStreamConstant.STREAM_KEY, content);
+		Metrics.counter("lesson_apply_total", "version", "mq", "result", "applied").increment();
 		return requestId;
 	}
 
