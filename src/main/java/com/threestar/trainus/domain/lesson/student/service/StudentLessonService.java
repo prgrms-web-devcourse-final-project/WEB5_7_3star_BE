@@ -66,6 +66,7 @@ public class StudentLessonService {
 	private final LessonApplicationRepository lessonApplicationRepository;
 	private final GeometryFactory geometryFactory;
 	private final StringRedisTemplate redisTemplate;
+	private final com.threestar.trainus.domain.lesson.issue.LessonWaitingRoomService waitingRoomService;
 
 	@Transactional(readOnly = true)
 	public LessonSearchListResponseDto searchLessons(
@@ -543,16 +544,23 @@ public class StudentLessonService {
 
 		return LessonSimpleMapper.toLessonSimpleDto(lesson);
 	}
-	// 비동기 레슨 신청 상태 조회
 
-	public String getAsyncApplyStatus(String requestId) {
+	// 비동기 레슨 신청 상태 조회
+	public com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto getAsyncApplyStatus(String requestId) {
 		String status = redisTemplate.opsForValue().get(LessonApplyStreamConstant.STATUS_PREFIX + requestId);
 
 		if (status == null) {
 			throw new BusinessException(ErrorCode.REQUEST_NOT_FOUND);
 		}
 
-		return status;
+		// 1. 대기 중인 경우 순번 조회하여 반환 (WAITING:lessonId:userId)
+		if (status.startsWith(LessonApplyStreamConstant.STATUS_WAITING)) {
+			return waitingRoomService.getRank(requestId)
+				.map(com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto::waiting)
+				.orElse(com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto.of(LessonApplyStreamConstant.STATUS_PROCESSING)); // 대기열에서 막 빠진 경우 처리 중으로 간주
+		}
+
+		return com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto.of(status);
 	}
 
 	@Transactional

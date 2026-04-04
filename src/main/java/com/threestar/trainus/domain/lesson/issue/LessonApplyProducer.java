@@ -1,8 +1,6 @@
 package com.threestar.trainus.domain.lesson.issue;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -18,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LessonApplyProducer {
 
 	private final StringRedisTemplate stringRedisTemplate;
+	private final LessonWaitingRoomService waitingRoomService;
 
 	public String send(Long lessonId, Long userId) {
 		String duplicateKey = LessonApplyStreamConstant.DUPLICATE_PREFIX + lessonId;
@@ -56,20 +55,10 @@ public class LessonApplyProducer {
 			return null;
 		}
 
-		// requestId 생성 및 초기 상태 저장
+		// requestId 생성 및 대기열 등록 (Phase 1)
 		String requestId = UUID.randomUUID().toString();
-		String statusKey = LessonApplyStreamConstant.STATUS_PREFIX + requestId;
-		stringRedisTemplate.opsForValue()
-			.set(statusKey, "PENDING", Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
+		waitingRoomService.enqueue(requestId, lessonId, userId);
 
-		// Stream 메시지 생성 및 전송
-		Map<String, String> content = new HashMap<>();
-		content.put("lessonId", String.valueOf(lessonId));
-		content.put("userId", String.valueOf(userId));
-		content.put("requestId", requestId);
-		content.put("timestamp", String.valueOf(System.currentTimeMillis()));
-
-		stringRedisTemplate.opsForStream().add(LessonApplyStreamConstant.STREAM_KEY, content);
 		Metrics.counter("lesson_apply_total", "version", "mq", "result", "applied").increment();
 		return requestId;
 	}

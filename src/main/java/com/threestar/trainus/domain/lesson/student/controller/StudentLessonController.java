@@ -37,6 +37,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
+import com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto;
+
 @Tag(name = "수강생 레슨 API", description = "수강생 조회/등록 관련 API")
 @RestController
 @RequestMapping("/api/v1/lessons")
@@ -48,10 +50,10 @@ public class StudentLessonController {
 
 	// 비동기 선착순 신청 결과 폴링
 	@GetMapping("/apply/status/{requestId}")
-	@Operation(summary = "비동기 선착순 신청 결과 폴링", description = "비동기 선착순 신청의 처리 진행 상태(PENDING, SUCCESS, FAIL)를 실시간으로 확인하기 위한 폴링 API입니다.")
-	public ResponseEntity<BaseResponse<String>> getAsyncApplyStatus(@PathVariable String requestId) {
-		String status = studentLessonService.getAsyncApplyStatus(requestId);
-		return BaseResponse.ok("비동기 신청 상태 조회 완료", status, HttpStatus.OK);
+	@Operation(summary = "비동기 선착순 신청 결과 폴링", description = "비동기 선착순 신청의 처리 진행 상태(WAITING, PROCESSING, SUCCESS, FAIL)를 실시간으로 확인하기 위한 폴링 API입니다.")
+	public ResponseEntity<BaseResponse<LessonApplyStatusResponseDto>> getAsyncApplyStatus(@PathVariable String requestId) {
+		LessonApplyStatusResponseDto response = studentLessonService.getAsyncApplyStatus(requestId);
+		return BaseResponse.ok("비동기 신청 상태 조회 완료", response, HttpStatus.OK);
 	}
 
 	@GetMapping
