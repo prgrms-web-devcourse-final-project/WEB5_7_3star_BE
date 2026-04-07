@@ -2,6 +2,7 @@ package com.threestar.trainus.domain.lesson.issue;
 
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -27,11 +28,13 @@ public class LessonApplyStreamConfig {
 
 	private final StreamMessageListenerContainer<String, MapRecord<String, String, String>> container;
 	private final LessonApplyConsumer lessonApplyConsumer;
-	private final StringRedisTemplate redisTemplate;
+
+	@Qualifier("mqRedisTemplate")
+	private final StringRedisTemplate mqRedisTemplate;
 
 	@PostConstruct
 	public void register() {
-		// 스트림 생성 보장
+		// 스트림 생성 보장 (MQ Redis 사용)
 		ensureStreamAndGroup();
 
 		// 설정된 스레드 개수만큼 리스너 등록
@@ -43,7 +46,7 @@ public class LessonApplyStreamConfig {
 				StreamOffset.create(LessonApplyStreamConstant.STREAM_KEY, ReadOffset.lastConsumed()),
 				lessonApplyConsumer
 			);
-			log.info("Parallel Lesson Consumer [{}] registered", consumerName);
+			log.info("Parallel Lesson Consumer [{}] registered on MQ Redis (6380)", consumerName);
 		}
 
 		if (!container.isRunning()) {
@@ -51,18 +54,17 @@ public class LessonApplyStreamConfig {
 		}
 	}
 
-	// 스트림 생성 보장 메서드
+	// 스트림 생성 보장 메서드 (MQ Redis 사용)
 	private void ensureStreamAndGroup() {
 		String key = LessonApplyStreamConstant.STREAM_KEY;
 		String group = LessonApplyStreamConstant.GROUP;
 
 		try {
 			// 스트림이 없으면 생성하고 그룹도 생성
-			redisTemplate.opsForStream().createGroup(key, ReadOffset.latest(), group);
-			log.info("Created Redis Stream group: {}", group);
+			mqRedisTemplate.opsForStream().createGroup(key, ReadOffset.latest(), group);
+			log.info("Created Redis Stream group: {} in MQ Redis", group);
 		} catch (Exception e) {
 			// 이미 존재함(BUSYGROUP) 에러는 무시
-			// 그 외엔 로그 출력
 			if (e.getMessage() == null || !e.getMessage().contains("BUSYGROUP")) {
 				log.warn("Stream group setup info: {}", e.getMessage());
 			}

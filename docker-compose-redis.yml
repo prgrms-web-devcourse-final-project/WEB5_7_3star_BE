@@ -1,0 +1,32 @@
+services:
+  redis-core:
+    image: redis:7-alpine
+    container_name: redis-core
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-core-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - redis-network
+
+  redis-mq:
+    image: redis:7-alpine
+    container_name: redis-mq
+    restart: always
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./redis-mq-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - redis-network
+
+networks:
+  redis-network:
+    driver: bridge
+
+volumes:
+  redis-core-data:
+  redis-mq-data:

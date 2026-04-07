@@ -8,10 +8,31 @@ management:
 spring:
   data:
     redis:
+      core:
+        host: ${REDIS_CORE_HOST:localhost}
+        port: ${REDIS_CORE_PORT:6379}
+        lettuce:
+          pool:
+            max-active: 50
+            max-idle: 25
+            min-idle: 10
+            max-wait: 3000ms
+      mq:
+        host: ${REDIS_MQ_HOST:localhost}
+        port: ${REDIS_MQ_PORT:6380}
+        lettuce:
+          pool:
+            max-active: 50
+            max-idle: 25
+            min-idle: 10
+            max-wait: 3000ms
+      key:
+        prefix: "redis://"
       stream:
         threads:
-          core: 15
-          max: 20
+          core: 5
+          max: 10
+
   endpoints:
     web:
       exposure:
