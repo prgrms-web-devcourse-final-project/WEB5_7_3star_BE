@@ -8,7 +8,7 @@ import lombok.Getter;
 public class LessonApplyStatusResponseDto {
 	private String status;
 	private Long rank;
-	private Long estimatedWaitTimeMs; // 선택 사항
+	private Long estimatedWaitTimeMs;
 
 	public static LessonApplyStatusResponseDto of(String status) {
 		return LessonApplyStatusResponseDto.builder()
@@ -20,7 +20,7 @@ public class LessonApplyStatusResponseDto {
 		return LessonApplyStatusResponseDto.builder()
 			.status("WAITING")
 			.rank(rank)
-			.estimatedWaitTimeMs(rank * 100L) // 예: 인당 100ms 예상 시
+			.estimatedWaitTimeMs(rank * 100L)
 			.build();
 	}
 }

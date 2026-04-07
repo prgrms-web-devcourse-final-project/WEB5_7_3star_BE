@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Metrics;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -39,7 +40,13 @@ public class LessonApplyService {
 	private final LessonRepository lessonRepository;
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final UserService userService;
-	private final StringRedisTemplate stringRedisTemplate;
+
+	@Qualifier("coreRedisTemplate")
+	private final StringRedisTemplate coreRedisTemplate;
+
+	@Qualifier("mqRedisTemplate")
+	private final StringRedisTemplate mqRedisTemplate;
+
 	private final JdbcTemplate jdbcTemplate;
 
 	@Transactional
@@ -92,14 +99,23 @@ public class LessonApplyService {
 			}
 
 			// Dirty Set 등록
-			stringRedisTemplate.opsForSet().add(LessonApplyStreamConstant.DIRTY_SET_KEY, String.valueOf(lessonId));
+			coreRedisTemplate.opsForSet().add(LessonApplyStreamConstant.DIRTY_SET_KEY, String.valueOf(lessonId));
 		}
 
-		// 상태 업데이트 및 지표 기록
+		// Pipelining 상태 업데이트 및 지표 기록 일괄 처리
+		mqRedisTemplate.executePipelined((org.springframework.data.redis.core.RedisCallback<Object>)connection -> {
+			for (ApplyMessage msg : messages) {
+				String key = LessonApplyStreamConstant.STATUS_PREFIX + msg.requestId();
+				String status = "SUCCESS";
+				byte[] rawKey = key.getBytes();
+				byte[] rawValue = status.getBytes();
+				connection.setEx(rawKey, LessonApplyStreamConstant.STATUS_TTL_MINUTE * 60, rawValue);
+			}
+			return null;
+		});
+
 		long now = System.currentTimeMillis();
 		for (ApplyMessage msg : messages) {
-			updateStatus(LessonApplyStreamConstant.STATUS_PREFIX + msg.requestId(), "SUCCESS");
-
 			// 지표 기록
 			Metrics.counter("lesson_apply_total", "version", "mq", "result", "success").increment();
 
@@ -107,7 +123,6 @@ public class LessonApplyService {
 			long latency = now - msg.timestamp();
 			Metrics.timer("lesson.apply.latency").record(latency, TimeUnit.MILLISECONDS);
 		}
-		log.info("Batch processed {} messages successfully", messages.size());
 	}
 
 	@Transactional
@@ -155,7 +170,6 @@ public class LessonApplyService {
 	}
 
 	private void updateStatus(String key, String status) {
-		stringRedisTemplate.opsForValue()
-			.set(key, status, Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
+		mqRedisTemplate.opsForValue().set(key, status, Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
 	}
 }

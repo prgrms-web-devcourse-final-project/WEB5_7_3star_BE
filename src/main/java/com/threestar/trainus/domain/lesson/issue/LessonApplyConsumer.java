@@ -1,5 +1,6 @@
 package com.threestar.trainus.domain.lesson.issue;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.RecordId;
@@ -23,28 +24,42 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LessonApplyConsumer implements StreamListener<String, MapRecord<String, String, String>> {
 
-	private final StringRedisTemplate redisTemplate;
+	@Qualifier("mqRedisTemplate")
+	private final StringRedisTemplate mqRedisTemplate;
+
 	private final LessonApplyService lessonApplyService;
 
 	private final ConcurrentLinkedQueue<MapRecord<String, String, String>> buffer = new ConcurrentLinkedQueue<>();
 	private static final int BATCH_SIZE = 1000;
 	private static final String STREAM_KEY = LessonApplyStreamConstant.STREAM_KEY;
 	private static final String GROUP = LessonApplyStreamConstant.GROUP;
+	private long lastProcessedTime = System.currentTimeMillis();
+
+	public void clearBuffer() {
+		buffer.clear();
+		lastProcessedTime = System.currentTimeMillis();
+		log.info("Consumer buffer cleared.");
+	}
 
 	@Override
 	public void onMessage(MapRecord<String, String, String> message) {
 		buffer.add(message);
 
-		// 버퍼가 차면 즉시 처리 시도
+		// 설정값(BATCH_SIZE)이 되면 프로세스 시작
 		if (buffer.size() >= BATCH_SIZE) {
 			processBuffer();
 		}
 	}
 
-	// 주기적으로 버퍼에 남은 메시지 처리
-	@Scheduled(fixedRate = 1000)
+	// 오래 방치된 데이터만 처리
+	@Scheduled(fixedRate = 2000)
 	public void scheduledProcess() {
-		if (!buffer.isEmpty()) {
+		if (buffer.isEmpty()) {
+			return;
+		}
+
+		long elapsed = System.currentTimeMillis() - lastProcessedTime;
+		if (elapsed >= 3000) {
 			processBuffer();
 		}
 	}
@@ -53,6 +68,9 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 		if (buffer.isEmpty()) {
 			return;
 		}
+
+		lastProcessedTime = System.currentTimeMillis();
+
 		List<MapRecord<String, String, String>> records = new ArrayList<>();
 		while (records.size() < BATCH_SIZE) {
 			MapRecord<String, String, String> record = buffer.poll();
@@ -65,6 +83,8 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 		if (records.isEmpty()) {
 			return;
 		}
+
+		// 배치 처리를 위한 Redis 메세지 매핑, 파싱
 		List<ApplyMessage> messages = records.stream().map(record -> {
 			Map<String, String> value = record.getValue();
 			return new ApplyMessage(Long.parseLong(value.get("lessonId")), Long.parseLong(value.get("userId")),
@@ -72,39 +92,36 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 		}).collect(Collectors.toList());
 
 		try {
-			// 서비스 레이어 배치 처리 호출
+			// DB 배치 처리
 			lessonApplyService.applyBatch(messages);
 
-			// 처리 성공 시 ACK 및 메시지 삭제
+			// Pipelining 으로 상태 ACK 업데이트 / 스트림에서 DELETE 일괄 처리
 			RecordId[] ids = records.stream().map(MapRecord::getId).toArray(RecordId[]::new);
-			redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, ids);
-			redisTemplate.opsForStream().delete(STREAM_KEY, ids);
-
+			mqRedisTemplate.executePipelined(new org.springframework.data.redis.core.SessionCallback<Object>() {
+				@Override
+				public Object execute(org.springframework.data.redis.core.RedisOperations operations) {
+					operations.opsForStream().acknowledge(STREAM_KEY, GROUP, ids);
+					operations.opsForStream().delete(STREAM_KEY, ids);
+					return null;
+				}
+			});
 			log.info("Batch processed {} messages successfully", messages.size());
 		} catch (Exception e) {
-			log.error("Batch failed due to: {}. Falling back to individual processing to isolate the error.",
-				e.getMessage());
+			// 실패 시 개별 메세지 실행
+			log.error("Batch failed: {}. Falling back to individual processing.", e.getMessage());
 
-			// 배치 실패 시 한 건씩 개별 처리
 			for (int i = 0; i < records.size(); i++) {
 				MapRecord<String, String, String> record = records.get(i);
 				ApplyMessage msg = messages.get(i);
 
 				try {
-					// 개별 처리 호출
 					lessonApplyService.apply(msg.lessonId(), msg.userId(), msg.requestId(), msg.timestamp());
-
-					// 개별 성공 시 즉시 ACK 및 삭제
-					redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, record.getId());
-					redisTemplate.opsForStream().delete(STREAM_KEY, record.getId());
+					mqRedisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, record.getId());
+					mqRedisTemplate.opsForStream().delete(STREAM_KEY, record.getId());
 				} catch (Exception ex) {
-					// 위반 발생 시 메시지 버림
-					log.error("Failed to process individual message: LessonId={}, UserId={}, Error={}",
-						msg.lessonId(), msg.userId(), ex.getMessage());
-
-					// 스트림에서 제거
-					redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, record.getId());
-					redisTemplate.opsForStream().delete(STREAM_KEY, record.getId());
+					log.error("Individual message failed: {}, Error={}", msg.requestId(), ex.getMessage());
+					mqRedisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, record.getId());
+					mqRedisTemplate.opsForStream().delete(STREAM_KEY, record.getId());
 				}
 			}
 		}

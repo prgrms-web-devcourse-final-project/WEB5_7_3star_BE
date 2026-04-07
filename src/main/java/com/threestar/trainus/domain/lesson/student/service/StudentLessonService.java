@@ -8,12 +8,14 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
@@ -65,7 +67,13 @@ public class StudentLessonService {
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
 	private final GeometryFactory geometryFactory;
-	private final StringRedisTemplate redisTemplate;
+
+	@Qualifier("coreRedisTemplate")
+	private final StringRedisTemplate coreRedisTemplate;
+
+	@Qualifier("mqRedisTemplate")
+	private final StringRedisTemplate mqRedisTemplate;
+
 	private final com.threestar.trainus.domain.lesson.issue.LessonWaitingRoomService waitingRoomService;
 
 	@Transactional(readOnly = true)
@@ -546,21 +554,25 @@ public class StudentLessonService {
 	}
 
 	// 비동기 레슨 신청 상태 조회
-	public com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto getAsyncApplyStatus(String requestId) {
-		String status = redisTemplate.opsForValue().get(LessonApplyStreamConstant.STATUS_PREFIX + requestId);
+	public LessonApplyStatusResponseDto getAsyncApplyStatus(String requestId) {
+		String status = mqRedisTemplate.opsForValue().get(LessonApplyStreamConstant.STATUS_PREFIX + requestId);
 
 		if (status == null) {
 			throw new BusinessException(ErrorCode.REQUEST_NOT_FOUND);
 		}
 
-		// 1. 대기 중인 경우 순번 조회하여 반환 (WAITING:lessonId:userId)
+		// 대기 중인 경우 순번 조회하여 반환
+		// (WAITING:lessonId:userId)
 		if (status.startsWith(LessonApplyStreamConstant.STATUS_WAITING)) {
-			return waitingRoomService.getRank(requestId)
-				.map(com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto::waiting)
-				.orElse(com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto.of(LessonApplyStreamConstant.STATUS_PROCESSING)); // 대기열에서 막 빠진 경우 처리 중으로 간주
-		}
+			String[] parts = status.split(":");
+			Long lessonId = (parts.length > 1) ? Long.parseLong(parts[1]) : null;
 
-		return com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto.of(status);
+			return waitingRoomService.getRank(lessonId, requestId)
+				.map(LessonApplyStatusResponseDto::waiting)
+				// 대기열에서 막 빠진 경우 처리 중으로 간주
+				.orElse(LessonApplyStatusResponseDto.of(LessonApplyStreamConstant.STATUS_PROCESSING));
+		}
+		return LessonApplyStatusResponseDto.of(status);
 	}
 
 	@Transactional

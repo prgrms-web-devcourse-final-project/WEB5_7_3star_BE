@@ -1,12 +1,11 @@
 package com.threestar.trainus.domain.test.service;
 
-import com.threestar.trainus.domain.lesson.issue.LessonApplyStreamConstant;
-import com.threestar.trainus.global.config.security.JwtProvider;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.stream.PendingMessage;
 import org.springframework.data.redis.connection.stream.PendingMessages;
@@ -18,10 +17,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.threestar.trainus.domain.lesson.issue.LessonApplyConsumer;
+import com.threestar.trainus.domain.lesson.issue.LessonApplyStreamConstant;
 import com.threestar.trainus.domain.profile.service.ProfileFacadeService;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
 import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.global.config.security.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +37,16 @@ public class TestUserService {
 	private final PasswordEncoder passwordEncoder;
 	private final ProfileFacadeService profileFacadeService;
 	private final JdbcTemplate jdbcTemplate;
-	private final StringRedisTemplate stringRedisTemplate;
 	private final JwtProvider jwtProvider;
+
+	@Qualifier("coreRedisTemplate")
+	private final StringRedisTemplate coreRedisTemplate;
+
+	@Qualifier("mqRedisTemplate")
+	private final StringRedisTemplate mqRedisTemplate;
+
+	@Autowired(required = false)
+	private LessonApplyConsumer lessonApplyConsumer;
 
 	@Transactional
 	public void createUsers(int count) {
@@ -124,24 +134,6 @@ public class TestUserService {
 	}
 
 	@Transactional
-	public User findOrCreateUser2(Long userId) {
-
-		return userRepository.findByTestUserId(userId).orElseGet(() -> {
-			User user = User.builder()
-				.testUserId(userId)
-				.email("testuser" + userId + "@example.com")
-				.nickname("testuser" + userId)
-				.password(passwordEncoder.encode("password"))
-				.role(UserRole.USER)
-				.build();
-
-			User saved = userRepository.save(user);
-			profileFacadeService.createDefaultProfile(saved);
-			return saved;
-		});
-	}
-
-	@Transactional
 	public void clearAllData() {
 		log.info("Starting hard reset of all test data...");
 
@@ -158,21 +150,22 @@ public class TestUserService {
 		String streamKey = LessonApplyStreamConstant.STREAM_KEY;
 		String groupName = LessonApplyStreamConstant.GROUP;
 
+		// 컨슈머 버퍼 비우기
+		Optional.ofNullable(lessonApplyConsumer).ifPresent(LessonApplyConsumer::clearBuffer);
+
 		// 데이터만 비우고 그룹은 유지
 		try {
-			stringRedisTemplate.opsForStream().trim(streamKey, 0);
+			mqRedisTemplate.opsForStream().trim(streamKey, 0);
 			log.info("Redis Stream [{}] trimmed to 0", streamKey);
 
 			// Pending 메세지 정리
 			try {
-				PendingMessages pendingMessages = stringRedisTemplate.opsForStream()
+				PendingMessages pendingMessages = mqRedisTemplate.opsForStream()
 					.pending(streamKey, groupName, Range.unbounded(), 10000L);
-				
+
 				if (pendingMessages != null && !pendingMessages.isEmpty()) {
-					RecordId[] ids = pendingMessages.stream()
-						.map(PendingMessage::getId)
-						.toArray(RecordId[]::new);
-					stringRedisTemplate.opsForStream().acknowledge(streamKey, groupName, ids);
+					RecordId[] ids = pendingMessages.stream().map(PendingMessage::getId).toArray(RecordId[]::new);
+					mqRedisTemplate.opsForStream().acknowledge(streamKey, groupName, ids);
 					log.info("PEL cleared: {} messages ACKed", ids.length);
 				}
 			} catch (Exception e) {
@@ -180,9 +173,10 @@ public class TestUserService {
 			}
 
 			// 그룹 오프셋 처음으로 리셋
-			stringRedisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Object>)connection -> {
+			mqRedisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Object>)connection -> {
 				try {
-					connection.execute("XGROUP", "SETID".getBytes(), streamKey.getBytes(), groupName.getBytes(), "0-0".getBytes());
+					connection.execute("XGROUP", "SETID".getBytes(), streamKey.getBytes(), groupName.getBytes(),
+						"0-0".getBytes());
 					log.info("Consumer Group [{}] offset reset to 0-0", groupName);
 				} catch (Exception e) {
 					log.warn("Failed to reset group offset: {}", e.getMessage());
@@ -191,38 +185,46 @@ public class TestUserService {
 			});
 
 			// Dirty Set 초기화
-			stringRedisTemplate.delete(LessonApplyStreamConstant.DIRTY_SET_KEY);
+			coreRedisTemplate.delete(LessonApplyStreamConstant.DIRTY_SET_KEY);
 			log.info("Dirty Set [{}] cleared", LessonApplyStreamConstant.DIRTY_SET_KEY);
+
+			// 대기열(Sorted Set) 초기화 (lesson:apply:waiting-room:*)
+			String waitingRoomPattern = LessonApplyStreamConstant.WAITING_ROOM_KEY.replace("%d", "*");
+			java.util.Set<String> waitingRoomKeys = coreRedisTemplate.keys(waitingRoomPattern);
+			if (waitingRoomKeys != null && !waitingRoomKeys.isEmpty()) {
+				coreRedisTemplate.delete(waitingRoomKeys);
+				log.info("Waiting Room keys [{}] cleared", waitingRoomKeys.size());
+			}
 		} catch (Exception e) {
 			log.warn("Redis reset failed: {}", e.getMessage());
 		}
 
 		// 중복 신청 방지 데이터 삭제 (lesson:apply:duplicate:*)
-		java.util.Set<String> duplicateKeys = stringRedisTemplate.keys(LessonApplyStreamConstant.DUPLICATE_PREFIX + "*");
+		java.util.Set<String> duplicateKeys = coreRedisTemplate.keys(
+			LessonApplyStreamConstant.DUPLICATE_PREFIX + "*");
 		if (duplicateKeys != null && !duplicateKeys.isEmpty()) {
-			stringRedisTemplate.delete(duplicateKeys);
+			coreRedisTemplate.delete(duplicateKeys);
 			log.info("Duplicate Filter keys [{}] cleared", duplicateKeys.size());
 		}
 
 		// 레슨 재고 데이터 삭제 (lesson:stock:*)
-		java.util.Set<String> stockKeys = stringRedisTemplate.keys(LessonApplyStreamConstant.STOCK_PREFIX + "*");
+		java.util.Set<String> stockKeys = coreRedisTemplate.keys(LessonApplyStreamConstant.STOCK_PREFIX + "*");
 		if (stockKeys != null && !stockKeys.isEmpty()) {
-			stringRedisTemplate.delete(stockKeys);
+			coreRedisTemplate.delete(stockKeys);
 		}
 
 		// 신청 상태 데이터 삭제 (lesson:apply:status:*)
-		java.util.Set<String> statusKeys = stringRedisTemplate.keys(LessonApplyStreamConstant.STATUS_PREFIX + "*");
+		java.util.Set<String> statusKeys = mqRedisTemplate.keys(LessonApplyStreamConstant.STATUS_PREFIX + "*");
 		if (statusKeys != null && !statusKeys.isEmpty()) {
-			stringRedisTemplate.delete(statusKeys);
+			mqRedisTemplate.delete(statusKeys);
 		}
 
 		// 기타 테스트 세션 등 정리
-		java.util.Set<String> sessionKeys = stringRedisTemplate.keys("test:session:*");
+		java.util.Set<String> sessionKeys = coreRedisTemplate.keys("test:session:*");
 		if (sessionKeys != null && !sessionKeys.isEmpty()) {
-			stringRedisTemplate.delete(sessionKeys);
+			coreRedisTemplate.delete(sessionKeys);
 		}
 
 		log.info("Redis data cleared.");
 	}
-
 }

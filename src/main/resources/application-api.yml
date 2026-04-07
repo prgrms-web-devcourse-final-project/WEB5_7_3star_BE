@@ -2,6 +2,27 @@ server:
   port: 8080
 
 spring:
+  data:
+    redis:
+      core:
+        host: ${REDIS_CORE_HOST:localhost}
+        port: ${REDIS_CORE_PORT:6379}
+        lettuce:
+          pool:
+            max-active: 30
+            max-idle: 15
+            min-idle: 5
+            max-wait: 3000ms
+      mq:
+        host: ${REDIS_MQ_HOST:localhost}
+        port: ${REDIS_MQ_PORT:6380}
+        lettuce:
+          pool:
+            max-active: 30
+            max-idle: 15
+            min-idle: 5
+            max-wait: 3000ms
+
   servlet:
     multipart:
       max-file-size: 10MB
