@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgis/postgis:17-3.5
-    container_name: dedicated-postgres
+    container_name: postgres-db
     restart: always
     env_file:
       - .env
