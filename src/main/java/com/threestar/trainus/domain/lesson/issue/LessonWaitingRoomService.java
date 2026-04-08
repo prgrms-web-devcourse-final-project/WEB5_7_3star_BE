@@ -28,8 +28,8 @@ public class LessonWaitingRoomService {
 
 		String statusKey = LessonApplyStreamConstant.STATUS_PREFIX + requestId;
 
-		// 상태 정보 저장 (상태:레슨ID:유저ID)
-		String waitInfo = String.format("%s:%d:%d", LessonApplyStreamConstant.STATUS_WAITING, lessonId, userId);
+		// 상태 정보 저장 (상태:레슨ID:유저ID:진입시간)
+		String waitInfo = String.format("%s:%d:%d:%d", LessonApplyStreamConstant.STATUS_WAITING, lessonId, userId, System.currentTimeMillis());
 
 		//payload를 담은 key 생성
 		mqRedisTemplate.opsForValue()
