@@ -89,10 +89,11 @@ public class LessonAdmissionScheduler {
 
 					String requestId = requestIds.toArray(new String[0])[i];
 					Long userId = Long.parseLong(parts[2]);
+					Long originalTimestamp = parts.length >= 4 ? Long.parseLong(parts[3]) : System.currentTimeMillis();
 
 					// 상태 변경 (SET)
 					String statusKey = statusKeys.get(i);
-					String processingInfo = String.format("%s:%d:%d", LessonApplyStreamConstant.STATUS_PROCESSING, lessonId, userId);
+					String processingInfo = String.format("%s:%d:%d:%d", LessonApplyStreamConstant.STATUS_PROCESSING, lessonId, userId, originalTimestamp);
 					operations.opsForValue().set(statusKey, processingInfo, java.time.Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
 
 					// 스트림 추가 (XADD)
@@ -100,7 +101,7 @@ public class LessonAdmissionScheduler {
 					content.put("lessonId", String.valueOf(lessonId));
 					content.put("userId", String.valueOf(userId));
 					content.put("requestId", requestId);
-					content.put("timestamp", String.valueOf(System.currentTimeMillis()));
+					content.put("timestamp", String.valueOf(originalTimestamp));
 					operations.opsForStream().add(LessonApplyStreamConstant.STREAM_KEY, content);
 				}
 				return null;
