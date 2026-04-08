@@ -1,8 +1,10 @@
 services:
-  monitoring-prometheus:
+  data-prometheus:
     image: prom/prometheus:v3.2.1
-    container_name: monitoring-prometheus
+    container_name: data-prometheus
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./prometheus-grafana/prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus-data:/prometheus
@@ -16,9 +18,9 @@ services:
     networks:
       - monitoring-network
 
-  monitoring-grafana:
+  data-grafana:
     image: grafana/grafana:11.5.2
-    container_name: monitoring-grafana
+    container_name: data-grafana
     restart: always
     ports:
       - "3000:3000"
