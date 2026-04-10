@@ -27,6 +27,12 @@ if [ -z "$SERVER_ROLE" ]; then
     export SERVER_ROLE="api"
 fi
 
+# 4. build/libs에 있는 최신 JAR 파일을 루트로 복사 (기존의 JAR를 Overwrite)
+if [ -f "$PROJECT_ROOT/build/libs/$JAR_NAME" ]; then
+    echo "> 최신 JAR 파일을 루트 경로로 복사합니다." >> $DEPLOY_LOG
+    cp $PROJECT_ROOT/build/libs/$JAR_NAME $PROJECT_ROOT/$JAR_NAME
+fi
+
 echo "> SERVER_ROLE: $SERVER_ROLE 프로파일로 실행합니다." >> $DEPLOY_LOG
 
 nohup java -jar \
