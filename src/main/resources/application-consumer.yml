@@ -4,6 +4,14 @@ server:
 management:
   server:
     port: 8083
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info
+  metrics:
+    tags:
+      application: trainus
+      role: consumer
 
 spring:
   data:
