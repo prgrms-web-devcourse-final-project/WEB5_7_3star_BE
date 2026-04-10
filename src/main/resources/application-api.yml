@@ -1,6 +1,18 @@
 server:
   port: 8080
 
+management:
+  server:
+    port: 8082
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info
+  metrics:
+    tags:
+      application: trainus
+      role: api
+
 spring:
   data:
     redis:
