@@ -1,0 +1,204 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "System Resources (Threads & Connections) [$env]",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus-default" },
+      "description": "API 서버의 Tomcat 스레드 상태 (Busy, Current, Max)",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        { "expr": "tomcat_threads_busy_threads{env=\"$env\", role=\"api\"}", "legendFormat": "Busy: {{instance}}", "refId": "A" },
+        { "expr": "tomcat_threads_current_threads{env=\"$env\", role=\"api\"}", "legendFormat": "Current: {{instance}}", "refId": "B" },
+        { "expr": "tomcat_threads_config_max_threads{env=\"$env\", role=\"api\"}", "legendFormat": "Max: {{instance}}", "refId": "C" }
+      ],
+      "title": "API Tomcat Threads",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus-default" },
+      "description": "API 서버의 HikariCP 커넥션 풀 상태 (Active, Idle, Pending)",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        { "expr": "hikaricp_connections_active{env=\"$env\", role=\"api\"}", "legendFormat": "Active: {{instance}}", "refId": "A" },
+        { "expr": "hikaricp_connections_idle{env=\"$env\", role=\"api\"}", "legendFormat": "Idle: {{instance}}", "refId": "B" },
+        { "expr": "hikaricp_connections_pending{env=\"$env\", role=\"api\"}", "legendFormat": "Pending: {{instance}}", "refId": "C" }
+      ],
+      "title": "API HikariCP Connections",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 101,
+      "panels": [],
+      "title": "Core Business Metrics (MQ & Defense) [$env]",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus-default" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 10 },
+      "id": 120,
+      "options": {
+        "legend": { "calcs": ["max", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        { "expr": "max(lesson_apply_latency_seconds_max{env=\"$env\"}) by (instance, instance_id)", "legendFormat": "Latency: {{instance}}", "refId": "A" }
+      ],
+      "title": "Async Processing Latency (Max)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus-default" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 10 },
+      "id": 121,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "sum(lesson_apply_total{env=\"$env\", result=\"pre_filter_reject\"})", "legendFormat": "Rejected Total", "refId": "A" }
+      ],
+      "title": "[Defend] Pre-filter Reject Count",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "id": 102,
+      "panels": [],
+      "title": "Throughput & Latency (HTTP) [$env]",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus-default" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "lineWidth": 2 },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
+      "id": 4,
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count{env=\"$env\"}[1m])) by (uri, instance)", "legendFormat": "{{uri}} ({{instance}})", "refId": "A" }
+      ],
+      "title": "Request Throughput (RPS)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus-default" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "lineWidth": 2 },
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
+      "id": 5,
+      "targets": [
+        { "expr": "rate(http_server_requests_seconds_sum{env=\"$env\"}[1m]) / rate(http_server_requests_seconds_count{env=\"$env\"}[1m])", "legendFormat": "{{uri}} ({{instance}})", "refId": "A" }
+      ],
+      "title": "Average Response Time",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 40,
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": true, "text": "production", "value": "production" },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Environment",
+        "multi": false,
+        "name": "env",
+        "options": [
+          { "selected": true, "text": "production", "value": "production" },
+          { "selected": false, "text": "baseline", "value": "baseline" }
+        ],
+        "query": "production,baseline",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": { "from": "now-15m", "to": "now" },
+  "title": "TrainUs Master Dashboard",
+  "uid": "trainus-master-v1",
+  "version": 4
+}
