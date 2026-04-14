@@ -26,6 +26,8 @@ services:
       - "3000:3000"
     volumes:
       - ./grafana-data:/var/lib/grafana
+      - ./prometheus-grafana/grafana/provisioning:/etc/grafana/provisioning
+      - ./prometheus-grafana/grafana/dashboards:/var/lib/grafana/dashboards:ro # 읽기 전용 마운트
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     networks:

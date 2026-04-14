@@ -19,6 +19,26 @@ scrape_configs:
         labels:
           env: 'local'
 
+  # 독립 API 서버 수집
+  - job_name: 'trainus-independent-api'
+    metrics_path: '/actuator/prometheus'
+    ec2_sd_configs:
+      - region: ap-northeast-2
+        port: 8082
+    relabel_configs:
+      # 'Name' 태그가 'TrainUs-Independent-Api'로 시작하는 인스턴스
+      - source_labels: [__meta_ec2_tag_Name]
+        regex: TrainUs-Independent-Api.*
+        action: keep
+
+      # 그라파나 대시보드용 라벨 추가
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance_id
+      - target_label: env
+        replacement: 'baseline'
+      - target_label: role
+        replacement: 'api'
+
   # API 서버 수집
   - job_name: 'trainus-api-apps'
     metrics_path: '/actuator/prometheus'

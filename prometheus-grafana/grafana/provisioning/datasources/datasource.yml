@@ -1,0 +1,10 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://data-prometheus:9090
+    isDefault: true
+    editable: true
+    uid: prometheus-default # 대시보드 JSON과 일치시키기 위해 UID 고정
