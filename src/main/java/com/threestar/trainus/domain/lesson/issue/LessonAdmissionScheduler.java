@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Profile("consumer")
+@Profile("consumer & !legacy")
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -59,12 +59,6 @@ public class LessonAdmissionScheduler {
 		Set<String> requestIds = waitingRoomService.dequeue(lessonId, ADMIT_BATCH_SIZE);
 
 		if (requestIds.isEmpty()) {
-			// 실제 대기열이 비었는지 다시 확인
-			Long remainingInWaitingRoom = coreRedisTemplate.opsForZSet().size(String.format(LessonApplyStreamConstant.WAITING_ROOM_KEY, lessonId));
-			if (remainingInWaitingRoom == null || remainingInWaitingRoom == 0) {
-				coreRedisTemplate.opsForSet().remove(LessonApplyStreamConstant.DIRTY_SET_KEY, String.valueOf(lessonId));
-				log.info("Lesson {} admission completed. Removed from active set.", lessonId);
-			}
 			return;
 		}
 
