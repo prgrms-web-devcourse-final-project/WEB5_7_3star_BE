@@ -11,6 +11,7 @@ import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 
 import jakarta.annotation.PostConstruct;
@@ -27,7 +28,7 @@ public class LessonApplyStreamConfig {
 	private int concurrency;
 
 	private final StreamMessageListenerContainer<String, MapRecord<String, String, String>> container;
-	private final LessonApplyConsumer lessonApplyConsumer;
+	private final StreamListener<String, MapRecord<String, String, String>> lessonApplyConsumer;
 
 	@Qualifier("mqRedisTemplate")
 	private final StringRedisTemplate mqRedisTemplate;
