@@ -33,10 +33,17 @@ if [ -f "$PROJECT_ROOT/build/libs/$JAR_NAME" ]; then
     cp $PROJECT_ROOT/build/libs/$JAR_NAME $PROJECT_ROOT/$JAR_NAME
 fi
 
-echo "> SERVER_ROLE: $SERVER_ROLE 프로파일로 실행합니다." >> $DEPLOY_LOG
+# 5. 프로파일 설정 결정 (환경변수 우선순위 적용)
+if [ -n "$SPRING_PROFILES_ACTIVE" ]; then
+    ACTIVE_PROFILE=$SPRING_PROFILES_ACTIVE
+    echo "> 시스템 환경변수 SPRING_PROFILES_ACTIVE($ACTIVE_PROFILE)를 사용합니다." >> $DEPLOY_LOG
+else
+    ACTIVE_PROFILE=$SERVER_ROLE
+    echo "> SERVER_ROLE($ACTIVE_PROFILE)을 기본 프로파일로 사용합니다." >> $DEPLOY_LOG
+fi
 
 nohup java -jar \
-    -Dspring.profiles.active=$SERVER_ROLE \
+    -Dspring.profiles.active=$ACTIVE_PROFILE \
     $PROJECT_ROOT/$JAR_NAME > $APP_LOG 2>&1 &
 
 echo "> 애플리케이션 실행 완료" >> $DEPLOY_LOG
