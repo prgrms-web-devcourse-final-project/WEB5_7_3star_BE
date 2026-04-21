@@ -227,4 +227,42 @@ public class TestUserService {
 
 		log.info("Redis data cleared.");
 	}
+
+	//프로메테우스 지표 초기화 (Admin API 활용)
+	public void resetPrometheusMetrics() {
+		log.info("Starting Prometheus metrics reset...");
+		
+		// 프로메테우스 서버 주소 (환경변수로 관리)
+		String prometheusHost = "http://localhost:9090"; 
+		String deleteApi = prometheusHost + "/api/v1/admin/tsdb/delete_series?match[]=lesson_apply_total";
+		String cleanApi = prometheusHost + "/api/v1/admin/tsdb/clean_tombstones";
+
+		try {
+			java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+				.connectTimeout(java.time.Duration.ofSeconds(5))
+				.build();
+			
+			// 지표 데이터 삭제
+			java.net.http.HttpRequest deleteRequest = java.net.http.HttpRequest.newBuilder()
+				.uri(java.net.URI.create(deleteApi))
+				.POST(java.net.http.HttpRequest.BodyPublishers.noBody())
+				.build();
+			java.net.http.HttpResponse<String> deleteResponse = client.send(deleteRequest, java.net.http.HttpResponse.BodyHandlers.ofString());
+			
+			if (deleteResponse.statusCode() >= 400) {
+				log.warn("Prometheus delete_series failed with status: {}", deleteResponse.statusCode());
+			}
+
+			// 물리적 삭제 확정
+			java.net.http.HttpRequest cleanRequest = java.net.http.HttpRequest.newBuilder()
+				.uri(java.net.URI.create(cleanApi))
+				.POST(java.net.http.HttpRequest.BodyPublishers.noBody())
+				.build();
+			client.send(cleanRequest, java.net.http.HttpResponse.BodyHandlers.ofString());
+
+			log.info("Prometheus metrics [lesson_apply_total] reset request sent successfully.");
+		} catch (Exception e) {
+			log.warn("Failed to reset Prometheus metrics: {}. (Check if --web.enable-admin-api is enabled)", e.getMessage());
+		}
+	}
 }

@@ -153,6 +153,13 @@ public class TestConcurrencyController {
 		return ResponseEntity.ok("레슨 관련 Redis 데이터 초기화 완료");
 	}
 
+	@PostMapping("/metrics/reset")
+	@Operation(summary = "Prometheus 지표 초기화", description = "Prometheus 서버의 lesson_apply_total 지표를 초기화합니다. (Admin API 활성화 필요)")
+	public ResponseEntity<String> resetPrometheusMetrics() {
+		testUserService.resetPrometheusMetrics();
+		return ResponseEntity.ok("Prometheus 지표 초기화 요청 완료");
+	}
+
 	@PostMapping("/reset")
 	@Operation(summary = "모든 테스트 데이터 초기화", description = "DB와 Redis의 모든 테스트 데이터를 비우고 ID 시퀀스를 1로 리셋합니다.")
 	public ResponseEntity<String> resetData() {
