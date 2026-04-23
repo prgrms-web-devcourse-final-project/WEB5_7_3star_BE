@@ -2,12 +2,14 @@ package com.threestar.trainus.domain.lesson.issue;
 
 import java.util.Optional;
 
+import com.threestar.trainus.domain.lesson.teacher.repository.LessonParticipantRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.stream.StreamInfo;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LessonStockReconciliationScheduler {
 
 	private final LessonRepository lessonRepository;
+	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplyProducer lessonApplyProducer;
 
 	@Qualifier("coreRedisTemplate")
@@ -32,6 +35,7 @@ public class LessonStockReconciliationScheduler {
 	@Qualifier("mqRedisTemplate")
 	private final StringRedisTemplate mqRedisTemplate;
 
+	@Transactional
 	@Scheduled(fixedRate = 30000)
 	@SchedulerLock(name = "LessonStockReconciliation", lockAtMostFor = "25s", lockAtLeastFor = "20s")
 	public void reconcileStock() {
@@ -41,7 +45,7 @@ public class LessonStockReconciliationScheduler {
 			return;
 		}
 
-		log.info("Starting Smart Stock Reconciliation (DB -> Redis)...");
+		log.info("Starting Smart Stock Reconciliation (Actual DB Count -> Lesson Row -> Redis)...");
 
 		String dirtySetKey = LessonApplyStreamConstant.DIRTY_SET_KEY;
 
@@ -57,7 +61,14 @@ public class LessonStockReconciliationScheduler {
 			try {
 				Long lessonId = Long.valueOf(lessonIdStr);
 
-				// DB 카운트 조회
+				// 실제 참여자 수 계산 (DB)
+				long actualParticipantCount = lessonParticipantRepository.countByLessonId(lessonId);
+
+				// Lesson 테이블 카운트 보정 및 상태 변경
+				lessonRepository.updateParticipantCount(lessonId, (int)actualParticipantCount,
+					com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus.RECRUITMENT_COMPLETED);
+
+				// 최신 레슨 정보 조회하여 Redis 동기화
 				Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
 				if (lessonOpt.isPresent()) {
 					Lesson lesson = lessonOpt.get();
@@ -74,7 +85,8 @@ public class LessonStockReconciliationScheduler {
 					coreRedisTemplate.opsForSet().remove(dirtySetKey, lessonIdStr);
 
 					processedCount++;
-					log.debug("Reconciled lesson [{}] stock to [{}]", lessonId, currentStock);
+					log.debug("Reconciled lesson [{}] to actual count [{}] and stock [{}]", 
+						lessonId, actualParticipantCount, currentStock);
 				}
 			} catch (Exception e) {
 				log.error("Failed to reconcile lesson [{}]: {}", lessonIdStr, e.getMessage());

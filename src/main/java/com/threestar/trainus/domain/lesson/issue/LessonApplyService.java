@@ -85,20 +85,8 @@ public class LessonApplyService {
 		Map<Long, Long> countsByLesson = messages.stream()
 			.collect(Collectors.groupingBy(ApplyMessage::lessonId, Collectors.counting()));
 
-		for (Map.Entry<Long, Long> entry : countsByLesson.entrySet()) {
-			Long lessonId = entry.getKey();
-			int amount = entry.getValue().intValue();
-
-			int affectedRows = lessonRepository.incrementParticipantCountBatch(lessonId, amount,
-				LessonStatus.RECRUITMENT_COMPLETED);
-
-			if (affectedRows == 0) {
-				log.error("Batch update failed for lesson [{}]: Capacity exceeded", lessonId);
-				Metrics.counter("lesson.apply.rejected", "lessonId", String.valueOf(lessonId)).increment(amount);
-				throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
-			}
-
-			// Dirty Set 등록
+		for (Long lessonId : countsByLesson.keySet()) {
+			// Dirty Set 등록 (스케줄러 보정 요청)
 			coreRedisTemplate.opsForSet().add(LessonApplyStreamConstant.DIRTY_SET_KEY, String.valueOf(lessonId));
 		}
 
@@ -147,10 +135,12 @@ public class LessonApplyService {
 				return false;
 			}
 
-			// 실제 DB 저장 및 카운트 증가 (원자적 연산 적용)
+			// 실제 DB 저장
 			LessonParticipant participant = LessonParticipant.builder().lesson(lesson).user(user).build();
 			lessonParticipantRepository.save(participant);
-			lessonRepository.incrementParticipantCount(lessonId);
+
+			// Dirty Set 등록 (보정 스케줄러 처리 요청)
+			coreRedisTemplate.opsForSet().add(LessonApplyStreamConstant.DIRTY_SET_KEY, String.valueOf(lessonId));
 
 			// 처리 성공 결과 저장 및 지연 시간 측정
 			long latency = System.currentTimeMillis() - produceTime;
