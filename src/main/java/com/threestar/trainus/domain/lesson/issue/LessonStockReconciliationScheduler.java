@@ -67,7 +67,7 @@ public class LessonStockReconciliationScheduler {
 				int busyCount = (busyCountStr == null) ? 0 : Integer.parseInt(busyCountStr);
 
 				if (busyCount > 0) {
-					log.info("Lesson [{}] is still being processed by batch consumers (Busy count: {}). Skipping reconciliation for now.", 
+					log.info("Lesson [{}] is still being processed by batch consumers (Busy count: {}). Skipping reconciliation for now.",
 						lessonId, busyCount);
 					continue;
 				}
@@ -96,7 +96,7 @@ public class LessonStockReconciliationScheduler {
 					coreRedisTemplate.opsForSet().remove(dirtySetKey, lessonIdStr);
 
 					processedCount++;
-					log.debug("Reconciled lesson [{}] to actual count [{}] and stock [{}]", 
+					log.debug("Reconciled lesson [{}] to actual count [{}] and stock [{}]",
 						lessonId, actualParticipantCount, currentStock);
 				}
 			} catch (Exception e) {
