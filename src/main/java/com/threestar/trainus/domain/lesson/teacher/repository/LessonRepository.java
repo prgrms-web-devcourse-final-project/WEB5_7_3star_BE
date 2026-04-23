@@ -80,6 +80,21 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 		updateDecrementInternal(lessonId, LessonStatus.RECRUITING);
 	}
 
+	@Modifying(clearAutomatically = true)
+	@Query("""
+		UPDATE Lesson l
+		SET l.participantCount = :count,
+		    l.status = CASE WHEN :count >= l.maxParticipants 
+		                    THEN :completedStatus 
+		                    ELSE l.status END
+		WHERE l.id = :lessonId
+		""")
+	int updateParticipantCount(
+		@Param("lessonId") Long lessonId,
+		@Param("count") int count,
+		@Param("completedStatus") LessonStatus completedStatus
+	);
+
 	// 중복 레슨 검증(같은 강사가 같은 이름과 시작시간으로 레슨 생성했는지 체크)
 	@Query("""
 		SELECT COUNT(l) > 0 FROM Lesson l
