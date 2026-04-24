@@ -27,6 +27,9 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 	@Qualifier("mqRedisTemplate")
 	private final StringRedisTemplate mqRedisTemplate;
 
+	@Qualifier("coreRedisTemplate")
+	private final StringRedisTemplate coreRedisTemplate;
+
 	private final LessonApplyService lessonApplyService;
 
 	private final ConcurrentLinkedQueue<MapRecord<String, String, String>> buffer = new ConcurrentLinkedQueue<>();
@@ -35,14 +38,17 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 	private static final String GROUP = LessonApplyStreamConstant.GROUP;
 	private long lastProcessedTime = System.currentTimeMillis();
 
-	public void clearBuffer() {
-		buffer.clear();
-		lastProcessedTime = System.currentTimeMillis();
-		log.info("Consumer buffer cleared.");
-	}
-
+	// 스트림 리스너의 onMessage
 	@Override
 	public void onMessage(MapRecord<String, String, String> message) {
+		// 메세지를 받으면 레슨 ID 추출 및 Busy 카운터 증가
+		String lessonIdStr = message.getValue().get("lessonId");
+		if (lessonIdStr != null) {
+			String key = "lesson:busy:" + lessonIdStr;
+			coreRedisTemplate.opsForValue().increment(key);
+			coreRedisTemplate.expire(key, java.time.Duration.ofSeconds(60));
+		}
+
 		buffer.add(message);
 
 		// 설정값(BATCH_SIZE)이 되면 프로세스 시작
@@ -51,7 +57,7 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 		}
 	}
 
-	// 오래 방치된 데이터만 처리
+	// 오래 방치된 데이터 처리를 위한 스케줄링
 	@Scheduled(fixedRate = 2000)
 	public void scheduledProcess() {
 		if (buffer.isEmpty()) {
@@ -124,6 +130,20 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 					mqRedisTemplate.opsForStream().delete(STREAM_KEY, record.getId());
 				}
 			}
+		} finally {
+			// 작업 완료 후 각 레슨별로 이번 배치에서 처리한 개수만큼 Busy 카운터 감소
+			Map<Long, Long> countsPerLesson = messages.stream()
+				.collect(Collectors.groupingBy(ApplyMessage::lessonId, Collectors.counting()));
+
+			countsPerLesson.forEach((lessonId, count) -> {
+				coreRedisTemplate.opsForValue().decrement("lesson:busy:" + lessonId, count);
+			});
 		}
+	}
+
+	public void clearBuffer() {
+		buffer.clear();
+		lastProcessedTime = System.currentTimeMillis();
+		log.info("Consumer buffer cleared.");
 	}
 }
