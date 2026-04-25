@@ -45,8 +45,10 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 		String lessonIdStr = message.getValue().get("lessonId");
 		if (lessonIdStr != null) {
 			String key = "lesson:busy:" + lessonIdStr;
+			String lastActiveKey = "lesson:busy:last_active:" + lessonIdStr;
 			coreRedisTemplate.opsForValue().increment(key);
-			coreRedisTemplate.expire(key, java.time.Duration.ofSeconds(60));
+			coreRedisTemplate.expire(key, java.time.Duration.ofMinutes(10));
+			coreRedisTemplate.opsForValue().set(lastActiveKey, String.valueOf(System.currentTimeMillis()), java.time.Duration.ofMinutes(10));
 		}
 
 		buffer.add(message);
@@ -132,11 +134,15 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 			}
 		} finally {
 			// 작업 완료 후 각 레슨별로 이번 배치에서 처리한 개수만큼 Busy 카운터 감소
+			// 작업 완료 후 각 레슨별로 마지막 처리 시점 기록
 			Map<Long, Long> countsPerLesson = messages.stream()
 				.collect(Collectors.groupingBy(ApplyMessage::lessonId, Collectors.counting()));
 
 			countsPerLesson.forEach((lessonId, count) -> {
-				coreRedisTemplate.opsForValue().decrement("lesson:busy:" + lessonId, count);
+				String busyKey = "lesson:busy:" + lessonId;
+				String lastActiveKey = "lesson:busy:last_active:" + lessonId;
+				coreRedisTemplate.opsForValue().decrement(busyKey, count);
+				coreRedisTemplate.opsForValue().set(lastActiveKey, String.valueOf(System.currentTimeMillis()), java.time.Duration.ofMinutes(10));
 			});
 		}
 	}
