@@ -61,6 +61,17 @@ public class LessonStockReconciliationScheduler {
 			try {
 				Long lessonId = Long.valueOf(lessonIdStr);
 
+				// 해당 레슨이 현재 배치 처리 중인지 확인
+				String busyKey = "lesson:busy:" + lessonId;
+				String busyCountStr = coreRedisTemplate.opsForValue().get(busyKey);
+				int busyCount = (busyCountStr == null) ? 0 : Integer.parseInt(busyCountStr);
+
+				if (busyCount > 0) {
+					log.info("Lesson [{}] is still being processed by batch consumers (Busy count: {}). Skipping reconciliation for now.",
+						lessonId, busyCount);
+					continue;
+				}
+
 				// 실제 참여자 수 계산 (DB)
 				long actualParticipantCount = lessonParticipantRepository.countByLessonId(lessonId);
 
@@ -85,7 +96,7 @@ public class LessonStockReconciliationScheduler {
 					coreRedisTemplate.opsForSet().remove(dirtySetKey, lessonIdStr);
 
 					processedCount++;
-					log.debug("Reconciled lesson [{}] to actual count [{}] and stock [{}]", 
+					log.debug("Reconciled lesson [{}] to actual count [{}] and stock [{}]",
 						lessonId, actualParticipantCount, currentStock);
 				}
 			} catch (Exception e) {
