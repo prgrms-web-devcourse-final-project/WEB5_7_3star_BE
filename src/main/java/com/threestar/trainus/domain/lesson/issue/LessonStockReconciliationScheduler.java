@@ -75,7 +75,7 @@ public class LessonStockReconciliationScheduler {
 
 					// 일정 시간 무응답시 교착상태 방지
 					boolean isStale = (lastActiveStr != null && (now - Long.parseLong(lastActiveStr) > 600000)); // 10분 이상 무응답
-					boolean isRecent = (lastActiveStr != null && (now - Long.parseLong(lastActiveStr) < 5000));   // 5초 이내 활동
+					boolean isRecent = (lastActiveStr != null && (now - Long.parseLong(lastActiveStr) < 30000));  // 30초 이내 활동
 					boolean isNegative = busyCount < 0;
 
 					// busy 카운터 존재 & 응답 10분 미만
@@ -85,7 +85,7 @@ public class LessonStockReconciliationScheduler {
 						continue;
 					}
 
-					// busy 카운터 = 0 & 5초 내 활동이 있었음 (DB트랜잭션 잠시 대기)
+					// busy 카운터 = 0 & 30초 내 활동이 있었음 (DB트랜잭션 잠시 대기)
 					if (busyCount == 0 && isRecent) {
 						log.info("Lesson [{}] recently active. Waiting for safety margin.", lessonId);
 						continue;
