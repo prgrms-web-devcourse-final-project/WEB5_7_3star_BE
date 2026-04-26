@@ -133,8 +133,7 @@ public class LessonApplyConsumer implements StreamListener<String, MapRecord<Str
 				}
 			}
 		} finally {
-			// 작업 완료 후 각 레슨별로 이번 배치에서 처리한 개수만큼 Busy 카운터 감소
-			// 작업 완료 후 각 레슨별로 마지막 처리 시점 기록
+			// 작업 완료 후 각 레슨별로 이번 배치에서 처리한 개수만큼 Busy 카운터 감소, 마지막 처리 시점 기록
 			Map<Long, Long> countsPerLesson = messages.stream()
 				.collect(Collectors.groupingBy(ApplyMessage::lessonId, Collectors.counting()));
 
