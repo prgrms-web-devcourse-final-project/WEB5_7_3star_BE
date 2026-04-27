@@ -110,6 +110,12 @@ public class LessonStockReconciliationScheduler {
 				// 실제 참여자 수 계산 (DB)
 				long actualParticipantCount = lessonParticipantRepository.countByLessonId(lessonId);
 
+				// Redis 재고가 음수라면 producer의 DECR -> INCR rollback 중으로 판단
+				String redisStockBefore = coreRedisTemplate.opsForValue().get(stockKey);
+				if (isNegativeRedisStock(lessonId, redisStockBefore)) {
+					continue;
+				}
+
 				// Lesson 테이블 카운트 보정 및 상태 변경
 				lessonRepository.updateParticipantCount(lessonId, (int)actualParticipantCount,
 					com.threestar.trainus.domain.lesson.teacher.entity.LessonStatus.RECRUITMENT_COMPLETED);
@@ -125,7 +131,6 @@ public class LessonStockReconciliationScheduler {
 						currentStock = 0;
 
 					Long waitingRoomSize = coreRedisTemplate.opsForZSet().size(waitingRoomKey);
-					String redisStockBefore = coreRedisTemplate.opsForValue().get(stockKey);
 					Long streamSize = mqRedisTemplate.opsForStream().size(LessonApplyStreamConstant.STREAM_KEY);
 					log.info(
 						"Reconciliation diagnostics. lessonId={}, dbCount={}, maxParticipants={}, calculatedStock={}, redisStockBefore={}, waitingRoomSize={}, streamSize={}, busyCount={}, lastActive={}",
@@ -148,6 +153,26 @@ public class LessonStockReconciliationScheduler {
 		}
 
 		log.info("Finished Smart Stock Reconciliation for {} lessons.", processedCount);
+	}
+
+	private boolean isNegativeRedisStock(Long lessonId, String redisStock) {
+		if (redisStock == null) {
+			return false;
+		}
+
+		try {
+			int currentStock = Integer.parseInt(redisStock);
+			if (currentStock < 0) {
+				log.info("Redis stock is negative. lessonId={}, stock={}. Postponing reconciliation.", lessonId,
+					redisStock);
+				return true;
+			}
+			return false;
+		} catch (NumberFormatException e) {
+			log.warn("Failed to parse Redis stock. lessonId={}, stock={}. Postponing reconciliation.", lessonId,
+				redisStock);
+			return true;
+		}
 	}
 
 	// 미처리 메세지 확인 메서드 (Core Redis)
