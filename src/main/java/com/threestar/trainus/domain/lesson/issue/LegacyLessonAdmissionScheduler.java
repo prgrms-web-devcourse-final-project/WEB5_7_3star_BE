@@ -46,7 +46,7 @@ public class LegacyLessonAdmissionScheduler {
 
 	private void processAdmissionForLesson(Long lessonId) {
 		// 해당 레슨 대기열에서 인원 추출
-		Set<String> requestIds = waitingRoomService.dequeue(lessonId, ADMIT_BATCH_SIZE);
+		List<String> requestIds = waitingRoomService.dequeue(lessonId, ADMIT_BATCH_SIZE);
 
 		if (requestIds.isEmpty()) {
 			return;
@@ -69,7 +69,7 @@ public class LegacyLessonAdmissionScheduler {
 			if (parts.length < 3)
 				continue;
 
-			String requestId = requestIds.toArray(new String[0])[i];
+			String requestId = requestIds.get(i);
 			Long userId = Long.parseLong(parts[2]);
 			Long originalTimestamp = parts.length >= 4 ? Long.parseLong(parts[3]) : System.currentTimeMillis();
 

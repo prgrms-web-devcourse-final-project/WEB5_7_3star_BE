@@ -1,6 +1,8 @@
 package com.threestar.trainus.domain.lesson.issue;
 
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,12 +53,13 @@ public class LessonWaitingRoomService {
 	}
 
 	// 특정 레슨 대기열에서 가장 오래된 N명을 꺼내기
-	public java.util.Set<String> dequeue(Long lessonId, long count) {
+	public List<String> dequeue(Long lessonId, long count) {
 		String waitingRoomKey = String.format(LessonApplyStreamConstant.WAITING_ROOM_KEY, lessonId);
 		return coreRedisTemplate.opsForZSet()
 			.popMin(waitingRoomKey, count)
 			.stream()
+			.sorted(Comparator.comparing(tuple -> tuple.getScore() == null ? Double.MAX_VALUE : tuple.getScore()))
 			.map(tuple -> tuple.getValue())
-			.collect(java.util.stream.Collectors.toSet());
+			.toList();
 	}
 }
