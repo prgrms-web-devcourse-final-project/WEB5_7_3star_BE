@@ -66,16 +66,18 @@ public class LessonStockReconciliationScheduler {
 		for (String lessonIdStr : lessonIds) {
 			try {
 				Long lessonId = Long.valueOf(lessonIdStr);
+				String waitingRoomKey = String.format(LessonApplyStreamConstant.WAITING_ROOM_KEY, lessonId);
+				String stockKey = LessonApplyStreamConstant.STOCK_PREFIX + lessonId;
 
 				// 해당 레슨이 현재 배치 처리 중인지 확인
 				String busyKey = "lesson:busy:" + lessonId;
 				String lastActiveKey = "lesson:busy:last_active:" + lessonId;
 				String busyCountStr = coreRedisTemplate.opsForValue().get(busyKey);
+				String lastActiveStr = coreRedisTemplate.opsForValue().get(lastActiveKey);
 
 				// 보정 로직 미실행 조건 체크
 				if (busyCountStr != null) {
 					// 마지막 활동 시간 로드
-					String lastActiveStr = coreRedisTemplate.opsForValue().get(lastActiveKey);
 					long now = System.currentTimeMillis();
 					int busyCount = Integer.parseInt(busyCountStr);
 
@@ -121,6 +123,14 @@ public class LessonStockReconciliationScheduler {
 
 					if (currentStock < 0)
 						currentStock = 0;
+
+					Long waitingRoomSize = coreRedisTemplate.opsForZSet().size(waitingRoomKey);
+					String redisStockBefore = coreRedisTemplate.opsForValue().get(stockKey);
+					Long streamSize = mqRedisTemplate.opsForStream().size(LessonApplyStreamConstant.STREAM_KEY);
+					log.info(
+						"Reconciliation diagnostics. lessonId={}, dbCount={}, maxParticipants={}, calculatedStock={}, redisStockBefore={}, waitingRoomSize={}, streamSize={}, busyCount={}, lastActive={}",
+						lessonId, actualParticipantCount, lesson.getMaxParticipants(), currentStock, redisStockBefore,
+						waitingRoomSize, streamSize, busyCountStr, lastActiveStr);
 
 					// Redis 재고 동기화 (Core Redis)
 					lessonApplyProducer.setStock(lessonId, currentStock);
