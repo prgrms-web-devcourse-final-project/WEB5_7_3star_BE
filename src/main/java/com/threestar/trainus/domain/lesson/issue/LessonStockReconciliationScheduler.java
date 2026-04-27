@@ -39,6 +39,12 @@ public class LessonStockReconciliationScheduler {
 	@Scheduled(fixedRate = 30000)
 	@SchedulerLock(name = "LessonStockReconciliation", lockAtMostFor = "25s", lockAtLeastFor = "20s")
 	public void reconcileStock() {
+		// 대기열 잔여 메세지 존재 시 연기 (Core Redis)
+		if (hasWaitingRoomMessages()) {
+			log.info("Waiting room still has messages. Postponing reconciliation.");
+			return;
+		}
+
 		// 미처리 메세지 존재 시 연기 (MQ Redis)
 		if (hasStreamLag()) {
 			log.info("Stream still has pending messages or backlog in MQ. Postponing reconciliation.");
@@ -134,6 +140,37 @@ public class LessonStockReconciliationScheduler {
 		log.info("Finished Smart Stock Reconciliation for {} lessons.", processedCount);
 	}
 
+	// 미처리 메세지 확인 메서드 (Core Redis)
+	private boolean hasWaitingRoomMessages() {
+		String dirtySetKey = LessonApplyStreamConstant.DIRTY_SET_KEY;
+
+		// Dirty Set 확인 (Core Redis)
+		java.util.Set<String> lessonIds = coreRedisTemplate.opsForSet().members(dirtySetKey);
+		if (lessonIds == null || lessonIds.isEmpty()) {
+			return false;
+		}
+
+		for (String lessonIdStr : lessonIds) {
+			try {
+				Long lessonId = Long.valueOf(lessonIdStr);
+
+				// 레슨별 대기열 잔여 메세지 확인 (Core Redis)
+				String waitingRoomKey = String.format(LessonApplyStreamConstant.WAITING_ROOM_KEY, lessonId);
+				Long size = coreRedisTemplate.opsForZSet().size(waitingRoomKey);
+				if (size != null && size > 0) {
+					log.info("Waiting room still has messages. lessonId={}, size={}", lessonId, size);
+					return true;
+				}
+			} catch (Exception e) {
+				// 대기열 확인 실패 시 보수적으로 보정 연기
+				log.warn("Failed to check waiting room for lesson [{}]: {}", lessonIdStr, e.getMessage());
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	// 미처리 메세지 확인 메서드 (MQ Redis)
 	private boolean hasStreamLag() {
 		try {
@@ -151,8 +188,9 @@ public class LessonStockReconciliationScheduler {
 			return size != null && size > 0;
 
 		} catch (Exception e) {
-			// 스트림이 없거나 초기 상태일 경우
-			return false;
+			// 스트림 상태 확인 실패 시 보수적으로 보정 연기
+			log.warn("Failed to check stream lag. Postponing reconciliation: {}", e.getMessage());
+			return true;
 		}
 	}
 }
