@@ -7,6 +7,7 @@ services:
       - "6379:6379"
     volumes:
       - ./redis-core-data:/data
+    # Core Redis: 재고/대기열 복구를 위해 AOF 유지
     command: redis-server --appendonly yes
     networks:
       - redis-network
@@ -19,7 +20,8 @@ services:
       - "6380:6379"
     volumes:
       - ./redis-mq-data:/data
-    command: redis-server --appendonly yes
+    # MQ Redis: 고부하 처리 안정성을 위해 영속화 비활성화
+    command: redis-server --appendonly no --save ""
     networks:
       - redis-network
 
