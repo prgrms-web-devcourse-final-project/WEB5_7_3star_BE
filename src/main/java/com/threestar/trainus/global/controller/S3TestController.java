@@ -2,6 +2,7 @@ package com.threestar.trainus.global.controller;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "S3 테스트 컨트롤러", description = "S3 업로더 테스트용 컨트롤러입니다.")
+@Profile({"local", "test"})
 @RestController
 @RequestMapping("/api/v1/test/s3")
 @RequiredArgsConstructor
