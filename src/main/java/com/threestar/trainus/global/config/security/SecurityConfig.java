@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,10 +30,26 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.authorizeHttpRequests(
-				auth -> auth.requestMatchers("/api/v1/users/**", "/api/lessons/test-auth", "/swagger-ui/**",
-						"/v3/api-docs/**", "/api/v1/profiles/**", "/api/v1/lessons/**", "api/v1/coupons/**",
-						"/api/v1/comments/**", "/api/v1/reviews/**", "/api/v1/admin/**", "/api/v1/rankings/**",
-						"/api/v1/payments/**", "/test/**", "/health", "/actuator/**")
+				auth -> auth.requestMatchers(
+						"/api/v1/users/signup",
+						"/api/v1/users/login",
+						"/api/v1/users/verify/**",
+						"/swagger-ui/**",
+						"/v3/api-docs/**",
+						"/health",
+						"/actuator/**")
+					.permitAll()
+					.requestMatchers(HttpMethod.GET,
+						"/api/v1/profiles/*",
+						"/api/v1/profiles/*/created-lessons",
+						"/api/v1/lessons",
+						"/api/v1/lessons/search/nearby",
+						"/api/v1/lessons/*",
+						"/api/v1/lessons/summary/*",
+						"/api/v1/lessons/apply/status/*",
+						"/api/v1/comments/**",
+						"/api/v1/reviews/**",
+						"/api/v1/rankings/**")
 					.permitAll()
 					.requestMatchers("/api/v1/admin/**")
 					.hasRole("ADMIN")

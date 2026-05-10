@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +27,6 @@ import com.threestar.trainus.domain.lesson.teacher.repository.LessonRepository;
 import com.threestar.trainus.domain.metadata.entity.ProfileMetadata;
 import com.threestar.trainus.domain.metadata.mapper.ProfileMetadataMapper;
 import com.threestar.trainus.domain.metadata.repository.ProfileMetadataRepository;
-import com.threestar.trainus.domain.profile.entity.Profile;
 import com.threestar.trainus.domain.profile.mapper.ProfileMapper;
 import com.threestar.trainus.domain.profile.repository.ProfileRepository;
 import com.threestar.trainus.domain.review.entity.Review;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@org.springframework.context.annotation.Profile("dev") // dev 프로필에서만 실행
+@Profile({"local", "test"})
 @RequiredArgsConstructor
 public class MockDataInitializer implements CommandLineRunner {
 
@@ -111,7 +111,7 @@ public class MockDataInitializer implements CommandLineRunner {
 			User savedInstructor = userRepository.save(instructor);
 
 			// Profile 생성
-			Profile profile = ProfileMapper.toDefaultEntity(savedInstructor);
+			var profile = ProfileMapper.toDefaultEntity(savedInstructor);
 			profile.updateProfileImage("https://example.com/instructor" + (i + 1) + ".jpg");
 			profile.updateProfileIntro(instructorNames[i] + "입니다. 최고의 레슨을 제공합니다!");
 			profileRepository.save(profile);
@@ -138,7 +138,7 @@ public class MockDataInitializer implements CommandLineRunner {
 		User savedAdmin = userRepository.save(admin);
 
 		// 관리자 Profile 생성
-		Profile adminProfile = ProfileMapper.toDefaultEntity(savedAdmin);
+		var adminProfile = ProfileMapper.toDefaultEntity(savedAdmin);
 		adminProfile.updateProfileImage("https://example.com/admin.jpg");
 		profileRepository.save(adminProfile);
 
@@ -165,7 +165,7 @@ public class MockDataInitializer implements CommandLineRunner {
 			User savedStudent = userRepository.save(student);
 
 			// Profile 생성
-			Profile profile = ProfileMapper.toDefaultEntity(savedStudent);
+			var profile = ProfileMapper.toDefaultEntity(savedStudent);
 			profile.updateProfileImage("https://example.com/student" + (i + 1) + ".jpg");
 			profileRepository.save(profile);
 
