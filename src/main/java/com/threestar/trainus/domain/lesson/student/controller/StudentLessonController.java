@@ -24,14 +24,11 @@ import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.dto.PageRequestDto;
-import com.threestar.trainus.global.exception.domain.ErrorCode;
-import com.threestar.trainus.global.exception.handler.BusinessException;
 import com.threestar.trainus.global.unit.BaseResponse;
 import com.threestar.trainus.global.unit.PagedResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -137,13 +134,8 @@ public class StudentLessonController {
 		@RequestParam(defaultValue = "5") @Min(value = 1, message = "limit는 1 이상이어야 합니다.")
 		@Max(value = 100, message = "limit는 100 이하여야 합니다.") int limit,
 		@RequestParam(defaultValue = "ALL") String status,
-		HttpSession session
+		@LoginUser Long userId
 	) {
-		Long userId = (Long)session.getAttribute("LOGIN_USER");
-		if (userId == null) {
-			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
-		}
-
 		MyLessonApplicationListResponseDto serviceResponse = studentLessonService.getMyLessonApplications(userId, page,
 			limit, status);
 		MyLessonApplicationListWrapperDto response = new MyLessonApplicationListWrapperDto(

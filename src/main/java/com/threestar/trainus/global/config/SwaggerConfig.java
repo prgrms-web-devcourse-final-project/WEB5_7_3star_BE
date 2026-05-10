@@ -14,12 +14,12 @@ public class SwaggerConfig {
 	@Bean
 	public OpenAPI openApi() {
 		return new OpenAPI()
-			.addSecurityItem(new SecurityRequirement().addList("session"))
+			.addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
 			.components(new Components()
-				.addSecuritySchemes("session", new SecurityScheme()
-					.type(SecurityScheme.Type.APIKEY)
-					.in(SecurityScheme.In.COOKIE)
-					.name("JSESSIONID")
+				.addSecuritySchemes("bearerAuth", new SecurityScheme()
+					.type(SecurityScheme.Type.HTTP)
+					.scheme("bearer")
+					.bearerFormat("JWT")
 				)
 			)
 			.info(apiInfo());
@@ -27,7 +27,7 @@ public class SwaggerConfig {
 
 	private Info apiInfo() {
 		return new Info()
-			.title("FitMate API 문서") // API의 제목
+			.title("TrainUs API 문서") // API의 제목
 			.description("운동 메이트 매칭 플랫폼의 API 명세서") // API에 대한 설명
 			.version("1.0.0"); // API의 버전
 	}
