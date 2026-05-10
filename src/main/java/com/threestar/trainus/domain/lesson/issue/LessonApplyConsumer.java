@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
-@Profile("consumer & !legacy")
+@Profile("consumer")
 @Slf4j
 @Component
 @RequiredArgsConstructor
