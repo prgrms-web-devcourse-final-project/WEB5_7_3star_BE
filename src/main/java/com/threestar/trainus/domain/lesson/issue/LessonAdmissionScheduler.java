@@ -73,6 +73,7 @@ public class LessonAdmissionScheduler {
 			log.warn(
 				"Admission diagnostics. lessonId={}, dequeuedCount={}, statusKeyCount={}, statusInfos=null. Admission skipped after dequeue.",
 				lessonId, requestIds.size(), statusKeys.size());
+			requeueAfterAdmissionFailure(lessonId, requestIds, statusKeys, null);
 			return;
 		}
 
@@ -80,56 +81,84 @@ public class LessonAdmissionScheduler {
 		AtomicInteger invalidStatusCount = new AtomicInteger();
 		AtomicInteger xaddAttemptCount = new AtomicInteger();
 
-		// Pipelining 방식으로 요청 상태 변경 / Stream ADD 로직 일괄 처리
-		mqRedisTemplate.executePipelined(new SessionCallback<Object>() {
-			@Override
-			public Object execute(RedisOperations operations) {
-				for (int i = 0; i < statusKeys.size(); i++) {
-					String info = statusInfos.get(i);
-					if (info == null) {
-						statusNullCount.incrementAndGet();
-						continue;
+		try {
+			// Pipelining 방식으로 요청 상태 변경 / Stream ADD 로직 일괄 처리
+			mqRedisTemplate.executePipelined(new SessionCallback<Object>() {
+				@Override
+				public Object execute(RedisOperations operations) {
+					for (int i = 0; i < statusKeys.size(); i++) {
+						String info = statusInfos.get(i);
+						if (info == null) {
+							statusNullCount.incrementAndGet();
+							continue;
+						}
+
+						String[] parts = info.split(":");
+						if (parts.length < 3) {
+							invalidStatusCount.incrementAndGet();
+							continue;
+						}
+
+						String requestId = requestIds.get(i);
+						Long userId;
+						Long originalTimestamp;
+						try {
+							userId = Long.parseLong(parts[2]);
+							originalTimestamp = parts.length >= 4 ? Long.parseLong(parts[3]) : System.currentTimeMillis();
+						} catch (NumberFormatException e) {
+							invalidStatusCount.incrementAndGet();
+							continue;
+						}
+
+						// 상태 변경 (SET)
+						String statusKey = statusKeys.get(i);
+						String processingInfo = String.format("%s:%d:%d:%d", LessonApplyStreamConstant.STATUS_PROCESSING, lessonId, userId, originalTimestamp);
+						operations.opsForValue().set(statusKey, processingInfo, java.time.Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
+
+						// 스트림 추가 (XADD)
+						Map<String, String> content = new HashMap<>();
+						content.put("lessonId", String.valueOf(lessonId));
+						content.put("userId", String.valueOf(userId));
+						content.put("requestId", requestId);
+						content.put("timestamp", String.valueOf(originalTimestamp));
+						operations.opsForStream().add(LessonApplyStreamConstant.STREAM_KEY, content);
+						xaddAttemptCount.incrementAndGet();
 					}
-
-					String[] parts = info.split(":");
-					if (parts.length < 3) {
-						invalidStatusCount.incrementAndGet();
-						continue;
-					}
-
-					String requestId = requestIds.get(i);
-					Long userId;
-					Long originalTimestamp;
-					try {
-						userId = Long.parseLong(parts[2]);
-						originalTimestamp = parts.length >= 4 ? Long.parseLong(parts[3]) : System.currentTimeMillis();
-					} catch (NumberFormatException e) {
-						invalidStatusCount.incrementAndGet();
-						continue;
-					}
-
-					// 상태 변경 (SET)
-					String statusKey = statusKeys.get(i);
-					String processingInfo = String.format("%s:%d:%d:%d", LessonApplyStreamConstant.STATUS_PROCESSING, lessonId, userId, originalTimestamp);
-					operations.opsForValue().set(statusKey, processingInfo, java.time.Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
-
-					// 스트림 추가 (XADD)
-					Map<String, String> content = new HashMap<>();
-					content.put("lessonId", String.valueOf(lessonId));
-					content.put("userId", String.valueOf(userId));
-					content.put("requestId", requestId);
-					content.put("timestamp", String.valueOf(originalTimestamp));
-					operations.opsForStream().add(LessonApplyStreamConstant.STREAM_KEY, content);
-					xaddAttemptCount.incrementAndGet();
+					return null;
 				}
-				return null;
-			}
-		});
+			});
+		} catch (RuntimeException e) {
+			requeueAfterAdmissionFailure(lessonId, requestIds, statusKeys, statusInfos);
+			log.error("Admission pipeline failed. Requeued requests for lessonId={}", lessonId, e);
+			return;
+		}
 
 		log.info(
 			"Admission diagnostics. lessonId={}, dequeuedCount={}, statusKeyCount={}, statusNullCount={}, invalidStatusCount={}, xaddAttemptCount={}",
 			lessonId, requestIds.size(), statusKeys.size(), statusNullCount.get(), invalidStatusCount.get(),
 			xaddAttemptCount.get());
 		log.debug("Admitted {} users to MQ via pipeline for lesson: {}", requestIds.size(), lessonId);
+	}
+
+	private void requeueAfterAdmissionFailure(
+		Long lessonId,
+		List<String> requestIds,
+		List<String> statusKeys,
+		List<String> statusInfos
+	) {
+		int requeueCount = 0;
+		for (int i = 0; i < requestIds.size(); i++) {
+			String requestId = requestIds.get(i);
+			String statusInfo = statusInfos == null ? null : statusInfos.get(i);
+
+			waitingRoomService.requeueAfterAdmissionFailure(lessonId, requestId);
+			if (statusInfo != null) {
+				mqRedisTemplate.opsForValue()
+					.set(statusKeys.get(i), statusInfo, java.time.Duration.ofMinutes(LessonApplyStreamConstant.STATUS_TTL_MINUTE));
+			}
+			requeueCount++;
+		}
+
+		log.warn("Admission failed after dequeue. Requeued {} requests. lessonId={}", requeueCount, lessonId);
 	}
 }

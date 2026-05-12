@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.LessonApplyRequestResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListWrapperDto;
@@ -19,7 +19,6 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListWrapperDto;
 import com.threestar.trainus.domain.lesson.student.entity.LessonSortType;
-import com.threestar.trainus.domain.lesson.student.service.StudentLessonFacade;
 import com.threestar.trainus.domain.lesson.student.service.StudentLessonService;
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.global.annotation.LoginUser;
@@ -43,7 +42,6 @@ import com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponse
 public class StudentLessonController {
 
 	private final StudentLessonService studentLessonService;
-	private final StudentLessonFacade studentLessonFacade;
 
 	// 비동기 선착순 신청 결과 폴링
 	@GetMapping("/apply/status/{requestId}")
@@ -105,15 +103,24 @@ public class StudentLessonController {
 		return BaseResponse.ok("레슨 상세 조회 완료", response, HttpStatus.OK);
 	}
 
-	@PostMapping("/{lessonId}/application")
-	@Operation(summary = "레슨 신청", description = "레슨 ID에 해당되는 레슨을 신청합니다.")
-	public ResponseEntity<BaseResponse<LessonApplicationResponseDto>> createLessonApplication(
+	@PostMapping("/{lessonId}/applications/approval")
+	@Operation(summary = "수락제 레슨 신청", description = "관리자 승인이 필요한 수락제 레슨을 신청합니다.")
+	public ResponseEntity<BaseResponse<LessonApplyRequestResponseDto>> createApprovalLessonApplication(
 		@PathVariable Long lessonId,
 		@LoginUser Long userId
 	) {
-		// 잔여 좌석 확인 메서드
-		LessonApplicationResponseDto response = studentLessonFacade.applyToLessonWithDistributedLock(lessonId, userId);
-		return BaseResponse.ok("레슨 신청 완료", response, HttpStatus.OK);
+		LessonApplyRequestResponseDto response = studentLessonService.applyToApprovalLesson(lessonId, userId);
+		return BaseResponse.ok("레슨 신청 완료", response, HttpStatus.CREATED);
+	}
+
+	@PostMapping("/{lessonId}/applications/open-run")
+	@Operation(summary = "선착순 레슨 신청", description = "선착순 레슨을 Redis Stream 기반 비동기 경로로 신청합니다.")
+	public ResponseEntity<BaseResponse<LessonApplyRequestResponseDto>> createOpenRunLessonApplication(
+		@PathVariable Long lessonId,
+		@LoginUser Long userId
+	) {
+		LessonApplyRequestResponseDto response = studentLessonService.applyToOpenRunLesson(lessonId, userId);
+		return BaseResponse.ok("선착순 레슨 신청 접수 완료", response, HttpStatus.ACCEPTED);
 	}
 
 	@DeleteMapping("/{lessonId}/application")

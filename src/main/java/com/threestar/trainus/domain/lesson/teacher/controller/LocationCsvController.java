@@ -11,8 +11,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.threestar.trainus.domain.lesson.teacher.service.LocationCsvService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "지역 API", description = "법정동 데이터 업로드 및 검증 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/location")

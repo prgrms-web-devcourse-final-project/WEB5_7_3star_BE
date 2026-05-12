@@ -61,7 +61,11 @@ public class LessonApplyService {
 			.stream()
 			.collect(Collectors.toMap(Lesson::getId, l -> l));
 
-		String sql = "INSERT INTO lesson_participants (lesson_id, user_id, join_at, status) VALUES (?, ?, NOW(), ?)";
+		String sql = """
+			INSERT INTO lesson_participants (lesson_id, user_id, join_at, status)
+			VALUES (?, ?, NOW(), ?)
+			ON CONFLICT (user_id, lesson_id) DO NOTHING
+			""";
 		jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -152,10 +156,13 @@ public class LessonApplyService {
 			updateStatus(statusKey, "SUCCESS");
 
 			return true;
-		} catch (Exception e) {
-			log.error("Failed to apply lesson in consumer: {}", e.getMessage());
-			updateStatus(statusKey, "FAIL:ERROR");
+		} catch (BusinessException e) {
+			log.warn("Lesson apply business failed. requestId={}, errorCode={}", requestId, e.getErrorCode());
+			updateStatus(statusKey, "FAIL:" + e.getErrorCode().name());
 			return false;
+		} catch (Exception e) {
+			log.error("Failed to apply lesson in consumer. requestId={}", requestId, e);
+			throw e;
 		}
 	}
 

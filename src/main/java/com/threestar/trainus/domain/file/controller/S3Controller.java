@@ -14,6 +14,9 @@ import com.threestar.trainus.domain.file.service.S3Service;
 import com.threestar.trainus.global.annotation.LoginUser;
 import com.threestar.trainus.global.unit.BaseResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "파일 API", description = "S3 Presigned URL 발급 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/s3")
