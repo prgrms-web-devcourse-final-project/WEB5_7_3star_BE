@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +22,12 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "lesson_applications")
+@Table(
+	name = "lesson_applications",
+	uniqueConstraints = {
+		@UniqueConstraint(name = "uq_lesson_applications", columnNames = {"user_id", "lesson_id"})
+	}
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LessonApplication extends BaseDateEntity {
 

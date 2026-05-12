@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,7 +24,12 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "lesson_participants")
+@Table(
+	name = "lesson_participants",
+	uniqueConstraints = {
+		@UniqueConstraint(name = "uq_lesson_participants", columnNames = {"user_id", "lesson_id"})
+	}
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LessonParticipant {
 	@Id
