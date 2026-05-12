@@ -13,6 +13,7 @@ public class StudentLessonFacade {
 
 	private final StudentLessonService studentLessonService;
 
+	// Benchmark: Redis Stream 방식과 처리량을 비교하기 위한 분산락 기반 Facade
 	@DistributedLock(key = "'lesson_apply:' + #lessonId")
 	public LessonApplicationResponseDto applyToLessonWithDistributedLock(Long lessonId, Long userId) {
 		return studentLessonService.applyToLessonWithDistributedLock(lessonId, userId);

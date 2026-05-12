@@ -15,11 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplicationResponseDto;
+import com.threestar.trainus.domain.lesson.student.dto.LessonApplyRequestResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonApplyStatusResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonDetailResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchListResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSearchResponseDto;
 import com.threestar.trainus.domain.lesson.student.dto.LessonSimpleResponseDto;
+import com.threestar.trainus.domain.lesson.issue.LessonApplyProducer;
 import com.threestar.trainus.domain.lesson.issue.LessonApplyStreamConstant;
 import com.threestar.trainus.domain.lesson.student.dto.MyLessonApplicationListResponseDto;
 import com.threestar.trainus.domain.lesson.student.entity.LessonSortType;
@@ -67,6 +69,7 @@ public class StudentLessonService {
 	private final LessonParticipantRepository lessonParticipantRepository;
 	private final LessonApplicationRepository lessonApplicationRepository;
 	private final GeometryFactory geometryFactory;
+	private final LessonApplyProducer lessonApplyProducer;
 
 	@Qualifier("coreRedisTemplate")
 	private final StringRedisTemplate coreRedisTemplate;
@@ -227,6 +230,69 @@ public class StudentLessonService {
 	}
 
 	@Transactional
+	public LessonApplyRequestResponseDto applyToApprovalLesson(Long lessonId, Long userId) {
+		// 레슨 조회
+		Lesson lesson = adminLessonService.findLessonById(lessonId);
+
+		// 유저 조회
+		User user = userService.getUserById(userId);
+
+		// 개설자 신청 불가 체크
+		if (lesson.getLessonLeader().equals(userId)) {
+			throw new BusinessException(ErrorCode.LESSON_CREATOR_CANNOT_APPLY);
+		}
+
+		// 중복 체크
+		boolean alreadyParticipated = lessonParticipantRepository.existsByLessonIdAndUserId(lessonId, userId);
+		boolean alreadyApplied = lessonApplicationRepository.existsByLessonIdAndUserId(lessonId, userId);
+		if (alreadyParticipated || alreadyApplied) {
+			throw new BusinessException(ErrorCode.ALREADY_APPLIED);
+		}
+
+		// 레슨 상태 체크
+		if (lesson.getStatus() != LessonStatus.RECRUITING) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+		}
+
+		// 선착순 레슨은 수락제 신청 경로에서 제외
+		if (lesson.getOpenRun()) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+		}
+
+		// 수락제 레슨은 신청만 등록
+		LessonApplication application = LessonApplication.builder()
+			.lesson(lesson)
+			.user(user)
+			.build();
+		lessonApplicationRepository.save(application);
+
+		return LessonApplyRequestResponseDto.builder()
+			.lessonId(lesson.getId())
+			.userId(user.getId())
+			.status(ApplicationStatus.PENDING.name())
+			.appliedAt(application.getCreatedAt())
+			.build();
+	}
+
+	public LessonApplyRequestResponseDto applyToOpenRunLesson(Long lessonId, Long userId) {
+		String requestId = lessonApplyProducer.send(lessonId, userId);
+		if ("ALREADY_APPLIED".equals(requestId)) {
+			throw new BusinessException(ErrorCode.ALREADY_APPLIED);
+		}
+		if (requestId == null) {
+			throw new BusinessException(ErrorCode.LESSON_NOT_AVAILABLE);
+		}
+
+		return LessonApplyRequestResponseDto.builder()
+			.lessonId(lessonId)
+			.userId(userId)
+			.requestId(requestId)
+			.status(LessonApplyStreamConstant.STATUS_WAITING)
+			.build();
+	}
+
+	// Benchmark: 락 미적용 상태의 동시성 문제 재현을 위한 비교용 메서드
+	@Transactional
 	public LessonApplicationResponseDto applyToLessonWithoutLock(Long lessonId, Long userId) {
 		// 레슨 조회
 		Lesson lesson = adminLessonService.findLessonById(lessonId);
@@ -288,6 +354,7 @@ public class StudentLessonService {
 		}
 	}
 
+	// Benchmark: Redis Stream 방식과 처리량을 비교하기 위한 분산락 기반 신청 메서드
 	@Transactional
 	public LessonApplicationResponseDto applyToLessonWithDistributedLock(Long lessonId, Long userId) {
 		// 레슨 조회
@@ -354,6 +421,7 @@ public class StudentLessonService {
 		}
 	}
 
+	// Benchmark: Redis Stream 방식과 처리량을 비교하기 위한 비관적 락 기반 신청 메서드
 	@Transactional
 	public LessonApplicationResponseDto applyToLessonWithPessimisticLock(Long lessonId, Long userId) {
 		// 레슨 조회 (비관적 락)
@@ -421,7 +489,7 @@ public class StudentLessonService {
 		}
 	}
 
-	// facade 패턴 적용 이전 분산락 메서드 (병목 재현)
+	// Benchmark: Facade 분리 이전의 분산락 적용 범위 비교를 위한 메서드
 	@Transactional
 	@DistributedLock(key = "'lesson_apply:' + #lessonId")
 	public LessonApplicationResponseDto applyToLessonWithCoupledLock(Long lessonId, Long userId) {
