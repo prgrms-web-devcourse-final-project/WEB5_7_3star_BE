@@ -62,4 +62,11 @@ public class LessonWaitingRoomService {
 			.map(tuple -> tuple.getValue())
 			.toList();
 	}
+
+	// Admission 실패 시 이미 선점된 요청을 유실하지 않도록 대기열에 재등록
+	public void requeueAfterAdmissionFailure(Long lessonId, String requestId) {
+		String waitingRoomKey = String.format(LessonApplyStreamConstant.WAITING_ROOM_KEY, lessonId);
+		coreRedisTemplate.opsForZSet().add(waitingRoomKey, requestId, System.currentTimeMillis());
+		coreRedisTemplate.opsForSet().add(LessonApplyStreamConstant.DIRTY_SET_KEY, String.valueOf(lessonId));
+	}
 }
