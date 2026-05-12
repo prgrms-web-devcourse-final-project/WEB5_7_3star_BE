@@ -78,6 +78,10 @@ jwt:
   access-token-validity: 3600000 # 1H
   refresh-token-validity: 604800000 # 7D
 
+springdoc:
+  swagger-ui:
+    tags-sorter: none
+
 server:
   tomcat:
     mbeanregistry:

@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "동시성 테스트 API", description = "선착순 기능 테스트를 위한 API")
+@Tag(name = "테스트 - 동시성 API", description = "선착순 기능 테스트를 위한 API")
 @Profile({"local", "test"})
 @RestController
 @RequestMapping("/test")

@@ -15,7 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "S3 테스트 컨트롤러", description = "S3 업로더 테스트용 컨트롤러입니다.")
+@Tag(name = "테스트 - S3 API", description = "S3 업로더 테스트용 컨트롤러입니다.")
 @Profile({"local", "test"})
 @RestController
 @RequestMapping("/api/v1/test/s3")
