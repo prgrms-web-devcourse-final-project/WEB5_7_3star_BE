@@ -24,10 +24,9 @@ import com.threestar.trainus.domain.user.dto.SignupResponseDto;
 import com.threestar.trainus.domain.user.entity.User;
 import com.threestar.trainus.domain.user.entity.UserRole;
 import com.threestar.trainus.domain.user.repository.UserRepository;
+import com.threestar.trainus.global.config.security.JwtProvider;
 import com.threestar.trainus.global.exception.domain.ErrorCode;
 import com.threestar.trainus.global.exception.handler.BusinessException;
-
-import jakarta.servlet.http.HttpSession;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService 테스트")
@@ -49,7 +48,7 @@ class UserServiceTest {
 	private EmailVerificationService emailVerificationService;
 
 	@Mock
-	private HttpSession session;
+	private JwtProvider jwtProvider;
 
 	@Nested
 	@DisplayName("회원가입")
@@ -153,17 +152,19 @@ class UserServiceTest {
 
 			given(userRepository.findByEmail(request.email())).willReturn(Optional.of(user));
 			given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(true);
+			given(jwtProvider.createAccessToken(user.getId(), user.getRole().name())).willReturn("access-token");
+			given(jwtProvider.createRefreshToken(user.getId(), user.getRole().name())).willReturn("refresh-token");
 
 			// when
-			LoginResponseDto result = userService.login(request, session);
+			LoginResponseDto result = userService.login(request);
 
 			// then
 			assertThat(result).isNotNull();
 			assertThat(result.id()).isEqualTo(1L);
 			assertThat(result.email()).isEqualTo("test@email.com");
 			assertThat(result.nickname()).isEqualTo("testUser");
-
-			verify(session).setAttribute("LOGIN_USER", 1L);
+			assertThat(result.accessToken()).isEqualTo("access-token");
+			assertThat(result.refreshToken()).isEqualTo("refresh-token");
 		}
 
 		@Test
@@ -174,7 +175,7 @@ class UserServiceTest {
 			given(userRepository.findByEmail(request.email())).willReturn(Optional.empty());
 
 			// when & then
-			assertThatThrownBy(() -> userService.login(request, session))
+			assertThatThrownBy(() -> userService.login(request))
 				.isInstanceOf(BusinessException.class)
 				.extracting("errorCode")
 				.isEqualTo(ErrorCode.INVALID_CREDENTIALS);
@@ -194,7 +195,7 @@ class UserServiceTest {
 			given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(false);
 
 			// when & then
-			assertThatThrownBy(() -> userService.login(request, session))
+			assertThatThrownBy(() -> userService.login(request))
 				.isInstanceOf(BusinessException.class)
 				.extracting("errorCode")
 				.isEqualTo(ErrorCode.INVALID_CREDENTIALS);
@@ -330,7 +331,7 @@ class UserServiceTest {
 			assertThatThrownBy(() -> userService.validateAdminRole(userId))
 				.isInstanceOf(BusinessException.class)
 				.extracting("errorCode")
-				.isEqualTo(ErrorCode.AUTHENTICATION_REQUIRED);
+				.isEqualTo(ErrorCode.ACCESS_FORBIDDEN);
 		}
 	}
 }

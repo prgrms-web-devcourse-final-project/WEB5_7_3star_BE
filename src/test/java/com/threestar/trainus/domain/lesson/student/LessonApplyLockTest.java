@@ -292,8 +292,8 @@ public class LessonApplyLockTest {
 			executor.submit(() -> {
 				try {
 					User user = userRepository.findByEmail(email).orElseThrow();
-					boolean sent = lessonApplyProducer.send(lessonId, user.getId());
-					if (sent) {
+					String requestId = lessonApplyProducer.send(lessonId, user.getId());
+					if (requestId != null) {
 						producerSuccessCount.incrementAndGet();
 					} else {
 						producerFailCount.incrementAndGet();
