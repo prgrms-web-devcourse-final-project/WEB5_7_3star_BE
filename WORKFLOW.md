@@ -28,7 +28,7 @@ hooks:
     git clone --branch develop https://github.com/prgrms-web-devcourse-final-project/WEB5_7_3star_BE.git .
 agent:
   max_concurrent_agents: 1
-  max_turns: 8
+  max_turns: 4
 codex:
   command: codex --model gpt-5.4-mini --config model_reasoning_effort="high" --config shell_environment_policy.inherit=all app-server
   approval_policy: never
@@ -38,80 +38,85 @@ codex:
     networkAccess: true
 ---
 
-너는 Linear 이슈 `{{ issue.identifier }}`를 작업한다.
+You are working on Linear issue `{{ issue.identifier }}`.
 
-## 기본
+## Basics
 
-- 이 파일은 실행 설정과 공통 규칙만 둔다.
-- 세부 역할과 테스트 경계는 `docs/ai-test-workflow/rules/*.md`와 이슈 본문을 따른다.
-- 근거가 없으면 추측하지 말고, 부족한 근거만 기록한다.
-- 출력은 한국어로 쓴다.
-- 코드 식별자, 파일 경로, 클래스명, 메서드명, 명령어, 예외명은 원문 그대로 유지한다.
+- This file contains only execution settings and shared rules.
+- Follow `docs/ai-test-workflow/rules/*.md` and the issue body for role details and test boundaries.
+- Do not guess when evidence is missing. Record only missing evidence.
+- Write user-facing output in Korean.
+- Keep code identifiers, file paths, class names, method names, commands, and exception names unchanged.
 
-## 산출물
+## Artifacts
 
 - Researcher: `docs/ai-test-workflow/reports/{{ issue.identifier }}/research-report.md`
 - Planner: `docs/ai-test-workflow/reports/{{ issue.identifier }}/test-plan.md`
 - Reviewer: `docs/ai-test-workflow/reports/{{ issue.identifier }}/review-report.md`
-- PR 초안: `docs/ai-test-workflow/reports/{{ issue.identifier }}/pr-draft.md`
-- 로그: `docs/ai-test-workflow/logs/{{ issue.identifier }}/prompt-and-tool-log.md`
+- PR draft: `docs/ai-test-workflow/reports/{{ issue.identifier }}/pr-draft.md`
+- Log: `docs/ai-test-workflow/logs/{{ issue.identifier }}/prompt-and-tool-log.md`
 
-## 이슈 정보
+## Issue Info
 
-- 식별자: `{{ issue.identifier }}`
-- 제목: `{{ issue.title }}`
-- 상태: `{{ issue.state }}`
-- 라벨: `{{ issue.labels }}`
+- Identifier: `{{ issue.identifier }}`
+- Title: `{{ issue.title }}`
+- State: `{{ issue.state }}`
+- Labels: `{{ issue.labels }}`
 - URL: `{{ issue.url }}`
 
 {% if issue.description %}
 {{ issue.description }}
 {% else %}
-설명이 없습니다.
+No description provided.
 {% endif %}
 
-## 첫 실행
+## First Run
 
-- 작업공간에 `.codegraph/`가 없으면 `codegraph init -i`를 1회 실행한다.
-- 인덱스가 있으면 재사용한다.
-- 구조 질의는 CodeGraph를 우선 쓴다.
+- If `.codegraph/` is missing, run `codegraph init -i` once.
+- Reuse the index if it already exists.
+- Prefer CodeGraph for structural queries.
 
-## 규칙
+## Rules
 
-- 이슈를 단일 기준으로 삼는다.
-- 이슈 범위를 벗어나지 않는다.
-- 승인 전에는 운영 코드를 수정하지 않는다.
-- 계획 작성 후 `Planning`으로 이동하고 종료한다.
-- `Planning`은 active state가 아니며 승인 대기 중 재시도하지 않는다.
-- 구현 완료 후 `In Review`로 이동한다.
-- 리뷰 완료 후 `Final Approval`로 이동하고 종료한다.
-- `Final Approval`은 active state가 아니며 승인 대기 중 재시도하지 않는다.
-- `Done`, `Closed`, `Cancelled`, `Canceled`, `Duplicate`로 직접 전환하지 않는다.
-- `git push`, `gh pr create`, PR merge는 하지 않는다.
-- PR 본문은 초안만 남긴다.
-- PR 초안은 `.github/PULL_REQUEST_TEMPLATE.md` 항목을 따른다.
-- PR 초안의 관련 이슈는 GitHub 이슈 번호를 `#123` 형식으로 쓴다.
-- `Final Approval`은 사람이 확인할 때만 쓰고 active state에는 넣지 않는다.
-- 리뷰 반복 여부는 파일 존재가 아니라 현재 이슈, 작업 범위, 브랜치, 최신 커밋 기준으로 판단한다.
-- 같은 스냅샷의 리뷰가 이미 있으면 요약만 남기고 `Final Approval`로 이동한다.
+- Use the issue as the single source of truth.
+- Stay within issue scope.
+- Do not modify production code before approval.
+- After planning, move to `Planning` and stop.
+- `Planning` is not an active state and must not keep retrying.
+- If the current state is `Approved`, do not rewrite the plan; move to implementation.
+- If `test-plan.md` already exists and the approval scope is unchanged, do not regenerate the plan.
+- After implementation, move to `In Review`.
+- After review, move to `Final Approval` and stop.
+- `Final Approval` is not an active state and must not keep retrying.
+- Do not move directly to `Done`, `Closed`, `Cancelled`, `Canceled`, or `Duplicate`.
+- Do not `git push`, create PRs, or merge PRs.
+- Keep PR text as draft only.
+- PR drafts must follow `.github/PULL_REQUEST_TEMPLATE.md`.
+- Related issue references in PR drafts must use `#123` format.
+- Use `Final Approval` only for human confirmation; do not include it in active states.
+- Decide whether to repeat review based on the current issue, scope, branch, and latest commit, not on file existence alone.
+- If the same snapshot was already reviewed, keep only a summary and move to `Final Approval`.
 
-## 상태
+## States
 
-- `Backlog`: 미착수
-- `Todo`: 대기
-- `Research`: 조사
-- `Planning`: 계획, 승인 대기
-- `Approved`: 승인 완료
-- `In Progress`: 구현 중
-- `In Review`: 검토 중
-- `Rework`: 수정 중
-- `Final Approval`: 최종 승인 대기
-- `Done`: 최종 완료
+- `Backlog`: not started
+- `Todo`: waiting
+- `Research`: investigation
+- `Planning`: plan ready, waiting for approval
+- `Approved`: approved
+- `In Progress`: implementing
+- `In Review`: reviewing
+- `Rework`: fixing
+- `Final Approval`: final approval waiting
+- `Done`: fully complete
 
-## 최소 기록
+## Minimal Record
 
-- 리포트는 목적, 근거, 발견 사항, 한계, 다음 단계만 남긴다.
-- 로그는 사용한 프롬프트와 도구만 기록한다.
-- 산출물은 이슈별 디렉터리에 보관한다.
-- 이전 이슈 산출물을 덮어쓰지 않는다.
-- 최종 응답은 완료 작업, 수정 파일, 검증, 남은 블로커만 요약한다.
+- Reports keep only purpose, evidence, findings, limits, and next steps.
+- Logs keep prompts, tools, model name, and reasoning effort.
+- Record models with concrete values such as `gpt-5.4-mini` and `model_reasoning_effort=high`.
+- Logs also keep per-stage token usage.
+- Example stages: `Research`, `Planning`, `Implementation`, `Review`, `Approval`.
+- Store artifacts under issue-specific directories.
+- Do not overwrite artifacts from previous issues.
+- Final response must summarize completed work, modified files, validation, and remaining blockers only.
