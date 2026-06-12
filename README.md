@@ -179,6 +179,77 @@ Redis는 목적에 따라 Core Redis와 MQ Redis로 분리해 사용합니다.
 | `redis-core` | 6379 | 재고, 중복 신청, 대기열, 분산 락 |
 | `redis-mq` | 6380 | Redis Stream, 신청 처리 상태 |
 
+## 시퀀스 다이어그램
+
+### 선착순 신청 흐름
+
+```mermaid
+---
+config:
+  theme: redux-color
+  themeCSS: |
+    text.actor {
+      font-size: 17px !important;
+    }
+    .messageText {
+      font-size: 19px !important;
+    }
+    .note {
+      fill: #f1f5f9 !important;
+      stroke: #cbd5e1 !important;
+    }
+    .noteText {
+      font-size: 17px !important;
+    }
+    .labelText {
+      font-size: 17px !important;
+    }
+    .loopText {
+      font-size: 17px !important;
+    }
+---
+sequenceDiagram
+    autonumber
+    actor User
+    participant API as API Server
+    participant Core as Redis Core<br/>(Sorted Set)
+    participant Consumer as Consumer Server
+    participant Stream as Redis Stream
+    participant DB as PostgreSQL / PostGIS
+
+    activate API
+    User->>API: POST /lesson/apply
+    API->>Core: 재고 선점 / 중복 확인 / 대기열 등록
+    Note over API,Core: requestId는 Sorted Set Waiting Room에서 대기
+    API-->>User: requestId 반환
+    deactivate API
+
+    activate Consumer
+    rect rgb(255, 242, 242)
+    Note over Core,Stream: Admission 단계
+    Consumer->>Core: 대기열 requestId dequeue
+    Consumer->>Core: 상태변경: PROCESSING
+    Consumer->>Stream: XADD 신청 메시지
+    end
+    Note over Consumer,Stream: 신청 메시지는 Redis Stream에 적재
+    rect rgb(239, 246, 255)
+    Note over Core,DB: Consumer 처리 단계
+    Stream-->>Consumer: XREADGROUP
+    Consumer->>DB: DB 반영
+    Consumer->>Core: 상태변경: SUCCESS / FAIL
+    end
+    deactivate Consumer
+
+    loop requestId polling
+        activate API
+        User->>API: GET /lesson/apply/{requestId}
+        API->>Core: 상태 조회
+        Core-->>API: WAITING / PROCESSING / SUCCESS / FAIL
+        API-->>User: 현재 상태 응답
+        deactivate API
+    end
+```
+
 ## 배포 자동화
 
 배포는 GitHub Actions, S3, CodeDeploy를 사용합니다. 
