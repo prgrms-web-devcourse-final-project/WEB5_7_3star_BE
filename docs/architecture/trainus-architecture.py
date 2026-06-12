@@ -22,27 +22,27 @@ graph_attr = {
 }
 
 node_attr = {
-    "fontsize": "18",
-    "margin": "0.14",
+    "fontsize": "19",
+    "margin": "0.20",
 }
 
 edge_attr = {
-    "fontsize": "15",
+    "fontsize": "20",
 }
 
 cluster_attr = {
     "margin": "20",
-    "fontsize": "18",
+    "fontsize": "22",
 }
 
 instance_cluster_attr = {
     "margin": "8",
-    "fontsize": "15",
+    "fontsize": "22",
 }
 
 asg_cluster_attr = {
     "margin": "15",
-    "fontsize": "18",
+    "fontsize": "24",
 }
 
 with Diagram(
@@ -79,7 +79,7 @@ with Diagram(
                 width="1.42",
                 height="0.28",
                 fixedsize="true",
-                fontsize="15",
+                fontsize="19",
             )
             api_app_n = Node(
                 "Spring Boot",
@@ -88,7 +88,7 @@ with Diagram(
                 width="1.42",
                 height="0.28",
                 fixedsize="true",
-                fontsize="15",
+                fontsize="19",
             )
             api_ec2_n - api_app_n
 
@@ -113,7 +113,7 @@ with Diagram(
                 width="1.42",
                 height="0.28",
                 fixedsize="true",
-                fontsize="15",
+                fontsize="19",
             )
             consumer_app_n = Node(
                 "Spring Boot",
@@ -122,7 +122,7 @@ with Diagram(
                 width="1.42",
                 height="0.28",
                 fixedsize="true",
-                fontsize="15",
+                fontsize="19",
             )
             consumer_ec2_n - consumer_app_n
 
@@ -135,15 +135,15 @@ with Diagram(
     alb >> Edge(minlen="2") >> api_ec2_1
     alb >> Edge(minlen="2") >> api_ec2_n
 
-    api_app_1 >> Edge(label="apply request") >> redis_core
-    api_app_1 >> Edge(label="poll status") >> redis_mq
-    api_app_1 >> Edge(label="read/write", color="darkgreen") >> postgres
+    api_app_1 >> Edge(label="apply request", fontsize="20") >> redis_core
+    api_app_1 >> Edge(label="poll status", fontsize="20") >> redis_mq
+    api_app_1 >> Edge(label="read/write", color="darkgreen", fontsize="20") >> postgres
 
-    redis_core >> Edge(label="admit") >> consumer_app_1
-    consumer_app_1 >> Edge(label="XREAD / ACK") >> redis_mq
-    consumer_app_1 >> Edge(label="batch insert") >> postgres
+    redis_core >> Edge(label="admit", fontsize="20") >> consumer_app_1
+    consumer_app_1 >> Edge(label="XREAD / ACK", fontsize="20") >> redis_mq
+    consumer_app_1 >> Edge(label="batch insert", fontsize="20") >> postgres
 
-    prometheus << Edge(label="metrics", style="dashed") << [api_app_1, consumer_app_1]
+    prometheus << Edge(label="metrics", style="dashed", fontsize="20") << [api_app_1, consumer_app_1]
 
-    codedeploy >> Edge(label="deploy api", color="blue", style="dashed", constraint="false") >> api_ec2_1
-    codedeploy >> Edge(label="deploy consumer", color="blue", style="dashed", constraint="false") >> consumer_ec2_1
+    codedeploy >> Edge(label="deploy api", color="blue", style="dashed", constraint="false", fontsize="20") >> api_ec2_1
+    codedeploy >> Edge(label="deploy consumer", color="blue", style="dashed", constraint="false", fontsize="20") >> consumer_ec2_1
