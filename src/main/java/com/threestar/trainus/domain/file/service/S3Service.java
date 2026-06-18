@@ -11,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.Headers;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.threestar.trainus.domain.file.dto.GetS3UrlDto;
 
@@ -42,16 +40,9 @@ public class S3Service {
 
 	// 파일 업로드용 Presigned URL 생성
 	private GeneratePresignedUrlRequest getGeneratePresignedUrlRequest(String bucket, String fileName) {
-		GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucket, fileName)
+		return new GeneratePresignedUrlRequest(bucket, fileName)
 			.withMethod(HttpMethod.PUT)
 			.withExpiration(getPresignedUrlExpiration());
-
-		generatePresignedUrlRequest.addRequestParameter(
-			Headers.S3_CANNED_ACL,
-			CannedAccessControlList.PublicRead.toString()
-		);
-
-		return generatePresignedUrlRequest;
 	}
 
 	//Presigned URL 유효기간 설정
