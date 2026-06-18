@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.lesson.student;
+package com.threestar.trainus.domain.lesson.student.setup;
 
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
@@ -26,7 +26,7 @@ import org.locationtech.jts.geom.Point;
 @Slf4j
 @SpringBootTest
 @ActiveProfiles("test")
-// @Disabled("데이터 생성 전용 테스트, 필요할 때만 수동으로 실행")
+@Disabled("데이터 생성 전용 테스트, 필요할 때만 수동으로 실행")
 public class LessonDatabaseSetupTest {
 
     @Autowired

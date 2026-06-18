@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.lesson.student;
+package com.threestar.trainus.domain.lesson.student.performance;
 
 import com.threestar.trainus.domain.lesson.teacher.entity.Category;
 import com.threestar.trainus.domain.lesson.teacher.entity.Lesson;
