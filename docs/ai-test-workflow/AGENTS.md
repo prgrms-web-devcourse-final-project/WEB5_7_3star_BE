@@ -23,7 +23,6 @@
 
 ```text
 docs/ai-test-workflow/reports/{workstream}/
-  campaign-log.md
   pr-draft.md
   cycles/
     {cycle}/
@@ -31,6 +30,10 @@ docs/ai-test-workflow/reports/{workstream}/
       test-plan.md
       review-report.md
       cycle-summary.md
+docs/ai-test-workflow/logs/{workstream}/
+  campaign-log.md
+  cycles/
+    {cycle}/
       prompt-and-tool-log.md
 ```
 
@@ -59,7 +62,7 @@ test task request
 
 ## Stop Points
 
-- Researcher는 `research-report.md`와 `prompt-and-tool-log.md` 작성 후 종료한다.
+- Researcher는 `research-report.md` 작성 후 종료한다.
 - Planner는 `test-plan.md`에 승인 요청 범위를 작성한 뒤 종료한다.
 - Implementer는 승인된 범위 구현과 검증 결과 기록 후 종료한다.
 - Reviewer는 `review-report.md` 작성 후 파일 수정 없이 종료한다.
@@ -90,7 +93,8 @@ test task request
 
 ## Record Policy
 
-- 각 사이클 산출물은 `reports/{workstream}/cycles/{cycle}/`에 작성한다.
+- 각 사이클 보고서는 `reports/{workstream}/cycles/{cycle}/`에 작성한다.
+- 로그는 `logs/{workstream}/cycles/{cycle}/`에 작성한다.
 - 이전 사이클 산출물은 덮어쓰지 않는다.
 - 로그에는 프롬프트, 사용 도구, 모델명, reasoning effort, 단계별 토큰 사용량을 기록한다.
 - 모델은 구체적인 모델명과 실행 설정으로 기록한다.

@@ -62,6 +62,8 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation 'org.testcontainers:postgresql:1.21.4'
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -69,4 +71,13 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    def userDockerSocket = file("${System.getProperty('user.home')}/.docker/run/docker.sock")
+    def varRunDockerSocket = file('/var/run/docker.sock')
+    if (userDockerSocket.exists()) {
+        environment 'DOCKER_HOST', "unix://${userDockerSocket.absolutePath}"
+    } else if (!System.getenv('DOCKER_HOST') && varRunDockerSocket.exists()) {
+        environment 'DOCKER_HOST', "unix://${varRunDockerSocket.absolutePath}"
+    }
+    environment 'DOCKER_API_VERSION', '1.40'
+    systemProperty 'api.version', '1.40'
 }

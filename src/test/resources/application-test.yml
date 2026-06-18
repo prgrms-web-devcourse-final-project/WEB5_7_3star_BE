@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:trainus_test}
+    username: ${DB_USER:trainus}
+    password: ${DB_PASSWORD:trainus}
 
   page:
     size:
@@ -16,8 +16,14 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: 6379
+      core:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
+      mq:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
       ssl:
         enabled: false
       key:
@@ -25,7 +31,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO}
+      ddl-auto: ${DDL_AUTO:create-drop}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -36,8 +42,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:test@example.com}
+    password: ${MAIL_PASSWORD:test-password}
     properties:
       mail:
         smtp:
@@ -48,10 +54,10 @@ spring:
 cloud:
   aws:
     credentials:
-      access-key: ${AWS_ACCESS_KEY}
-      secret-key: ${AWS_SECRET_KEY}
+      access-key: ${AWS_ACCESS_KEY:test-access-key}
+      secret-key: ${AWS_SECRET_KEY:test-secret-key}
     s3:
-      bucket: ${S3_BUCKET_NAME}
+      bucket: ${S3_BUCKET_NAME:test-bucket}
     region:
       static: ap-northeast-2
     stack:
@@ -66,7 +72,12 @@ logging:
     org.springframework.orm.jpa: ERROR
 
 payment:
-  secret-key: ${PAYMENT_SECRET_KEY}
+  secret-key: ${PAYMENT_SECRET_KEY:test-payment-secret}
   base-url: https://api.tosspayments.com
   confirm-endpoint: /v1/payments/confirm
   cancel-endpoint: /v1/payments/%s/cancel
+
+jwt:
+  secret: ${JWT_SECRET:test-jwt-secret-key-for-integration-tests-1234567890}
+  access-token-validity: 3600000
+  refresh-token-validity: 604800000
