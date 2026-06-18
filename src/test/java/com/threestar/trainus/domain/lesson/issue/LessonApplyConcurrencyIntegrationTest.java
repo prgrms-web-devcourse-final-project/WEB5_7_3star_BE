@@ -1,4 +1,4 @@
-package com.threestar.trainus.domain.lesson.student;
+package com.threestar.trainus.domain.lesson.issue;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @org.springframework.test.context.ActiveProfiles({"local", "consumer"}) // 필요시 수정
-public class LessonApplyLockTest {
+public class LessonApplyConcurrencyIntegrationTest {
 
 	@Autowired
 	private StudentLessonService lessonService;
