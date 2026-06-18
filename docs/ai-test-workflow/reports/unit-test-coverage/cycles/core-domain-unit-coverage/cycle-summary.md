@@ -2,7 +2,7 @@
 
 ## Scope
 
-- `core-domain-branch-coverage` 사이클의 승인 범위 안에서 unit-test-only 보강을 수행했다.
+- `core-domain-unit-coverage` 사이클의 승인 범위 안에서 unit-test-only 보강을 수행했다.
 - 대상은 payment/refund/coupon, lesson search/application mapper, user auth/withdraw, request DTO validation, admin coupon mapper였다.
 - production code, build/profile 설정, Testcontainers, controller/repository/integration test는 변경하지 않았다.
 

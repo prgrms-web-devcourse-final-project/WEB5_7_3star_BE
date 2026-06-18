@@ -7,7 +7,7 @@
 사용 모델: gpt-5.4-mini
 reasoning effort: high
 에이전트 역할: Researcher
-사용 프롬프트: lesson-domain unit-test coverage research
+사용 프롬프트: lesson-domain-unit-coverage unit-test coverage research
 참조 문서:
 - docs/ai-test-workflow/AGENTS.md
 - docs/ai-test-workflow/rules/agent-roles.md
@@ -254,7 +254,7 @@ reasoning effort: high
 - src/main/java/com/threestar/trainus/domain/lesson/issue/LessonWaitingRoomService.java
 - src/main/java/com/threestar/trainus/domain/lesson/issue/LessonPendingMessageRecoveryScheduler.java
 - src/main/java/com/threestar/trainus/domain/lesson/issue/LessonStockReconciliationScheduler.java
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/test-plan.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/cycle-summary.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/review-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/cycle-summary.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/review-report.md
 ```

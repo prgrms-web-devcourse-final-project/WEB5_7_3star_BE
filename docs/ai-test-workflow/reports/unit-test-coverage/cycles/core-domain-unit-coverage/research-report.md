@@ -164,15 +164,15 @@ Integration-only candidates:
 ### Recommended Cycle Name
 
 ```text
-권장 주제명: core-domain-branch-coverage
-이유: 이번 조사 범위는 lesson-domain을 넘어 payment/refund/coupon, auth, search, DTO/mapper를 함께 묶는 cross-cutting branch coverage 성격이 강하다.
+권장 주제명: core-domain-unit-coverage
+이유: 이번 조사 범위는 lesson-domain-unit-coverage을 넘어 payment/refund/coupon, auth, search, DTO/mapper를 함께 묶는 cross-cutting branch coverage 성격이 강하다.
 ```
 
 ### Researcher Conclusion
 
 ```text
 요약:
-- lesson-domain에는 일부 서비스 단위 테스트와 Redis/PostgreSQL 기반 통합/벤치마크 테스트가 섞여 있지만, payment/refund/coupon state, search validation, auth, mapper/DTO validation은 아직 빈 구간이 많다.
+- lesson-domain-unit-coverage에는 일부 서비스 단위 테스트와 Redis/PostgreSQL 기반 통합/벤치마크 테스트가 섞여 있지만, payment/refund/coupon state, search validation, auth, mapper/DTO validation은 아직 빈 구간이 많다.
 - 단위 테스트로 가장 효율적으로 잠글 수 있는 영역은 `PaymentService`, `CouponService`, `StudentLessonService`의 분기 로직, `UserService` 권한 검증, 그리고 순수 mapper/DTO helper다.
 - Redis Stream consumer, recovery scheduler, open-run 동시성, PostgreSQL search query는 통합 테스트로 분리하는 편이 맞다.
 

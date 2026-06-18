@@ -10,6 +10,6 @@
 
 | Cycle | Status | Summary |
 | --- | --- | --- |
-| `lesson-domain` | Planned | 레슨 강사/수강생 도메인 단위 테스트 보강 예정 |
+| `lesson-domain-unit-coverage` | Planned | 레슨 강사/수강생 도메인 단위 테스트 보강 예정 |
 | `payment-domain` | Pending | 후속 사이클 |
 | `user-domain` | Pending | 후속 사이클 |

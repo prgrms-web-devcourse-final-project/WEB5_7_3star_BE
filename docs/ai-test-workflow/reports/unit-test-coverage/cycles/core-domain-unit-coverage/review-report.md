@@ -6,10 +6,10 @@
 실행 일시: 2026-06-14 00:51:08 KST
 사용 모델: inherited from main agent
 에이전트 역할: Reviewer
-사용 프롬프트: core-domain-branch-coverage 구현 결과 읽기 전용 검토
+사용 프롬프트: core-domain-unit-coverage 구현 결과 읽기 전용 검토
 참조 문서:
 - docs/ai-test-workflow/AGENTS.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-branch-coverage/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-unit-coverage/test-plan.md
 검토 대상:
 - payment/coupon/student lesson/user service unit tests
 - mapper tests

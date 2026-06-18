@@ -2,8 +2,8 @@
 
 ## Summary
 
-- Broaden lesson-domain unit test coverage for teacher and student lesson services.
-- Add pure mapper and DTO helper tests for approved lesson-domain boundaries.
+- Broaden lesson-domain-unit-coverage unit test coverage for teacher and student lesson services.
+- Add pure mapper and DTO helper tests for approved lesson-domain-unit-coverage boundaries.
 - Keep changes test-only; no production code, build, profile, controller slice, Testcontainers, or integration test changes.
 
 ## Changes
@@ -50,4 +50,4 @@
 ## Review
 
 - Reviewer finding: no blocking issue in the six requested test files.
-- Scope note: current worktree includes unrelated existing changes outside this cycle; include only approved lesson-domain test/report files in the PR.
+- Scope note: current worktree includes unrelated existing changes outside this cycle; include only approved lesson-domain-unit-coverage test/report files in the PR.

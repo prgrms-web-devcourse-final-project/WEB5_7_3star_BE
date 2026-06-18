@@ -3,7 +3,7 @@
 ## Core Domain Researcher
 
 ```text
-작업 주제: core-domain-branch-coverage
+작업 주제: core-domain-unit-coverage
 목적: payment/refund/coupon calculation and state logic, lesson search condition validation/limit/sort, user authorization validation, lesson application status/response/failure reason branches, meaningful DTO validation/mapper logic의 unit-test gaps를 조사했다.
 실행 정보:
 - 모델: gpt-5.4-mini
@@ -39,7 +39,7 @@
 ## Core Domain Planner
 
 ```text
-작업 주제: core-domain-branch-coverage
+작업 주제: core-domain-unit-coverage
 목적: Researcher가 정리한 payment/refund/coupon, lesson search, user auth, lesson application, DTO/mapper 공백을 기준으로 unit-test-only reinforcement plan과 human approval 범위를 문서에 작성했다.
 실행 정보:
 - 모델: gpt-5.4-mini
@@ -53,7 +53,7 @@
 - docs/ai-test-workflow/rules/enforcement-checklist.md
 - docs/ai-test-workflow/prompts/planner.md
 - docs/ai-test-workflow/templates/test-plan-template.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-branch-coverage/research-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-unit-coverage/research-report.md
 사용 도구:
 - codegraph_status
 - codegraph_context
@@ -66,7 +66,7 @@
 - rg -n
 - apply_patch
 결과 요약:
-- `core-domain-branch-coverage`를 독립 사이클 주제명으로 사용한다.
+- `core-domain-unit-coverage`를 독립 사이클 주제명으로 사용한다.
 - plan은 PaymentService/CouponService를 우선하고, 이후 search/auth/application branches, DTO validation/mapper coverage 순서로 정리한다.
 - human approval block은 테스트 파일만 허용하고 production code, controller slice, integration, Testcontainers, build/profile changes를 제외한다.
 - verification commands는 targeted `./gradlew test --tests ...` 중심이며 full suite는 unit-only cycle gate로 요구하지 않는다.
@@ -75,14 +75,14 @@
 ## Core Domain Implementation
 
 ```text
-작업 주제: core-domain-branch-coverage
+작업 주제: core-domain-unit-coverage
 목적: 승인된 test-plan 범위 안에서 payment/refund/coupon, lesson search/application, user auth/withdraw, DTO/mapper 단위 테스트를 구현했다.
 실행 정보:
 - 모델: main Codex session
 - 실행 일시: 2026-06-14 00:51 KST
 참조 문서:
 - docs/ai-test-workflow/AGENTS.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-branch-coverage/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-unit-coverage/test-plan.md
 사용 도구:
 - codegraph_status
 - codegraph_context
@@ -101,7 +101,7 @@
 ## Core Domain Reviewer
 
 ```text
-작업 주제: core-domain-branch-coverage
+작업 주제: core-domain-unit-coverage
 목적: 구현된 테스트가 승인 범위 안에서 원인 지향적으로 분기를 고정하는지 읽기 전용 검토했다.
 실행 정보:
 - 에이전트: 019ec1aa-cb0a-7891-8372-1700ceaf4c21

@@ -3,7 +3,7 @@
 ## Researcher Prompt Summary
 
 ```text
-TrainUs 프로젝트의 lesson-domain(unit-test-coverage) 범위를 조사하는 Researcher 역할로, 운영 코드/테스트 코드/설정 파일은 수정하지 않고 현재 테스트 현황, 테스트 공백, 단위 테스트 후보, 통합 테스트 후보, 우선순위 높은 후보를 문서화했다.
+TrainUs 프로젝트의 lesson-domain-unit-coverage(unit-test-coverage) 범위를 조사하는 Researcher 역할로, 운영 코드/테스트 코드/설정 파일은 수정하지 않고 현재 테스트 현황, 테스트 공백, 단위 테스트 후보, 통합 테스트 후보, 우선순위 높은 후보를 문서화했다.
 ```
 
 ## 실행 정보
@@ -44,7 +44,7 @@ reasoning effort: high
 ## 결과 요약
 
 ```text
-- lesson-domain에는 Mockito 기반 단위 테스트 3개(AdminLessonServiceTest, LessonCreationLimitServiceTest, LessonStatusSchedulerTest), SpringBootTest 기반 통합/벤치마크성 테스트 3개(LessonApplyLockTest, LessonDatabaseSetupTest, LessonSearchPerformanceTest)가 확인됐다.
+- lesson-domain-unit-coverage에는 Mockito 기반 단위 테스트 3개(AdminLessonServiceTest, LessonCreationLimitServiceTest, LessonStatusSchedulerTest), SpringBootTest 기반 통합/벤치마크성 테스트 3개(LessonApplyLockTest, LessonDatabaseSetupTest, LessonSearchPerformanceTest)가 확인됐다.
 - controller, mapper, DTO validation, lesson issue 패키지의 핵심 분기에는 실행되는 테스트가 거의 없었다.
 - test profile은 PostgreSQL와 Redis를 직접 참조하고, build.gradle에는 integrationTest 분리가 없었다.
 - `KeywordSearchPerformanceTest`와 `LocationSearchPerformanceTest`는 주석 처리되어 실행 테스트로는 제외했다.
@@ -60,7 +60,7 @@ reasoning effort: high
 ## Implementer Prompt Summary
 
 ```text
-사용자가 Planner 승인 범위를 모두 승인한 뒤, Main agent가 승인된 두 테스트 파일 안에서만 lesson-domain 단위 테스트를 구현했다. 운영 코드, build.gradle, test profile, 통합 테스트 범위는 수정하지 않았다.
+사용자가 Planner 승인 범위를 모두 승인한 뒤, Main agent가 승인된 두 테스트 파일 안에서만 lesson-domain-unit-coverage 단위 테스트를 구현했다. 운영 코드, build.gradle, test profile, 통합 테스트 범위는 수정하지 않았다.
 ```
 
 ## 실행 정보
@@ -79,8 +79,8 @@ reasoning effort: 현재 세션 설정
 - docs/ai-test-workflow/rules/human-approval-policy.md
 - docs/ai-test-workflow/rules/test-boundary.md
 - docs/ai-test-workflow/rules/enforcement-checklist.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/test-plan.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/review-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/review-report.md
 ```
 
 ## 사용 도구 / 명령
@@ -140,8 +140,8 @@ reasoning effort: medium
 - docs/ai-test-workflow/rules/test-boundary.md
 - docs/ai-test-workflow/prompts/reviewer.md
 - docs/ai-test-workflow/templates/review-report-template.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/research-report.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/research-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/test-plan.md
 ```
 
 ## 사용 도구 / 명령
@@ -168,7 +168,7 @@ reasoning effort: medium
 ## Planner Prompt Summary
 
 ```text
-TrainUs 프로젝트의 lesson-domain(unit-test-coverage) 범위를 대상으로 Planner 역할을 수행하며, Researcher 결과를 바탕으로 운영 코드/테스트 코드/설정 파일은 수정하지 않고 단위 테스트 보강 계획과 승인 요청 범위를 문서화했다.
+TrainUs 프로젝트의 lesson-domain-unit-coverage(unit-test-coverage) 범위를 대상으로 Planner 역할을 수행하며, Researcher 결과를 바탕으로 운영 코드/테스트 코드/설정 파일은 수정하지 않고 단위 테스트 보강 계획과 승인 요청 범위를 문서화했다.
 ```
 
 ## 실행 정보
@@ -189,7 +189,7 @@ reasoning effort: high
 - docs/ai-test-workflow/rules/enforcement-checklist.md
 - docs/ai-test-workflow/prompts/planner.md
 - docs/ai-test-workflow/templates/test-plan-template.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/research-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/research-report.md
 ```
 
 ## 사용 도구 / 명령
@@ -224,9 +224,9 @@ reasoning effort: high
 ## Researcher Additional Follow-up
 
 ```text
-작업 주제: lesson-domain unit-test coverage broad follow-up
+작업 주제: lesson-domain-unit-coverage unit-test coverage broad follow-up
 목적: 현재 사이클에서 해소된 서비스 P1 분기와 남은 단위 테스트 공백, controller slice 분리 여부, Redis/PostgreSQL/consumer/recovery/open-run 동시성의 통합 경계를 추가 조사했다.
-사용 프롬프트: lesson-domain remaining unit test gaps after current cycle, focus on AdminLessonService, StudentLessonService, mapper classes, DTO validation/helpers, controller slice boundaries, and lesson issue package.
+사용 프롬프트: lesson-domain-unit-coverage remaining unit test gaps after current cycle, focus on AdminLessonService, StudentLessonService, mapper classes, DTO validation/helpers, controller slice boundaries, and lesson issue package.
 실행 정보:
 - 모델: gpt-5.4-mini
 - reasoning effort: high
@@ -257,9 +257,9 @@ reasoning effort: high
 ## Planner Additional Follow-up
 
 ```text
-작업 주제: lesson-domain unit-test coverage broad follow-up
-목적: 기존 lesson-domain 사이클을 유지하면서, 서비스 조회/생성/삭제 분기와 mapper/DTO/helper까지 포함한 추가 커버리지 확장 계획과 승인 요청 범위를 문서에 덧붙였다.
-사용 프롬프트: lesson-domain broad follow-up planning with explicit boundary control and approval scope expansion.
+작업 주제: lesson-domain-unit-coverage unit-test coverage broad follow-up
+목적: 기존 lesson-domain-unit-coverage 사이클을 유지하면서, 서비스 조회/생성/삭제 분기와 mapper/DTO/helper까지 포함한 추가 커버리지 확장 계획과 승인 요청 범위를 문서에 덧붙였다.
+사용 프롬프트: lesson-domain-unit-coverage broad follow-up planning with explicit boundary control and approval scope expansion.
 실행 정보:
 - 모델: gpt-5.4-mini
 - reasoning effort: high
@@ -272,9 +272,9 @@ reasoning effort: high
 - docs/ai-test-workflow/rules/enforcement-checklist.md
 - docs/ai-test-workflow/prompts/planner.md
 - docs/ai-test-workflow/templates/test-plan-template.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/research-report.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/test-plan.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/review-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/research-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/review-report.md
 사용 도구:
 - sed -n
 - apply_patch
@@ -289,8 +289,8 @@ reasoning effort: high
 ## Implementer Broad Follow-up
 
 ```text
-작업 주제: lesson-domain unit-test coverage broad follow-up implementation
-목적: 승인된 broad follow-up 계획에 따라 기존 lesson-domain 사이클에 서비스/매퍼/DTO helper 단위 테스트를 추가했다.
+작업 주제: lesson-domain-unit-coverage unit-test coverage broad follow-up implementation
+목적: 승인된 broad follow-up 계획에 따라 기존 lesson-domain-unit-coverage 사이클에 서비스/매퍼/DTO helper 단위 테스트를 추가했다.
 실행 정보:
 - 실행 일시: 2026-06-13 20:00:48 KST
 - 모델: GPT-5 계열 메인 에이전트
@@ -302,7 +302,7 @@ reasoning effort: high
 - docs/ai-test-workflow/rules/human-approval-policy.md
 - docs/ai-test-workflow/rules/test-boundary.md
 - docs/ai-test-workflow/rules/enforcement-checklist.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/test-plan.md
 사용 도구 / 명령:
 - codegraph_status
 - codegraph_context
@@ -327,7 +327,7 @@ reasoning effort: high
 ## Reviewer Broad Follow-up
 
 ```text
-작업 주제: lesson-domain broad follow-up review
+작업 주제: lesson-domain-unit-coverage broad follow-up review
 목적: 추가된 6개 테스트 파일의 결함, Mockito strictness, 잘못된 가정, 승인 범위 위반 여부를 Reviewer 서브에이전트가 독립 검토했다.
 실행 정보:
 - 모델: gpt-5 계열 서브에이전트

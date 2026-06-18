@@ -7,7 +7,7 @@
 사용 모델: gpt-5.5
 reasoning effort: medium
 에이전트 역할: Reviewer
-사용 프롬프트: lesson-domain unit-test-coverage review
+사용 프롬프트: lesson-domain-unit-coverage unit-test-coverage review
 토큰 사용량: 서브에이전트에 노출되지 않음
 참조 문서:
 - docs/ai-test-workflow/AGENTS.md
@@ -16,12 +16,12 @@ reasoning effort: medium
 - docs/ai-test-workflow/rules/test-boundary.md
 - docs/ai-test-workflow/prompts/reviewer.md
 - docs/ai-test-workflow/templates/review-report-template.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/research-report.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/research-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/test-plan.md
 검토 대상:
 - src/test/java/com/threestar/trainus/domain/lesson/teacher/service/AdminLessonServiceTest.java
 - src/test/java/com/threestar/trainus/domain/lesson/student/service/StudentLessonServiceTest.java
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/test-plan.md
 검증 명령:
 - ./gradlew test --tests "com.threestar.trainus.domain.lesson.teacher.service.AdminLessonServiceTest" --tests "com.threestar.trainus.domain.lesson.student.service.StudentLessonServiceTest"
 검증 결과:
@@ -35,7 +35,7 @@ reasoning effort: medium
 - src/main/java/com/threestar/trainus/domain/lesson/student/service/StudentLessonService.java
 - src/test/java/com/threestar/trainus/domain/lesson/teacher/service/AdminLessonServiceTest.java
 - src/test/java/com/threestar/trainus/domain/lesson/student/service/StudentLessonServiceTest.java
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/test-plan.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/test-plan.md
 ```
 
 ## 심각도 높은 문제
@@ -81,7 +81,7 @@ flaky 가능성:
 - 검토 대상 개별 테스트는 `./gradlew test --tests ...`로 성공한다.
 
 아직 주장하면 안 되는 내용:
-- lesson-domain 전체 테스트가 통과한다고 주장하면 안 된다. 전체 테스트는 기존 외부 환경/컨텍스트 의존 실패가 남아 있다.
+- lesson-domain-unit-coverage 전체 테스트가 통과한다고 주장하면 안 된다. 전체 테스트는 기존 외부 환경/컨텍스트 의존 실패가 남아 있다.
 - Redis Stream, 대기열 순위 산정, PostgreSQL 검색 쿼리, open-run 동시성 경로가 실제 인프라와 함께 검증됐다고 주장하면 안 된다.
 - controller validation, mapper, DTO validation 커버리지가 이번 사이클에서 확보됐다고 주장하면 안 된다.
 ```

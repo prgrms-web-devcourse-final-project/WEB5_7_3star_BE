@@ -3,7 +3,7 @@
 ## Scope
 
 - 작업 묶음: unit-test-coverage
-- 작업 주제: lesson-domain
+- 작업 주제: lesson-domain-unit-coverage
 - 범위: 레슨 강사/수강생 서비스 도메인 단위 테스트
 - 제외: 통합 테스트, 운영 코드 변경, build.gradle/test profile/Testcontainers 변경
 
@@ -48,7 +48,7 @@
 
 ### Scope
 
-- 기존 `lesson-domain` 사이클에 추가 반영
+- 기존 `lesson-domain-unit-coverage` 사이클에 추가 반영
 - 승인 범위 안에서 서비스 단위 테스트, 순수 매퍼 테스트, DTO helper 테스트만 추가
 - 운영 코드, `build.gradle`, test profile, controller slice, Testcontainers, 통합 테스트는 변경하지 않음
 

@@ -7,7 +7,7 @@
 사용 모델: gpt-5.4-mini
 reasoning effort: high
 에이전트 역할: Planner
-사용 프롬프트: lesson-domain unit-test coverage planning
+사용 프롬프트: lesson-domain-unit-coverage unit-test coverage planning
 참조 문서:
 - docs/ai-test-workflow/AGENTS.md
 - docs/ai-test-workflow/rules/agent-roles.md
@@ -17,14 +17,14 @@ reasoning effort: high
 - docs/ai-test-workflow/prompts/planner.md
 - docs/ai-test-workflow/templates/test-plan-template.md
 참조한 Research Report:
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/research-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/research-report.md
 ```
 
 ## 작업 목표
 
 ```text
 이번 작업의 목표:
-- lesson-domain의 강사/수강생 서비스에서 P1 단위 테스트 공백을 먼저 메운다.
+- lesson-domain-unit-coverage의 강사/수강생 서비스에서 P1 단위 테스트 공백을 먼저 메운다.
 - 기존 Mockito 기반 단위 테스트 패턴을 유지하면서 AdminLessonService와 StudentLessonService의 핵심 분기만 보강한다.
 - 이번 사이클에서는 통합 테스트, 운영 코드 변경, 설정 변경, Testcontainers 추가를 하지 않는다.
 
@@ -102,7 +102,7 @@ Testcontainers 적용 여부:
 
 ```text
 승인이 필요한 결정:
-- unit-test-coverage / lesson-domain 사이클에서 AdminLessonServiceTest를 보강하고 StudentLessonServiceTest를 새로 추가하는 것
+- unit-test-coverage / lesson-domain-unit-coverage 사이클에서 AdminLessonServiceTest를 보강하고 StudentLessonServiceTest를 새로 추가하는 것
 - 외부 인프라 없이 Mockito 기반 단위 테스트로만 P1 분기를 먼저 고정하는 것
 - controller slice, mapper, DTO validation, consumer/recovery, scheduler, search 쿼리는 이번 승인 범위에서 제외하는 것
 
@@ -118,8 +118,8 @@ Testcontainers 적용 여부:
 - src/test/java/com/threestar/trainus/domain/lesson/*/controller/**
 - src/test/java/com/threestar/trainus/domain/lesson/*/mapper/**
 - src/test/java/com/threestar/trainus/domain/lesson/*/repository/**
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/research-report.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/cycle-summary.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/research-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/cycle-summary.md
 
 추가 의존성:
 - 없음
@@ -142,7 +142,7 @@ Testcontainers 적용 여부:
 
 ### 작업 목표
 
-- 기존 lesson-domain 사이클의 단위 테스트 경계를 유지하면서, 남은 서비스 조회/생성/삭제 분기와 mapper/DTO/helper까지 포함해 레슨 도메인 커버리지를 한 단계 더 넓힌다.
+- 기존 lesson-domain-unit-coverage 사이클의 단위 테스트 경계를 유지하면서, 남은 서비스 조회/생성/삭제 분기와 mapper/DTO/helper까지 포함해 레슨 도메인 커버리지를 한 단계 더 넓힌다.
 - controller slice, Redis/PostgreSQL 통합 경로, consumer/recovery/open-run 동시성은 이번 승인 범위에서 제외하고 후속 통합 후보로만 유지한다.
 
 ### 이번 작업에서 하지 않을 것
@@ -222,9 +222,9 @@ Testcontainers 적용 여부:
 - `src/test/resources/application-test.yml`
 - `src/test/java/com/threestar/trainus/domain/lesson/issue/**`
 - `src/test/java/com/threestar/trainus/domain/lesson/*/controller/**`
-- `docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/research-report.md`
-- `docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/cycle-summary.md`
-- `docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain/review-report.md`
+- `docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/research-report.md`
+- `docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/cycle-summary.md`
+- `docs/ai-test-workflow/reports/unit-test-coverage/cycles/lesson-domain-unit-coverage/review-report.md`
 
 ### 사용자 승인 필요 사항
 

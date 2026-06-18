@@ -18,8 +18,8 @@ reasoning effort: high
 - docs/ai-test-workflow/rules/enforcement-checklist.md
 - docs/ai-test-workflow/prompts/planner.md
 - docs/ai-test-workflow/templates/test-plan-template.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-branch-coverage/research-report.md
-작업 주제명: core-domain-branch-coverage
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-unit-coverage/research-report.md
+작업 주제명: core-domain-unit-coverage
 ```
 
 ### 작업 목표
@@ -142,9 +142,9 @@ Forbidden files:
 - src/test/java/com/threestar/trainus/domain/lesson/*/controller/**
 - src/test/java/com/threestar/trainus/domain/lesson/*/repository/**
 - any integration-test-only files or Testcontainers setup
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-branch-coverage/research-report.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-branch-coverage/cycle-summary.md
-- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-branch-coverage/review-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-unit-coverage/research-report.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-unit-coverage/cycle-summary.md
+- docs/ai-test-workflow/reports/unit-test-coverage/cycles/core-domain-unit-coverage/review-report.md
 
 No external deps:
 - No Testcontainers
