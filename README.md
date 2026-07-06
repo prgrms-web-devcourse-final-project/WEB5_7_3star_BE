@@ -163,7 +163,7 @@ Swagger 설정이 포함되어 있어 실행 환경에서 API 문서를 확인�
 
 ## 시스템 구조
 
-![TrainUs Architecture](./docs/architecture/trainus-architecture.png)
+![TrainUs Architecture](./docs/architecture/trainus-architecture-simplified.png)
 
 운영 환경에서는 API 서버와 Consumer 서버를 역할별 profile로 분리합니다.
 
@@ -189,64 +189,62 @@ config:
   theme: redux-color
   themeCSS: |
     text.actor {
-      font-size: 17px !important;
+      font-size: 19px !important;
+      font-weight: 600 !important;
     }
     .messageText {
-      font-size: 19px !important;
-    }
-    .note {
-      fill: #f1f5f9 !important;
-      stroke: #cbd5e1 !important;
+      font-size: 20px !important;
     }
     .noteText {
-      font-size: 17px !important;
+      font-size: 18px !important;
+      font-weight: 600 !important;
     }
     .labelText {
-      font-size: 17px !important;
+      font-size: 18px !important;
+      font-weight: 600 !important;
     }
     .loopText {
-      font-size: 17px !important;
+      font-size: 18px !important;
+      font-weight: 600 !important;
+    }
+    .note {
+      fill: #f8fafc !important;
+      stroke: #cbd5e1 !important;
     }
 ---
 sequenceDiagram
     autonumber
     actor User
-    participant API as API Server
-    participant Core as Redis Core<br/>(Sorted Set)
-    participant Consumer as Consumer Server
-    participant Stream as Redis Stream
-    participant DB as PostgreSQL / PostGIS
+    participant API as API<br/>Server
+    participant Core as Redis Core<br/>(Stock / Waiting / Status)
+    participant Consumer as Consumer<br/>Server
+    participant Stream as Redis<br/>Stream
+    participant DB as DB
 
-    activate API
-    User->>API: POST /lesson/apply
+    User->>API: 신청 요청
     API->>Core: 재고 선점 / 중복 확인 / 대기열 등록
-    Note over API,Core: requestId는 Sorted Set Waiting Room에서 대기
     API-->>User: requestId 반환
-    deactivate API
 
-    activate Consumer
+    Note over User,Core: 사용자는 응답 대기 대신 requestId로 처리 상태 확인
+
     rect rgb(255, 242, 242)
-    Note over Core,Stream: Admission 단계
-    Consumer->>Core: 대기열 requestId dequeue
-    Consumer->>Core: 상태변경: PROCESSING
-    Consumer->>Stream: XADD 신청 메시지
+    Note over Core,Stream: Admission - 접수 요청을 처리 메시지로 전환
+    Consumer->>Core: 대기열 조회
+    Consumer->>Stream: 신청 메시지 적재
     end
-    Note over Consumer,Stream: 신청 메시지는 Redis Stream에 적재
-    rect rgb(239, 246, 255)
-    Note over Core,DB: Consumer 처리 단계
-    Stream-->>Consumer: XREADGROUP
-    Consumer->>DB: DB 반영
-    Consumer->>Core: 상태변경: SUCCESS / FAIL
-    end
-    deactivate Consumer
 
-    loop requestId polling
-        activate API
-        User->>API: GET /lesson/apply/{requestId}
+    rect rgb(239, 246, 255)
+    Note over Core,DB: Async Processing - 신청 내역 DB 반영
+    Consumer->>Stream: 메시지 읽기
+    Consumer->>DB: 신청 내역 일괄 반영
+    Consumer->>Core: SUCCESS / FAIL 저장
+    end
+
+    loop requestId 기반 상태 조회
+        User->>API: requestId 상태 조회
         API->>Core: 상태 조회
         Core-->>API: WAITING / PROCESSING / SUCCESS / FAIL
-        API-->>User: 현재 상태 응답
-        deactivate API
+        API-->>User: 현재 상태 반환
     end
 ```
 
